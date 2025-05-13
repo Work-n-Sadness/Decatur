@@ -13,8 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { getTaskCategoryIcon, getTaskStatusIcon } from '@/components/icons';
-import { CalendarIcon, User, Briefcase, Edit3, Save, X, ListChecks, Percent, Clock, Repeat, CheckSquare, Paperclip, ExternalLink, LinkIcon } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { CalendarIcon, User, Briefcase, Edit3, Save, X, ListChecks, Percent, Clock, Repeat, CheckSquare, Paperclip, ExternalLink, LinkIcon, BookOpen, UserCheck, Milestone } from 'lucide-react'; // Added BookOpen, UserCheck, Milestone
+import { format, parseISO, isValid } from 'date-fns';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -30,6 +30,8 @@ const taskSchema = z.object({
   endDate: z.date().nullable(),
   deliverables: z.string().optional(),
   evidenceLink: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  complianceChapterTag: z.string().optional(),
+  validatorApproval: z.string().optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -43,13 +45,6 @@ interface TaskDetailsDialogProps {
 }
 
 const taskStatuses: TaskStatus[] = ['Pending', 'In Progress', 'Completed', 'Overdue', 'Blocked'];
-// const taskCategories: TaskCategory[] = [
-//   'Health Protocols / Medications', 'Food Safety', 'Fire Safety', 'Office Admin',
-//   'Documentation & Compliance', 'Personnel File & Staff Training',
-//   'Postings & Required Notices', 'Environmental & Sanitation Checks', 'Additional ALR-Required Tasks'
-// ];
-// const roles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director'];
-// const frequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually', 'As Needed'];
 
 export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpenAttachEvidence }: TaskDetailsDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -63,17 +58,18 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
     if (task) {
       form.reset({
         name: task.name,
-        notes: task.notes,
+        notes: task.notes || '',
         assignedStaff: task.assignedStaff,
         status: task.status,
         progress: task.progress,
-        startDate: typeof task.startDate === 'string' ? parseISO(task.startDate) : new Date(task.startDate),
-        endDate: task.endDate ? (typeof task.endDate === 'string' ? parseISO(task.endDate) : new Date(task.endDate)) : null,
-        deliverables: task.deliverables,
+        startDate: task.startDate && isValid(new Date(task.startDate)) ? (typeof task.startDate === 'string' ? parseISO(task.startDate) : new Date(task.startDate)) : new Date(),
+        endDate: task.endDate && isValid(new Date(task.endDate)) ? (typeof task.endDate === 'string' ? parseISO(task.endDate) : new Date(task.endDate)) : null,
+        deliverables: task.deliverables || '',
         evidenceLink: task.evidenceLink || '',
+        complianceChapterTag: task.complianceChapterTag || '',
+        validatorApproval: task.validatorApproval || '',
       });
     }
-    // Reset editing state when dialog is closed or task changes
     if (!isOpen) {
       setIsEditing(false);
     }
@@ -90,8 +86,27 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
       ...data,
       startDate: data.startDate,
       endDate: data.endDate,
-      evidenceLink: data.evidenceLink || undefined, // Store as undefined if empty string
+      evidenceLink: data.evidenceLink || undefined,
+      complianceChapterTag: data.complianceChapterTag || undefined,
+      validatorApproval: data.validatorApproval || undefined,
     };
+
+    if (data.status === 'Completed' && task.status !== 'Completed') {
+      updatedTask.lastCompletedOn = new Date();
+      updatedTask.completedBy = data.assignedStaff;
+      updatedTask.progress = 100; // Ensure progress is 100% on completion
+    } else if (data.status !== 'Completed' && task.status === 'Completed') {
+      // If moved from completed to something else, clear completion fields
+      updatedTask.lastCompletedOn = null;
+      updatedTask.completedBy = null;
+    }
+    // If status is 'Completed' and progress is not 100, set it to 100
+    if (data.status === 'Completed' && data.progress !== 100) {
+        updatedTask.progress = 100;
+        form.setValue('progress', 100); // also update form state
+    }
+
+
     onSave(updatedTask); 
     setIsEditing(false);
   };
@@ -162,7 +177,11 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                         name="progress"
                         control={form.control}
                         render={({ field }) => (
-                           <Input id="progress" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} className="mt-1" />
+                           <Input id="progress" type="number" {...field} 
+                           onChange={e => field.onChange(parseInt(e.target.value))} 
+                           className="mt-1" 
+                           readOnly={form.getValues("status") === "Completed"} // Make progress readonly if status is Completed
+                           />
                         )}
                     />
                     {form.formState.errors.progress && <p className="text-sm text-destructive mt-1">{form.formState.errors.progress.message}</p>}
@@ -177,11 +196,11 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                                 <PopoverTrigger asChild>
                                 <Button variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                    {field.value && isValid(new Date(field.value)) ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
                                 </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
-                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                                <Calendar mode="single" selected={field.value && isValid(new Date(field.value)) ? new Date(field.value) : undefined} onSelect={field.onChange} initialFocus />
                                 </PopoverContent>
                             </Popover>
                         )}
@@ -197,15 +216,23 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                                 <PopoverTrigger asChild>
                                 <Button variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                    {field.value && isValid(new Date(field.value)) ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
                                 </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
-                                <Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} initialFocus />
+                                <Calendar mode="single" selected={field.value && isValid(new Date(field.value)) ? new Date(field.value) : undefined} onSelect={field.onChange} initialFocus />
                                 </PopoverContent>
                             </Popover>
                         )}
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="complianceChapterTag">Compliance Chapter Tag</Label>
+                    <Input id="complianceChapterTag" {...form.register("complianceChapterTag")} className="mt-1" placeholder="e.g., Ch. 14.31" />
+                  </div>
+                  <div>
+                    <Label htmlFor="validatorApproval">Validator Approval Notes</Label>
+                    <Input id="validatorApproval" {...form.register("validatorApproval")} className="mt-1" placeholder="e.g., Approved by Jane D. on..." />
                   </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="evidenceLink">Evidence Link (URL)</Label>
@@ -224,13 +251,17 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
               </>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <DetailItem icon={Clock} label="Start Date" value={format(new Date(task.startDate), 'PPP p')} />
-                <DetailItem icon={Clock} label="End Date" value={task.endDate ? format(new Date(task.endDate), 'PPP p') : undefined} />
+                <DetailItem icon={Clock} label="Start Date" value={task.startDate && isValid(new Date(task.startDate)) ? format(new Date(task.startDate), 'PPP p') : 'N/A'} />
+                <DetailItem icon={Clock} label="End Date" value={task.endDate && isValid(new Date(task.endDate)) ? format(new Date(task.endDate), 'PPP p') : undefined} />
                 <DetailItem icon={User} label="Assigned Staff" value={task.assignedStaff} />
                 <DetailItem icon={Briefcase} label="Responsible Role" value={task.responsibleRole} />
                 <DetailItem icon={Repeat} label="Frequency" value={task.frequency} />
-                <DetailItem icon={CheckSquare} label="Validator" value={task.validator} />
+                <DetailItem icon={CheckSquare} label="Validator Role" value={task.validator} />
                 <DetailItem icon={Percent} label="Progress" value={`${task.progress}%`} />
+                <DetailItem icon={BookOpen} label="Compliance Chapter" value={task.complianceChapterTag} />
+                <DetailItem icon={UserCheck} label="Completed By" value={task.completedBy} />
+                <DetailItem icon={Milestone} label="Last Completed On" value={task.lastCompletedOn && isValid(new Date(task.lastCompletedOn)) ? format(new Date(task.lastCompletedOn), 'PPP p') : undefined} />
+                <DetailItem icon={CheckSquare} label="Validator Approval" value={task.validatorApproval} />
                 <DetailItem 
                   icon={LinkIcon} 
                   label="Evidence" 
@@ -261,14 +292,14 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
             <Separator />
             <div>
               <h4 className="text-lg font-semibold mb-3">Activity Log</h4>
-              {task.activities.length > 0 ? (
+              {task.activities && task.activities.length > 0 ? (
                 <ScrollArea className="h-[150px] border rounded-md p-3 bg-muted/50">
                   <ul className="space-y-3">
                     {task.activities.map((activity, index) => (
                       <li key={index} className="text-xs">
                         <p className="font-medium">
                           {activity.user} - {activity.action}
-                          <span className="text-muted-foreground ml-2">({format(new Date(activity.timestamp), 'PPp')})</span>
+                          <span className="text-muted-foreground ml-2">({activity.timestamp && isValid(new Date(activity.timestamp)) ? format(new Date(activity.timestamp), 'PPp') : 'Invalid Date'})</span>
                         </p>
                         <p className="text-muted-foreground pl-2">{activity.details}</p>
                       </li>
@@ -305,3 +336,4 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
     </Dialog>
   );
 }
+

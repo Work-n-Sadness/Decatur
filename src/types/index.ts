@@ -11,7 +11,7 @@ export type TaskCategory =
   | 'Environmental & Sanitation Checks' 
   | 'Additional ALR-Required Tasks';
 export type TaskFrequency = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Mid Yearly' | 'Annually' | 'Bi-annually' | 'As Needed';
-export type Role = 'Nurse' | 'Caregiver' | 'Admin' | 'Maintenance' | 'Director';
+export type Role = 'Nurse' | 'Caregiver' | 'Admin' | 'Maintenance' | 'Director' | 'Wellness Nurse' | 'Housekeeping Supervisor' | 'QMAP Supervisor';
 
 export interface ActivityLog {
   timestamp: Date;
@@ -29,7 +29,7 @@ export interface Task {
   status: TaskStatus;
   progress: number; // 0-100
   assignedStaff: string;
-  validator: Role;
+  validator: Role; // The role responsible for validation
   startDate: Date;
   endDate: Date | null;
   time: string | null; // e.g., "10:00 AM"
@@ -37,6 +37,10 @@ export interface Task {
   notes: string;
   activities: ActivityLog[];
   evidenceLink?: string; // Link to evidence document/file
+  lastCompletedOn?: Date | null;
+  completedBy?: string | null; // Staff name who completed it
+  validatorApproval?: string | null; // Name/ID of staff who approved, or approval notes
+  complianceChapterTag?: string; // e.g., "Ch. 14.31"
 }
 
 export interface AuditCategory {

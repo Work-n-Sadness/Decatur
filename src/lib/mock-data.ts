@@ -15,12 +15,10 @@ const categories: TaskCategory[] = [
 ];
 const frequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Mid Yearly', 'Annually', 'Bi-annually', 'As Needed'];
 const statuses: TaskStatus[] = ['Pending', 'In Progress', 'Completed', 'Overdue', 'Blocked'];
-const roles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director'];
-const staffNames = ['Alice Smith', 'Bob Johnson', 'Carol Williams', 'David Brown', 'Eve Davis', 'Frank Wilson', 'Grace Lee'];
+const roles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director', 'Wellness Nurse', 'Housekeeping Supervisor', 'QMAP Supervisor'];
+const staffNames = ['Alice Smith', 'Bob Johnson', 'Carol Williams', 'David Brown', 'Eve Davis', 'Frank Wilson', 'Grace Lee', 'Henry Miller', 'Ivy Garcia'];
 
-const taskVerbs = ['Review', 'Update', 'Perform Check on', 'Document', 'Verify', 'Conduct Drill for'];
-// Note: 'Perform Resident Room Safety Compliance Check' is handled specially below
-// to avoid double verbs like "Verify Perform Resident Room Safety Compliance Check".
+const taskVerbs = ['Review', 'Update', 'Perform Check on', 'Document', 'Verify', 'Conduct Drill for', 'Audit'];
 const taskSubjectsAndFullNames = [
   'Patient Medication Chart', 
   'Kitchen Sanitization Log', 
@@ -29,20 +27,45 @@ const taskSubjectsAndFullNames = [
   'Staff Training Records', 
   'Emergency Contact List', 
   'Pest Control Measures',
-  'Perform Resident Room Safety Compliance Check' // This is a full name
+  'Perform Resident Room Safety Compliance Check',
+  'Medication Administration Record (MAR) logs',
+  'ECP audit files',
+  'Food temperature logs/photos',
+  'Fire drill checklists',
+  'Weekly medication audit summaries',
+  'QMAP audit tracking sheets',
+  'Staff training certificates',
+  'Caregiver daily activity logs',
+  'Resident file updates'
 ];
 
+const complianceChapters = ["Ch. 2.15", "Ch. 7.03", "Ch. 14.31", "Ch. 9.11", "Ch. 22.01", null, null, null]; // Some tasks might not have a chapter
 
-export const mockTasks: Task[] = Array.from({ length: 25 }, (_, i) => {
+export const mockTasks: Task[] = Array.from({ length: 35 }, (_, i) => {
   const startDate = getRandomDate(new Date(2023, 0, 1), new Date(2024, 6, 1));
   const endDate = Math.random() > 0.3 ? new Date(startDate.getTime() + (Math.floor(Math.random() * 30) + 1) * 24 * 60 * 60 * 1000) : null;
   const status = getRandomElement(statuses);
   const assignedStaff = getRandomElement(staffNames);
+  const responsibleRole = getRandomElement(roles);
+  const validatorRole = getRandomElement(roles.filter(r => r !== responsibleRole));
   
   const chosenSubjectOrFullName = getRandomElement(taskSubjectsAndFullNames);
   let descriptiveNamePart: string;
 
-  if (chosenSubjectOrFullName === 'Perform Resident Room Safety Compliance Check') {
+  const fullNamesDirectly = [
+    'Perform Resident Room Safety Compliance Check',
+    'Medication Administration Record (MAR) logs',
+    'ECP audit files',
+    'Food temperature logs/photos',
+    'Fire drill checklists',
+    'Weekly medication audit summaries',
+    'QMAP audit tracking sheets',
+    'Staff training certificates',
+    'Caregiver daily activity logs',
+    'Resident file updates'
+  ];
+
+  if (fullNamesDirectly.includes(chosenSubjectOrFullName)) {
     descriptiveNamePart = chosenSubjectOrFullName;
   } else {
     const chosenVerb = getRandomElement(taskVerbs);
@@ -52,16 +75,30 @@ export const mockTasks: Task[] = Array.from({ length: 25 }, (_, i) => {
   const taskName = `Task ${i + 1}: ${descriptiveNamePart}`;
   const hasEvidence = Math.random() > 0.6;
 
+  let lastCompletedOn: Date | null = null;
+  let completedBy: string | null = null;
+  let validatorApproval: string | null = null;
+
+  if (status === 'Completed') {
+    lastCompletedOn = endDate || new Date(startDate.getTime() + (Math.floor(Math.random() * 10) + 1) * 24 * 60 * 60 * 1000);
+    if (lastCompletedOn > new Date()) lastCompletedOn = new Date(new Date().getTime() - Math.random() * 1000 * 3600 * 24 * 5); // ensure it's in the past
+    completedBy = assignedStaff;
+    if (Math.random() > 0.4) {
+      validatorApproval = `Approved by ${getRandomElement(staffNames.filter(s => s !== assignedStaff))}`;
+    }
+  }
+
+
   return {
     id: `task_${i + 1}`,
     name: taskName,
     category: getRandomElement(categories),
     frequency: getRandomElement(frequencies),
-    responsibleRole: getRandomElement(roles),
+    responsibleRole,
     status,
     progress: status === 'Completed' ? 100 : (status === 'In Progress' ? Math.floor(Math.random() * 80) + 10 : (status === 'Blocked' || status === 'Overdue' ? Math.floor(Math.random()*30) : 0)),
     assignedStaff,
-    validator: getRandomElement(roles.filter(r => r !== roles[i % roles.length])), // Ensure validator is different
+    validator: validatorRole,
     startDate,
     endDate,
     time: Math.random() > 0.5 ? `${Math.floor(Math.random() * 12) + 1}:${['00', '15', '30', '45'][Math.floor(Math.random()*4)]} ${getRandomElement(['AM', 'PM'])}` : null,
@@ -70,10 +107,14 @@ export const mockTasks: Task[] = Array.from({ length: 25 }, (_, i) => {
     activities: [
       { timestamp: new Date(startDate.getTime() - (Math.floor(Math.random() * 5) + 1) * 24 * 60 * 60 * 1000), user: 'System', action: 'Task Auto-Generated', details: 'Task created based on schedule.' },
       ...(status !== 'Pending' ? [{ timestamp: startDate, user: assignedStaff, action: 'Task Started', details: 'Commenced work on task.' }] : []),
-      ...(status === 'Completed' ? [{ timestamp: endDate || new Date(), user: assignedStaff, action: 'Task Completed', details: 'Task marked as complete.' }] : []),
+      ...(status === 'Completed' && lastCompletedOn ? [{ timestamp: lastCompletedOn, user: completedBy || assignedStaff, action: 'Task Completed', details: 'Task marked as complete.' }] : []),
       ...(status === 'Blocked' ? [{ timestamp: new Date(startDate.getTime() + 1 * 24 * 60 * 60 * 1000), user: assignedStaff, action: 'Task Blocked', details: 'Issue preventing progress.' }] : []),
     ],
     evidenceLink: hasEvidence ? `https://docs.google.com/document/d/example${i+1}` : undefined,
+    lastCompletedOn,
+    completedBy,
+    validatorApproval,
+    complianceChapterTag: getRandomElement(complianceChapters) || undefined,
   };
 });
 
@@ -96,4 +137,7 @@ export const mockStaffResponsibilityMatrix = roles.map(role => ({
     .slice(0, Math.floor(Math.random() * 3) + 2) // Show 2-4 tasks per role
     .map(task => ({ taskName: task.name, deliverables: task.deliverables, category: task.category })),
 }));
+
+export const allMockRoles = roles; // Export all roles for use in filters etc.
+export const allMockComplianceChapters = Array.from(new Set(mockTasks.map(t => t.complianceChapterTag).filter(Boolean))) as string[];
 

@@ -4,33 +4,37 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays } from "lucide-react"; // Added FilterIcon and CalendarDays
+import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText } from "lucide-react"; // Added BookOpen, FileText
 import type { TaskCategory, TaskStatus, Role, TaskFrequency } from "@/types";
 
 interface DashboardFiltersProps {
   onSearch: (term: string) => void;
-  onFilterChange: (filters: Partial<{ category: TaskCategory; status: TaskStatus; role: Role; frequency: TaskFrequency }>) => void;
+  onFilterChange: (filters: Partial<{ category: TaskCategory; status: TaskStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>) => void;
   onSortChange: (sortBy: string) => void;
-  onExport: () => void;
+  onExportReport: () => void;
+  onExportAuditLog: () => void;
   categories: TaskCategory[];
   statuses: TaskStatus[];
   roles: Role[];
-  frequencies: TaskFrequency[]; // Added frequencies prop
+  frequencies: TaskFrequency[];
+  complianceChapterTags: string[];
 }
 
 export default function DashboardFilters({ 
   onSearch, 
   onFilterChange, 
   onSortChange, 
-  onExport,
+  onExportReport,
+  onExportAuditLog,
   categories,
   statuses,
   roles,
-  frequencies // Added frequencies prop
+  frequencies,
+  complianceChapterTags
 }: DashboardFiltersProps) {
   return (
-    <div className="mb-6 p-4 bg-card rounded-lg shadow">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-end"> {/* Adjusted grid for new filter */}
+    <div className="mb-6 p-4 bg-card rounded-lg shadow space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 items-end"> {/* Main filters row */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -84,30 +88,46 @@ export default function DashboardFilters({
             {frequencies.map(freq => <SelectItem key={freq} value={freq}>{freq}</SelectItem>)}
           </SelectContent>
         </Select>
-        
-        <div className="col-span-full lg:col-span-2 xl:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select onValueChange={(value) => onSortChange(value)}>
-            <SelectTrigger>
-                <ArrowDownUp className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Sort by..." />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="name_asc">Name (A-Z)</SelectItem>
-                <SelectItem value="name_desc">Name (Z-A)</SelectItem>
-                <SelectItem value="dueDate_asc">Due Date (Oldest)</SelectItem>
-                <SelectItem value="dueDate_desc">Due Date (Newest)</SelectItem>
-                <SelectItem value="status">Status</SelectItem>
-                <SelectItem value="progress_desc">Progress (High-Low)</SelectItem>
-                <SelectItem value="progress_asc">Progress (Low-High)</SelectItem>
-                <SelectItem value="frequency">Frequency</SelectItem>
-            </SelectContent>
-            </Select>
+
+        <Select onValueChange={(value) => onFilterChange({ complianceChapterTag: value === 'all' ? undefined : value })}>
+          <SelectTrigger>
+            <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
+            <SelectValue placeholder="Filter by Compliance Chapter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Compliance Chapters</SelectItem>
+            {complianceChapterTags.map(tag => <SelectItem key={tag} value={tag}>{tag}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end"> {/* Sort and Export row */}
+        <Select onValueChange={(value) => onSortChange(value)}>
+          <SelectTrigger>
+              <ArrowDownUp className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Sort by..." />
+          </SelectTrigger>
+          <SelectContent>
+              <SelectItem value="name_asc">Name (A-Z)</SelectItem>
+              <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+              <SelectItem value="dueDate_asc">Due Date (Oldest)</SelectItem>
+              <SelectItem value="dueDate_desc">Due Date (Newest)</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="progress_desc">Progress (High-Low)</SelectItem>
+              <SelectItem value="progress_asc">Progress (Low-High)</SelectItem>
+              <SelectItem value="frequency">Frequency</SelectItem>
+          </SelectContent>
+        </Select>
             
-            <Button onClick={onExport} variant="outline" className="w-full">
-            <Download className="mr-2 h-4 w-4" />
-            Export Report
-            </Button>
-        </div>
+        <Button onClick={onExportReport} variant="outline" className="w-full">
+          <Download className="mr-2 h-4 w-4" />
+          Export Task Report
+        </Button>
+
+        <Button onClick={onExportAuditLog} variant="outline" className="w-full">
+          <FileText className="mr-2 h-4 w-4" />
+          Export Audit Log
+        </Button>
       </div>
     </div>
   );
