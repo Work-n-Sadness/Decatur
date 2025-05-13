@@ -4,7 +4,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText } from "lucide-react"; // Added BookOpen, FileText
+import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText, Package } from "lucide-react"; // Added Package for Survey Prep
 import type { TaskCategory, TaskStatus, Role, TaskFrequency } from "@/types";
 
 interface DashboardFiltersProps {
@@ -13,6 +13,7 @@ interface DashboardFiltersProps {
   onSortChange: (sortBy: string) => void;
   onExportReport: () => void;
   onExportAuditLog: () => void;
+  onExportSurveyPrepPacket: () => void; // Added new prop
   categories: TaskCategory[];
   statuses: TaskStatus[];
   roles: Role[];
@@ -26,6 +27,7 @@ export default function DashboardFilters({
   onSortChange, 
   onExportReport,
   onExportAuditLog,
+  onExportSurveyPrepPacket, // Added new prop
   categories,
   statuses,
   roles,
@@ -101,7 +103,7 @@ export default function DashboardFilters({
         </Select>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end"> {/* Sort and Export row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end"> {/* Sort and Export row, adjusted to 4 columns */}
         <Select onValueChange={(value) => onSortChange(value)}>
           <SelectTrigger>
               <ArrowDownUp className="mr-2 h-4 w-4" />
@@ -128,8 +130,12 @@ export default function DashboardFilters({
           <FileText className="mr-2 h-4 w-4" />
           Export Audit Log
         </Button>
+
+        <Button onClick={onExportSurveyPrepPacket} variant="outline" className="w-full"> {/* New Button */}
+          <Package className="mr-2 h-4 w-4" />
+          Export Survey Packet
+        </Button>
       </div>
     </div>
   );
 }
-

@@ -1,5 +1,5 @@
 
-import type { Task, TaskCategory, TaskFrequency, TaskStatus, Role, AuditCategory, AuditItem } from '@/types';
+import type { Task, TaskCategory, TaskFrequency, TaskStatus, Role, AuditCategory, AuditItem, StaffTrainingRecord, TrainingType, TrainingStatus } from '@/types';
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -16,7 +16,7 @@ const categories: TaskCategory[] = [
 const frequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Mid Yearly', 'Annually', 'Bi-annually', 'As Needed'];
 const statuses: TaskStatus[] = ['Pending', 'In Progress', 'Completed', 'Overdue', 'Blocked'];
 const roles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director', 'Wellness Nurse', 'Housekeeping Supervisor', 'QMAP Supervisor'];
-const staffNames = ['Alice Smith', 'Bob Johnson', 'Carol Williams', 'David Brown', 'Eve Davis', 'Frank Wilson', 'Grace Lee', 'Henry Miller', 'Ivy Garcia'];
+const staffNames = ['Alice Smith', 'Bob Johnson', 'Carol Williams', 'David Brown', 'Eve Davis', 'Frank Wilson', 'Grace Lee', 'Henry Miller', 'Ivy Garcia', 'Jack Robinson', 'Kate Young'];
 
 const taskVerbs = ['Review', 'Update', 'Perform Check on', 'Document', 'Verify', 'Conduct Drill for', 'Audit'];
 const taskSubjectsAndFullNames = [
@@ -138,6 +138,58 @@ export const mockStaffResponsibilityMatrix = roles.map(role => ({
     .map(task => ({ taskName: task.name, deliverables: task.deliverables, category: task.category })),
 }));
 
+// Mock Data for Staff Training Dashboard
+const trainingTypes: TrainingType[] = ['QMAP Training', 'TB Test', 'CPR Certification', 'Orientation'];
+const trainingStatuses: TrainingStatus[] = ['Compliant', 'Expiring Soon', 'Overdue', 'Pending Documentation'];
+
+const generateTrainingDates = (): { completionDate?: Date | null, expiryDate?: Date | null, status: TrainingStatus } => {
+  const today = new Date();
+  const completionDate = Math.random() > 0.1 ? getRandomDate(new Date(today.getFullYear() - 2, 0, 1), today) : null;
+  let expiryDate: Date | null = null;
+  let status: TrainingStatus;
+
+  if (!completionDate) {
+    status = 'Pending Documentation';
+  } else {
+    const hasExpiry = Math.random() > 0.3;
+    if (hasExpiry) {
+      expiryDate = new Date(completionDate.getFullYear() + getRandomElement([1, 2]), completionDate.getMonth(), completionDate.getDate());
+      const daysUntilExpiry = (expiryDate.getTime() - today.getTime()) / (1000 * 3600 * 24);
+      if (daysUntilExpiry < 0) {
+        status = 'Overdue';
+      } else if (daysUntilExpiry <= 30) {
+        status = 'Expiring Soon';
+      } else {
+        status = 'Compliant';
+      }
+    } else { // No expiry, e.g., Orientation
+      status = 'Compliant';
+    }
+  }
+  return { completionDate, expiryDate, status };
+};
+
+export const mockStaffTrainingData: StaffTrainingRecord[] = staffNames.flatMap((staffName, staffIndex) => 
+  trainingTypes.map((trainingType, trainingTypeIndex) => {
+    const { completionDate, expiryDate, status } = generateTrainingDates();
+    const staffRole = roles[staffIndex % roles.length]; // Assign roles cyclically for variety
+    return {
+      id: `training_${staffIndex + 1}_${trainingTypeIndex + 1}`,
+      staffMemberName: staffName,
+      staffRole,
+      trainingType,
+      completionDate,
+      expiryDate,
+      status: expiryDate ? status : (completionDate ? 'Compliant' : 'Pending Documentation'), // Override status if no expiry
+      documentationLink: Math.random() > 0.5 ? `https://docs.google.com/document/d/training_cert_${staffIndex+1}_${trainingTypeIndex+1}` : undefined,
+      notes: Math.random() > 0.7 ? getRandomElement(['Attended refresher course.', 'Submitted via email.', 'To be updated next week.']) : undefined,
+    };
+  })
+);
+
 export const allMockRoles = roles; // Export all roles for use in filters etc.
 export const allMockComplianceChapters = Array.from(new Set(mockTasks.map(t => t.complianceChapterTag).filter(Boolean))) as string[];
-
+export const allMockStaffNames = staffNames;
+export const allTrainingTypes = trainingTypes;
+export const allTrainingStatuses = trainingStatuses;
+export const allTaskCategories = categories; // Export all categories for compliance summary

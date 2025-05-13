@@ -28,13 +28,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Building2, LogOut, UserCircle, Moon, Sun } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
-import { SidebarIcons } from '@/components/icons'; // Import SidebarIcons
+import { SidebarIcons } from '@/components/icons'; 
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: SidebarIcons.Dashboard },
   { href: '/audit-tool', label: 'Audit Tool', icon: SidebarIcons.AuditTool },
   { href: '/staff-matrix', label: 'Staff Matrix', icon: SidebarIcons.StaffMatrix },
   { href: '/reports', label: 'Reports', icon: SidebarIcons.Reports },
+  { href: '/compliance-summary', label: 'Compliance Summary', icon: SidebarIcons.ComplianceSummary },
+  { href: '/staff-training', label: 'Staff Training', icon: SidebarIcons.StaffTraining },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

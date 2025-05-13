@@ -12,14 +12,16 @@ import {
   CircleDot,
   Loader2,
   CheckCircle2,
-  AlertTriangle, // Changed from Clock
+  AlertTriangle,
   ShieldX,
   type LucideIcon,
   GanttChartSquare,
   FilePieChart,
   Settings2,
   Repeat,
-  CalendarClock, // For frequency icon differentiation if needed later
+  CalendarClock,
+  ClipboardCheck, // Added for Compliance Summary
+  UsersRound, // Added for Staff Training
 } from 'lucide-react';
 import type { TaskCategory, TaskStatus, TaskFrequency } from '@/types';
 
@@ -39,13 +41,13 @@ export const TaskStatusIcons: Record<TaskStatus, LucideIcon> = {
   Pending: CircleDot,
   'In Progress': Loader2,
   Completed: CheckCircle2,
-  Overdue: AlertTriangle, // Changed from Clock to AlertTriangle
+  Overdue: AlertTriangle,
   Blocked: ShieldX,
 };
 
 export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
   Daily: Repeat,
-  Weekly: CalendarClock, // Example: using a different icon for Weekly
+  Weekly: CalendarClock, 
   Monthly: CalendarClock,
   Quarterly: CalendarClock,
   'Mid Yearly': CalendarClock,
@@ -60,6 +62,8 @@ export const SidebarIcons = {
   AuditTool: Settings2, 
   StaffMatrix: Users, 
   Reports: FilePieChart,
+  ComplianceSummary: ClipboardCheck,
+  StaffTraining: UsersRound,
 };
 
 export const getTaskCategoryIcon = (category: TaskCategory) => {

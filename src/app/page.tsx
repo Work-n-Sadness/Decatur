@@ -86,6 +86,11 @@ export default function DashboardPage() {
     }
   };
 
+  const escapeCsvField = (field: any): string => {
+    const stringField = String(field === null || field === undefined ? '' : field);
+    return `"${stringField.replace(/"/g, '""')}"`;
+  };
+
   const handleExportReport = () => {
     const headers = ["ID", "Name", "Category", "Frequency", "Responsible Role", "Status", "Progress", "Assigned Staff", "Validator Role", "Start Date", "End Date", "Deliverables", "Notes", "Evidence Link", "Last Completed On", "Completed By", "Validator Approval", "Compliance Chapter"];
     const rows = filteredAndSortedTasks.map(task => [
@@ -107,7 +112,7 @@ export default function DashboardPage() {
       task.completedBy || '',
       task.validatorApproval || '',
       task.complianceChapterTag || '',
-    ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')); // Escape quotes and wrap in quotes
+    ].map(escapeCsvField).join(','));
     
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
     const encodedUri = encodeURI(csvContent);
@@ -151,11 +156,11 @@ export default function DashboardPage() {
             activity.action,
             activity.details
           ];
-          rows.push([...commonTaskData, ...activityData].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','));
+          rows.push([...commonTaskData, ...activityData].map(escapeCsvField).join(','));
         });
       } else {
         // Task with no activities, still list it with empty activity fields
-        rows.push([...commonTaskData, '', '', '', ''].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','));
+        rows.push([...commonTaskData, '', '', '', ''].map(escapeCsvField).join(','));
       }
     });
 
@@ -168,6 +173,46 @@ export default function DashboardPage() {
     link.click();
     document.body.removeChild(link);
     toast({ title: "Audit Log Exported", description: "Task audit log has been downloaded as CSV." });
+  };
+
+  const handleExportSurveyPrepPacket = () => {
+    const headers = [
+      "Task ID", "Task Name", "Category", "Frequency", "Responsible Role", "Assigned Staff", 
+      "Validator Role", "Status", "Progress", "Start Date", "End Date", 
+      "Deliverables", "Notes", "Evidence Link", "Last Completed On", "Completed By", 
+      "Validator Approval", "Compliance Chapter", "Activities (JSON)"
+    ];
+    const rows = filteredAndSortedTasks.map(task => [
+      task.id,
+      task.name,
+      task.category,
+      task.frequency,
+      task.responsibleRole,
+      task.status,
+      task.progress,
+      task.assignedStaff,
+      task.validator,
+      task.startDate ? format(new Date(task.startDate), 'yyyy-MM-dd HH:mm') : '',
+      task.endDate ? format(new Date(task.endDate), 'yyyy-MM-dd HH:mm') : '',
+      task.deliverables,
+      task.notes,
+      task.evidenceLink || '',
+      task.lastCompletedOn ? format(new Date(task.lastCompletedOn), 'yyyy-MM-dd HH:mm') : '',
+      task.completedBy || '',
+      task.validatorApproval || '',
+      task.complianceChapterTag || '',
+      JSON.stringify(task.activities.map(act => ({ ...act, timestamp: act.timestamp ? format(new Date(act.timestamp), 'yyyy-MM-dd HH:mm') : ''})))
+    ].map(escapeCsvField).join(','));
+    
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "survey_prep_packet.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({ title: "Survey Prep Packet Exported", description: "Survey prep packet has been downloaded as CSV." });
   };
 
 
@@ -223,6 +268,7 @@ export default function DashboardPage() {
         onSortChange={handleSortChange}
         onExportReport={handleExportReport}
         onExportAuditLog={handleExportAuditLog}
+        onExportSurveyPrepPacket={handleExportSurveyPrepPacket} // Added
         categories={uniqueCategories}
         statuses={uniqueStatuses}
         roles={uniqueRoles}
@@ -267,4 +313,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

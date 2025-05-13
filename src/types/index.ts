@@ -57,3 +57,19 @@ export interface AuditItem {
   evidence?: string; // Path or link to evidence
 }
 
+// Types for Staff Training Dashboard
+export type TrainingType = 'QMAP Training' | 'TB Test' | 'CPR Certification' | 'Orientation';
+export type TrainingStatus = 'Compliant' | 'Expiring Soon' | 'Overdue' | 'Pending Documentation';
+
+export interface StaffTrainingRecord {
+  id: string;
+  staffMemberName: string;
+  staffRole: Role;
+  trainingType: TrainingType;
+  completionDate?: Date | null;
+  expiryDate?: Date | null;
+  status: TrainingStatus;
+  documentationLink?: string; // Link to certificate or record
+  notes?: string;
+}
+
