@@ -18,14 +18,42 @@ const statuses: TaskStatus[] = ['Pending', 'In Progress', 'Completed', 'Overdue'
 const roles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director'];
 const staffNames = ['Alice Smith', 'Bob Johnson', 'Carol Williams', 'David Brown', 'Eve Davis', 'Frank Wilson', 'Grace Lee'];
 
+const taskVerbs = ['Review', 'Update', 'Perform Check on', 'Document', 'Verify', 'Conduct Drill for'];
+// Note: 'Perform Resident Room Safety Compliance Check' is handled specially below
+// to avoid double verbs like "Verify Perform Resident Room Safety Compliance Check".
+const taskSubjectsAndFullNames = [
+  'Patient Medication Chart', 
+  'Kitchen Sanitization Log', 
+  'Fire Extinguisher Status', 
+  'Resident Admission Forms', 
+  'Staff Training Records', 
+  'Emergency Contact List', 
+  'Pest Control Measures',
+  'Perform Resident Room Safety Compliance Check' // This is a full name
+];
+
+
 export const mockTasks: Task[] = Array.from({ length: 25 }, (_, i) => {
   const startDate = getRandomDate(new Date(2023, 0, 1), new Date(2024, 6, 1));
   const endDate = Math.random() > 0.3 ? new Date(startDate.getTime() + (Math.floor(Math.random() * 30) + 1) * 24 * 60 * 60 * 1000) : null;
   const status = getRandomElement(statuses);
   const assignedStaff = getRandomElement(staffNames);
+  
+  const chosenSubjectOrFullName = getRandomElement(taskSubjectsAndFullNames);
+  let descriptiveNamePart: string;
+
+  if (chosenSubjectOrFullName === 'Perform Resident Room Safety Compliance Check') {
+    descriptiveNamePart = chosenSubjectOrFullName;
+  } else {
+    const chosenVerb = getRandomElement(taskVerbs);
+    descriptiveNamePart = `${chosenVerb} ${chosenSubjectOrFullName}`;
+  }
+  
+  const taskName = `Task ${i + 1}: ${descriptiveNamePart}`;
+
   return {
     id: `task_${i + 1}`,
-    name: `Task ${i + 1}: ${getRandomElement(['Review', 'Update', 'Perform Check', 'Document', 'Verify', 'Conduct Drill'])} ${getRandomElement(['Patient Medication Chart', 'Kitchen Sanitization Log', 'Fire Extinguisher Status', 'Resident Admission Forms', 'Staff Training Records', 'Emergency Contact List', 'Pest Control Measures', 'General Safety Walkthrough'])}`,
+    name: taskName,
     category: getRandomElement(categories),
     frequency: getRandomElement(frequencies),
     responsibleRole: getRandomElement(roles),
