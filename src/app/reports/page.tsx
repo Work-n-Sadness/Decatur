@@ -9,14 +9,16 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BarChart3, CalendarIcon, Download, Filter, FileText } from "lucide-react";
+import { BarChart3, CalendarIcon, Download, Filter, FileText, Repeat } from "lucide-react"; // Added Repeat
 import { format } from "date-fns";
-import { mockTasks } from '@/lib/mock-data'; // For populating filter options
-import type { TaskCategory, TaskStatus, Role } from '@/types';
+import { mockTasks } from '@/lib/mock-data'; 
+import type { TaskCategory, TaskStatus, Role, TaskFrequency } from '@/types';
 
 const uniqueCategories = Array.from(new Set(mockTasks.map(task => task.category))) as TaskCategory[];
 const uniqueStatuses = Array.from(new Set(mockTasks.map(task => task.status))) as TaskStatus[];
 const uniqueRoles = Array.from(new Set(mockTasks.map(task => task.responsibleRole))) as Role[];
+const allFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Mid Yearly', 'Annually', 'Bi-annually', 'As Needed'];
+
 
 export default function ReportsPage() {
   const [reportType, setReportType] = useState<string>('');
@@ -24,15 +26,17 @@ export default function ReportsPage() {
   const [selectedCategories, setSelectedCategories] = useState<TaskCategory[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<TaskStatus[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<Role[]>([]);
+  const [selectedFrequencies, setSelectedFrequencies] = useState<TaskFrequency[]>([]);
+
 
   const handleGenerateReport = () => {
-    // Placeholder for report generation logic
     console.log("Generating report with criteria:", {
       reportType,
       dateRange,
       selectedCategories,
       selectedStatuses,
       selectedRoles,
+      selectedFrequencies,
     });
     alert("Report generation initiated (see console for criteria). This is a placeholder.");
   };
@@ -70,6 +74,7 @@ export default function ReportsPage() {
                   <SelectItem value="overdue_tasks">Overdue Tasks Report</SelectItem>
                   <SelectItem value="staff_performance">Staff Performance Overview</SelectItem>
                   <SelectItem value="audit_summary">Audit Summary Report</SelectItem>
+                  <SelectItem value="frequency_analysis">Task Frequency Analysis</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -113,7 +118,7 @@ export default function ReportsPage() {
           
           <div className="space-y-4 p-6 border rounded-lg bg-muted/30">
              <h3 className="text-lg font-semibold flex items-center gap-2"><Filter className="h-5 w-5 text-muted-foreground" /> Filter Criteria</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"> {/* Adjusted to 4 columns */}
                 <div>
                     <Label className="text-sm font-medium mb-2 block">Task Categories</Label>
                     <div className="space-y-1 max-h-40 overflow-y-auto p-2 border rounded-md bg-background">
@@ -147,6 +152,19 @@ export default function ReportsPage() {
                         ))}
                     </div>
                 </div>
+                <div>
+                    <Label className="text-sm font-medium mb-2 block">Task Frequencies</Label>
+                     <div className="space-y-1 max-h-40 overflow-y-auto p-2 border rounded-md bg-background">
+                        {allFrequencies.map(freq => (
+                            <div key={freq} className="flex items-center space-x-2">
+                                <Checkbox id={`freq-${freq}`} checked={selectedFrequencies.includes(freq)} onCheckedChange={() => toggleSelection(selectedFrequencies, freq, setSelectedFrequencies)} />
+                                <Label htmlFor={`freq-${freq}`} className="text-sm font-normal cursor-pointer flex items-center gap-1.5">
+                                  <Repeat className="h-3 w-3 text-muted-foreground" /> {freq}
+                                </Label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
           </div>
 
@@ -157,7 +175,6 @@ export default function ReportsPage() {
             </Button>
           </div>
 
-          {/* Placeholder for displaying the generated report */}
           <div className="mt-8 p-6 border rounded-lg bg-muted/30 min-h-[200px] flex items-center justify-center">
             <div className="text-center text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-2" />

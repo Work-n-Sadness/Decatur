@@ -13,7 +13,7 @@ const categories: TaskCategory[] = [
   'Documentation & Compliance', 'Personnel File & Staff Training',
   'Postings & Required Notices', 'Environmental & Sanitation Checks', 'Additional ALR-Required Tasks'
 ];
-const frequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually', 'As Needed'];
+const frequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Mid Yearly', 'Annually', 'Bi-annually', 'As Needed'];
 const statuses: TaskStatus[] = ['Pending', 'In Progress', 'Completed', 'Overdue', 'Blocked'];
 const roles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director'];
 const staffNames = ['Alice Smith', 'Bob Johnson', 'Carol Williams', 'David Brown', 'Eve Davis', 'Frank Wilson', 'Grace Lee'];
@@ -94,3 +94,4 @@ export const mockStaffResponsibilityMatrix = roles.map(role => ({
     .slice(0, Math.floor(Math.random() * 3) + 2) // Show 2-4 tasks per role
     .map(task => ({ taskName: task.name, deliverables: task.deliverables, category: task.category })),
 }));
+

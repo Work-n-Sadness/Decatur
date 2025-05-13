@@ -10,7 +10,7 @@ export type TaskCategory =
   | 'Postings & Required Notices' 
   | 'Environmental & Sanitation Checks' 
   | 'Additional ALR-Required Tasks';
-export type TaskFrequency = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Annually' | 'As Needed';
+export type TaskFrequency = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Mid Yearly' | 'Annually' | 'Bi-annually' | 'As Needed';
 export type Role = 'Nurse' | 'Caregiver' | 'Admin' | 'Maintenance' | 'Director';
 
 export interface ActivityLog {
@@ -51,3 +51,4 @@ export interface AuditItem {
   notes: string;
   evidence?: string; // Path or link to evidence
 }
+

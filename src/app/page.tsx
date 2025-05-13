@@ -6,7 +6,7 @@ import TaskCard from '@/components/dashboard/task-card';
 import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
 import DashboardFilters from '@/components/dashboard/dashboard-filters';
 import { mockTasks } from '@/lib/mock-data';
-import type { Task, TaskCategory, TaskStatus, Role } from '@/types';
+import type { Task, TaskCategory, TaskStatus, Role, TaskFrequency } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 const uniqueCategories = Array.from(new Set(mockTasks.map(task => task.category))) as TaskCategory[];
 const uniqueStatuses = Array.from(new Set(mockTasks.map(task => task.status))) as TaskStatus[];
 const uniqueRoles = Array.from(new Set(mockTasks.map(task => task.responsibleRole))) as Role[];
+const allFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Mid Yearly', 'Annually', 'Bi-annually', 'As Needed'];
 
 
 export default function DashboardPage() {
@@ -21,7 +22,7 @@ export default function DashboardPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState<Partial<{ category: TaskCategory; status: TaskStatus; role: Role }>>({});
+  const [filters, setFilters] = useState<Partial<{ category: TaskCategory; status: TaskStatus; role: Role; frequency: TaskFrequency }>>({});
   const [sortBy, setSortBy] = useState<string>('dueDate_asc');
   const { toast } = useToast();
 
@@ -31,7 +32,7 @@ export default function DashboardPage() {
   }, []);
 
   const handleSearch = (term: string) => setSearchTerm(term.toLowerCase());
-  const handleFilterChange = (newFilters: Partial<{ category: TaskCategory; status: TaskStatus; role: Role }>) => {
+  const handleFilterChange = (newFilters: Partial<{ category: TaskCategory; status: TaskStatus; role: Role; frequency: TaskFrequency }>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
   const handleSortChange = (newSortBy: string) => setSortBy(newSortBy);
@@ -53,12 +54,9 @@ export default function DashboardPage() {
       description: `Task "${updatedTask.name}" has been saved successfully.`,
       variant: "default", 
     });
-    // In a real app, you'd send this to a server
-    // For now, just update local state
   };
 
   const handleExport = () => {
-    // Basic CSV export
     const headers = ["ID", "Name", "Category", "Frequency", "Responsible Role", "Status", "Progress", "Assigned Staff", "Validator", "Start Date", "End Date", "Deliverables", "Notes"];
     const rows = filteredAndSortedTasks.map(task => [
       task.id,
@@ -91,7 +89,8 @@ export default function DashboardPage() {
       .filter(task => task.name.toLowerCase().includes(searchTerm))
       .filter(task => !filters.category || filters.category === 'all' || task.category === filters.category)
       .filter(task => !filters.status || filters.status === 'all' || task.status === filters.status)
-      .filter(task => !filters.role || filters.role === 'all' || task.responsibleRole === filters.role);
+      .filter(task => !filters.role || filters.role === 'all' || task.responsibleRole === filters.role)
+      .filter(task => !filters.frequency || filters.frequency === 'all' || task.frequency === filters.frequency);
 
     switch (sortBy) {
       case 'name_asc':
@@ -115,6 +114,10 @@ export default function DashboardPage() {
       case 'progress_desc':
         currentTasks.sort((a,b) => b.progress - a.progress);
         break;
+      case 'frequency':
+        // Basic frequency sort - could be made smarter if order of frequencies matters
+        currentTasks.sort((a,b) => a.frequency.localeCompare(b.frequency));
+        break;
       default:
         break;
     }
@@ -131,6 +134,7 @@ export default function DashboardPage() {
         categories={uniqueCategories}
         statuses={uniqueStatuses}
         roles={uniqueRoles}
+        frequencies={allFrequencies} // Pass allFrequencies
       />
 
       {filteredAndSortedTasks.length > 0 ? (
@@ -158,3 +162,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

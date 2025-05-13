@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getTaskCategoryIcon, getTaskStatusIcon } from '@/components/icons';
+import { getTaskCategoryIcon, getTaskStatusIcon, getTaskFrequencyIcon } from '@/components/icons';
 import { CalendarDays, User, CheckSquare, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -18,6 +18,7 @@ interface TaskCardProps {
 export default function TaskCard({ task, onOpenDetails }: TaskCardProps) {
   const CategoryIcon = getTaskCategoryIcon(task.category);
   const StatusIconWithClass = getTaskStatusIcon(task.status);
+  const FrequencyIcon = getTaskFrequencyIcon(task.frequency);
   
   const getStatusColor = (status: Task['status']) => {
     switch (status) {
@@ -43,6 +44,9 @@ export default function TaskCard({ task, onOpenDetails }: TaskCardProps) {
         <CardTitle className="text-lg leading-tight">{task.name}</CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
           <Tag className="inline-block h-3 w-3 mr-1" /> {task.category}
+        </CardDescription>
+         <CardDescription className="text-xs text-muted-foreground pt-1 flex items-center">
+          <FrequencyIcon className="inline-block h-3 w-3 mr-1.5" /> Frequency: {task.frequency}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
@@ -73,3 +77,4 @@ export default function TaskCard({ task, onOpenDetails }: TaskCardProps) {
     </Card>
   );
 }
+
