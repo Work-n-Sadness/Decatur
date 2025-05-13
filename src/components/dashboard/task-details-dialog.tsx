@@ -1,0 +1,274 @@
+
+"use client";
+
+import type { Task, ActivityLog, TaskStatus, TaskCategory, Role, TaskFrequency } from '@/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { getTaskCategoryIcon, getTaskStatusIcon } from '@/components/icons';
+import { CalendarIcon, User, Briefcase, Edit3, Save, X, ListChecks, Percent, Clock, Repeat, CheckSquare } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import React, { useEffect, useState } from 'react';
+
+const taskSchema = z.object({
+  name: z.string().min(1, "Task name is required"),
+  notes: z.string().optional(),
+  assignedStaff: z.string().min(1, "Assigned staff is required"),
+  status: z.enum(['Pending', 'In Progress', 'Completed', 'Overdue', 'Blocked']),
+  progress: z.number().min(0).max(100),
+  startDate: z.date(),
+  endDate: z.date().nullable(),
+  deliverables: z.string().optional(),
+});
+
+type TaskFormData = z.infer<typeof taskSchema>;
+
+interface TaskDetailsDialogProps {
+  task: Task | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (updatedTask: Task) => void; // Mock save
+}
+
+const taskStatuses: TaskStatus[] = ['Pending', 'In Progress', 'Completed', 'Overdue', 'Blocked'];
+const taskCategories: TaskCategory[] = [
+  'Health Protocols / Medications', 'Food Safety', 'Fire Safety', 'Office Admin',
+  'Documentation & Compliance', 'Personnel File & Staff Training',
+  'Postings & Required Notices', 'Environmental & Sanitation Checks', 'Additional ALR-Required Tasks'
+];
+const roles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director'];
+const frequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually', 'As Needed'];
+
+export default function TaskDetailsDialog({ task, isOpen, onClose, onSave }: TaskDetailsDialogProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const form = useForm<TaskFormData>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {},
+  });
+
+  useEffect(() => {
+    if (task) {
+      form.reset({
+        name: task.name,
+        notes: task.notes,
+        assignedStaff: task.assignedStaff,
+        status: task.status,
+        progress: task.progress,
+        startDate: typeof task.startDate === 'string' ? parseISO(task.startDate) : new Date(task.startDate),
+        endDate: task.endDate ? (typeof task.endDate === 'string' ? parseISO(task.endDate) : new Date(task.endDate)) : null,
+        deliverables: task.deliverables,
+      });
+    }
+  }, [task, form, isOpen]);
+
+  if (!task) return null;
+
+  const CategoryIcon = getTaskCategoryIcon(task.category);
+  const StatusIconWithClass = getTaskStatusIcon(task.status);
+
+  const handleSubmit = (data: TaskFormData) => {
+    const updatedTask: Task = {
+      ...task,
+      ...data,
+      startDate: data.startDate,
+      endDate: data.endDate,
+    };
+    onSave(updatedTask); // Call mock save
+    setIsEditing(false);
+    // onClose(); // Optionally close dialog on save
+  };
+
+  const DetailItem: React.FC<{icon: React.ElementType, label: string, value: React.ReactNode}> = ({ icon: Icon, label, value }) => (
+    <div className="flex items-start space-x-3">
+      <Icon className="h-5 w-5 text-muted-foreground mt-1 shrink-0" />
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="text-sm text-foreground">{value || 'N/A'}</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-4 border-b">
+          <div className="flex items-center space-x-3">
+            <CategoryIcon className="h-7 w-7 text-accent" />
+            <DialogTitle className="text-2xl">{isEditing ? 'Edit Task' : task.name}</DialogTitle>
+          </div>
+          <DialogDescription className="flex items-center gap-2 pt-1">
+            {StatusIconWithClass} {task.status}
+            <span className="mx-1 text-muted-foreground">&bull;</span>
+            Category: {task.category}
+          </DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea className="flex-grow">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="p-6 space-y-6">
+            {isEditing ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Task Name</Label>
+                    <Input id="name" {...form.register("name")} className="mt-1" />
+                    {form.formState.errors.name && <p className="text-sm text-red-500 mt-1">{form.formState.errors.name.message}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="assignedStaff">Assigned Staff</Label>
+                    <Input id="assignedStaff" {...form.register("assignedStaff")} className="mt-1" />
+                     {form.formState.errors.assignedStaff && <p className="text-sm text-red-500 mt-1">{form.formState.errors.assignedStaff.message}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Controller
+                      name="status"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {taskStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                   <div>
+                    <Label htmlFor="progress">Progress (%)</Label>
+                    <Controller
+                        name="progress"
+                        control={form.control}
+                        render={({ field }) => (
+                           <Input id="progress" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} className="mt-1" />
+                        )}
+                    />
+                    {form.formState.errors.progress && <p className="text-sm text-red-500 mt-1">{form.formState.errors.progress.message}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="startDate">Start Date</Label>
+                     <Controller
+                        name="startDate"
+                        control={form.control}
+                        render={({ field }) => (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                                </PopoverContent>
+                            </Popover>
+                        )}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="endDate">End Date</Label>
+                     <Controller
+                        name="endDate"
+                        control={form.control}
+                        render={({ field }) => (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                <Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} initialFocus />
+                                </PopoverContent>
+                            </Popover>
+                        )}
+                    />
+                  </div>
+                </div>
+                <div>
+                    <Label htmlFor="deliverables">Deliverables</Label>
+                    <Textarea id="deliverables" {...form.register("deliverables")} className="mt-1 min-h-[80px]" />
+                </div>
+                <div>
+                    <Label htmlFor="notes">Notes/Remarks</Label>
+                    <Textarea id="notes" {...form.register("notes")} className="mt-1 min-h-[100px]" />
+                </div>
+              </>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <DetailItem icon={Clock} label="Start Date" value={format(new Date(task.startDate), 'PPP p')} />
+                <DetailItem icon={Clock} label="End Date" value={task.endDate ? format(new Date(task.endDate), 'PPP p') : 'Not set'} />
+                <DetailItem icon={User} label="Assigned Staff" value={task.assignedStaff} />
+                <DetailItem icon={Briefcase} label="Responsible Role" value={task.responsibleRole} />
+                <DetailItem icon={Repeat} label="Frequency" value={task.frequency} />
+                <DetailItem icon={CheckSquare} label="Validator" value={task.validator} />
+                <DetailItem icon={Percent} label="Progress" value={`${task.progress}%`} />
+                <div className="md:col-span-2">
+                  <DetailItem icon={ListChecks} label="Deliverables" value={<p className="whitespace-pre-wrap">{task.deliverables}</p>} />
+                </div>
+                <div className="md:col-span-2">
+                  <DetailItem icon={Edit3} label="Notes/Remarks" value={<p className="whitespace-pre-wrap">{task.notes}</p>} />
+                </div>
+              </div>
+            )}
+
+            <Separator />
+            <div>
+              <h4 className="text-lg font-semibold mb-3">Activity Log</h4>
+              {task.activities.length > 0 ? (
+                <ScrollArea className="h-[150px] border rounded-md p-3 bg-muted/50">
+                  <ul className="space-y-3">
+                    {task.activities.map((activity, index) => (
+                      <li key={index} className="text-xs">
+                        <p className="font-medium">
+                          {activity.user} - {activity.action}
+                          <span className="text-muted-foreground ml-2">({format(new Date(activity.timestamp), 'PPp')})</span>
+                        </p>
+                        <p className="text-muted-foreground pl-2">{activity.details}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              ) : (
+                <p className="text-sm text-muted-foreground">No activities logged yet.</p>
+              )}
+            </div>
+          
+            <DialogFooter className="pt-4 border-t">
+              {isEditing ? (
+                <>
+                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                  </Button>
+                  <Button type="submit">
+                    <Save className="mr-2 h-4 w-4" /> Save Changes
+                  </Button>
+                </>
+              ) : (
+                <Button type="button" onClick={() => setIsEditing(true)}>
+                  <Edit3 className="mr-2 h-4 w-4" /> Edit Task
+                </Button>
+              )}
+              <DialogClose asChild>
+                 <Button type="button" variant="ghost" onClick={onClose}>Close</Button>
+              </DialogClose>
+            </DialogFooter>
+          </form>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
