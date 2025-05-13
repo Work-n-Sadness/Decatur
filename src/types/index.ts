@@ -36,6 +36,7 @@ export interface Task {
   deliverables: string;
   notes: string;
   activities: ActivityLog[];
+  evidenceLink?: string; // Link to evidence document/file
 }
 
 export interface AuditCategory {

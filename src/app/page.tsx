@@ -4,6 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import TaskCard from '@/components/dashboard/task-card';
 import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
+import AttachEvidenceDialog from '@/components/dashboard/attach-evidence-dialog';
 import DashboardFilters from '@/components/dashboard/dashboard-filters';
 import { mockTasks } from '@/lib/mock-data';
 import type { Task, TaskCategory, TaskStatus, Role, TaskFrequency } from '@/types';
@@ -24,6 +25,10 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<Partial<{ category: TaskCategory; status: TaskStatus; role: Role; frequency: TaskFrequency }>>({});
   const [sortBy, setSortBy] = useState<string>('dueDate_asc');
+  
+  const [isAttachEvidenceDialogOpen, setIsAttachEvidenceDialogOpen] = useState(false);
+  const [selectedTaskForEvidence, setSelectedTaskForEvidence] = useState<Task | null>(null);
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,12 +57,39 @@ export default function DashboardPage() {
     toast({
       title: "Task Updated",
       description: `Task "${updatedTask.name}" has been saved successfully.`,
-      variant: "default", 
     });
   };
 
+  const handleOpenAttachEvidence = (task: Task) => {
+    setSelectedTaskForEvidence(task);
+    setIsAttachEvidenceDialogOpen(true);
+  };
+
+  const handleCloseAttachEvidenceDialog = () => {
+    setIsAttachEvidenceDialogOpen(false);
+    setSelectedTaskForEvidence(null);
+  };
+
+  const handleSaveEvidenceLink = (taskId: string, evidenceLink: string) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId ? { ...task, evidenceLink: evidenceLink || undefined } : task
+      )
+    );
+    toast({
+      title: "Evidence Link Saved",
+      description: `Evidence link for task has been updated.`,
+    });
+    handleCloseAttachEvidenceDialog();
+    // If the main details dialog is open for the same task, update its state too
+    if (selectedTask && selectedTask.id === taskId) {
+      setSelectedTask(prev => prev ? {...prev, evidenceLink: evidenceLink || undefined} : null);
+    }
+  };
+
+
   const handleExport = () => {
-    const headers = ["ID", "Name", "Category", "Frequency", "Responsible Role", "Status", "Progress", "Assigned Staff", "Validator", "Start Date", "End Date", "Deliverables", "Notes"];
+    const headers = ["ID", "Name", "Category", "Frequency", "Responsible Role", "Status", "Progress", "Assigned Staff", "Validator", "Start Date", "End Date", "Deliverables", "Notes", "Evidence Link"];
     const rows = filteredAndSortedTasks.map(task => [
       task.id,
       task.name,
@@ -72,6 +104,7 @@ export default function DashboardPage() {
       task.endDate ? task.endDate.toISOString() : '',
       task.deliverables,
       task.notes,
+      task.evidenceLink || '',
     ].join(','));
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
     const encodedUri = encodeURI(csvContent);
@@ -134,13 +167,18 @@ export default function DashboardPage() {
         categories={uniqueCategories}
         statuses={uniqueStatuses}
         roles={uniqueRoles}
-        frequencies={allFrequencies} // Pass allFrequencies
+        frequencies={allFrequencies} 
       />
 
       {filteredAndSortedTasks.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredAndSortedTasks.map(task => (
-            <TaskCard key={task.id} task={task} onOpenDetails={handleOpenDetails} />
+            <TaskCard 
+              key={task.id} 
+              task={task} 
+              onOpenDetails={handleOpenDetails}
+              onOpenAttachEvidence={handleOpenAttachEvidence}
+            />
           ))}
         </div>
       ) : (
@@ -158,8 +196,14 @@ export default function DashboardPage() {
         isOpen={isDetailsOpen}
         onClose={handleCloseDetails}
         onSave={handleSaveTask}
+        onOpenAttachEvidence={handleOpenAttachEvidence}
+      />
+      <AttachEvidenceDialog
+        task={selectedTaskForEvidence}
+        isOpen={isAttachEvidenceDialogOpen}
+        onClose={handleCloseAttachEvidenceDialog}
+        onSaveEvidence={handleSaveEvidenceLink}
       />
     </div>
   );
 }
-

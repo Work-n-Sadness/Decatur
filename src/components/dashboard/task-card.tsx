@@ -7,15 +7,16 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getTaskCategoryIcon, getTaskStatusIcon, getTaskFrequencyIcon } from '@/components/icons';
-import { CalendarDays, User, CheckSquare, Tag } from 'lucide-react';
+import { CalendarDays, User, CheckSquare, Tag, Paperclip, ExternalLink, Repeat } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TaskCardProps {
   task: Task;
   onOpenDetails: (task: Task) => void;
+  onOpenAttachEvidence: (task: Task) => void;
 }
 
-export default function TaskCard({ task, onOpenDetails }: TaskCardProps) {
+export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: TaskCardProps) {
   const CategoryIcon = getTaskCategoryIcon(task.category);
   const StatusIconWithClass = getTaskStatusIcon(task.status);
   const FrequencyIcon = getTaskFrequencyIcon(task.frequency);
@@ -69,12 +70,23 @@ export default function TaskCard({ task, onOpenDetails }: TaskCardProps) {
           </div>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex-col items-stretch space-y-2">
         <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenDetails(task)}>
           View Details
         </Button>
+        <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenAttachEvidence(task)}>
+                <Paperclip className="mr-2 h-4 w-4" /> {task.evidenceLink ? 'Edit Evidence' : 'Attach Evidence'}
+            </Button>
+            {task.evidenceLink && (
+                <Button variant="ghost" size="sm" className="w-full" asChild>
+                    <a href={task.evidenceLink} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="mr-2 h-4 w-4" /> View Evidence
+                    </a>
+                </Button>
+            )}
+        </div>
       </CardFooter>
     </Card>
   );
 }
-

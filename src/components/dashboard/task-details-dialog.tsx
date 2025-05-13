@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { getTaskCategoryIcon, getTaskStatusIcon } from '@/components/icons';
-import { CalendarIcon, User, Briefcase, Edit3, Save, X, ListChecks, Percent, Clock, Repeat, CheckSquare } from 'lucide-react';
+import { CalendarIcon, User, Briefcase, Edit3, Save, X, ListChecks, Percent, Clock, Repeat, CheckSquare, Paperclip, ExternalLink, LinkIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,6 +29,7 @@ const taskSchema = z.object({
   startDate: z.date(),
   endDate: z.date().nullable(),
   deliverables: z.string().optional(),
+  evidenceLink: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -37,19 +38,20 @@ interface TaskDetailsDialogProps {
   task: Task | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedTask: Task) => void; // Mock save
+  onSave: (updatedTask: Task) => void;
+  onOpenAttachEvidence: (task: Task) => void;
 }
 
 const taskStatuses: TaskStatus[] = ['Pending', 'In Progress', 'Completed', 'Overdue', 'Blocked'];
-const taskCategories: TaskCategory[] = [
-  'Health Protocols / Medications', 'Food Safety', 'Fire Safety', 'Office Admin',
-  'Documentation & Compliance', 'Personnel File & Staff Training',
-  'Postings & Required Notices', 'Environmental & Sanitation Checks', 'Additional ALR-Required Tasks'
-];
-const roles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director'];
-const frequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually', 'As Needed'];
+// const taskCategories: TaskCategory[] = [
+//   'Health Protocols / Medications', 'Food Safety', 'Fire Safety', 'Office Admin',
+//   'Documentation & Compliance', 'Personnel File & Staff Training',
+//   'Postings & Required Notices', 'Environmental & Sanitation Checks', 'Additional ALR-Required Tasks'
+// ];
+// const roles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director'];
+// const frequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually', 'As Needed'];
 
-export default function TaskDetailsDialog({ task, isOpen, onClose, onSave }: TaskDetailsDialogProps) {
+export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpenAttachEvidence }: TaskDetailsDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   
   const form = useForm<TaskFormData>({
@@ -68,7 +70,12 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave }: Tas
         startDate: typeof task.startDate === 'string' ? parseISO(task.startDate) : new Date(task.startDate),
         endDate: task.endDate ? (typeof task.endDate === 'string' ? parseISO(task.endDate) : new Date(task.endDate)) : null,
         deliverables: task.deliverables,
+        evidenceLink: task.evidenceLink || '',
       });
+    }
+    // Reset editing state when dialog is closed or task changes
+    if (!isOpen) {
+      setIsEditing(false);
     }
   }, [task, form, isOpen]);
 
@@ -83,18 +90,21 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave }: Tas
       ...data,
       startDate: data.startDate,
       endDate: data.endDate,
+      evidenceLink: data.evidenceLink || undefined, // Store as undefined if empty string
     };
-    onSave(updatedTask); // Call mock save
+    onSave(updatedTask); 
     setIsEditing(false);
-    // onClose(); // Optionally close dialog on save
   };
 
-  const DetailItem: React.FC<{icon: React.ElementType, label: string, value: React.ReactNode}> = ({ icon: Icon, label, value }) => (
+  const DetailItem: React.FC<{icon: React.ElementType, label: string, value: React.ReactNode, action?: React.ReactNode}> = ({ icon: Icon, label, value, action }) => (
     <div className="flex items-start space-x-3">
       <Icon className="h-5 w-5 text-muted-foreground mt-1 shrink-0" />
-      <div>
+      <div className="flex-grow">
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <p className="text-sm text-foreground">{value || 'N/A'}</p>
+        <div className="text-sm text-foreground flex items-center gap-2">
+          {value || <span className="italic text-muted-foreground">N/A</span>}
+          {action}
+        </div>
       </div>
     </div>
   );
@@ -122,12 +132,12 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave }: Tas
                   <div>
                     <Label htmlFor="name">Task Name</Label>
                     <Input id="name" {...form.register("name")} className="mt-1" />
-                    {form.formState.errors.name && <p className="text-sm text-red-500 mt-1">{form.formState.errors.name.message}</p>}
+                    {form.formState.errors.name && <p className="text-sm text-destructive mt-1">{form.formState.errors.name.message}</p>}
                   </div>
                   <div>
                     <Label htmlFor="assignedStaff">Assigned Staff</Label>
                     <Input id="assignedStaff" {...form.register("assignedStaff")} className="mt-1" />
-                     {form.formState.errors.assignedStaff && <p className="text-sm text-red-500 mt-1">{form.formState.errors.assignedStaff.message}</p>}
+                     {form.formState.errors.assignedStaff && <p className="text-sm text-destructive mt-1">{form.formState.errors.assignedStaff.message}</p>}
                   </div>
                   <div>
                     <Label htmlFor="status">Status</Label>
@@ -155,7 +165,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave }: Tas
                            <Input id="progress" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} className="mt-1" />
                         )}
                     />
-                    {form.formState.errors.progress && <p className="text-sm text-red-500 mt-1">{form.formState.errors.progress.message}</p>}
+                    {form.formState.errors.progress && <p className="text-sm text-destructive mt-1">{form.formState.errors.progress.message}</p>}
                   </div>
                   <div>
                     <Label htmlFor="startDate">Start Date</Label>
@@ -197,6 +207,11 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave }: Tas
                         )}
                     />
                   </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="evidenceLink">Evidence Link (URL)</Label>
+                    <Input id="evidenceLink" {...form.register("evidenceLink")} className="mt-1" placeholder="https://example.com/evidence.pdf"/>
+                    {form.formState.errors.evidenceLink && <p className="text-sm text-destructive mt-1">{form.formState.errors.evidenceLink.message}</p>}
+                  </div>
                 </div>
                 <div>
                     <Label htmlFor="deliverables">Deliverables</Label>
@@ -210,17 +225,35 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave }: Tas
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 <DetailItem icon={Clock} label="Start Date" value={format(new Date(task.startDate), 'PPP p')} />
-                <DetailItem icon={Clock} label="End Date" value={task.endDate ? format(new Date(task.endDate), 'PPP p') : 'Not set'} />
+                <DetailItem icon={Clock} label="End Date" value={task.endDate ? format(new Date(task.endDate), 'PPP p') : undefined} />
                 <DetailItem icon={User} label="Assigned Staff" value={task.assignedStaff} />
                 <DetailItem icon={Briefcase} label="Responsible Role" value={task.responsibleRole} />
                 <DetailItem icon={Repeat} label="Frequency" value={task.frequency} />
                 <DetailItem icon={CheckSquare} label="Validator" value={task.validator} />
                 <DetailItem icon={Percent} label="Progress" value={`${task.progress}%`} />
+                <DetailItem 
+                  icon={LinkIcon} 
+                  label="Evidence" 
+                  value={
+                    task.evidenceLink ? (
+                      <a href={task.evidenceLink} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center">
+                        View Evidence <ExternalLink className="ml-1 h-4 w-4" />
+                      </a>
+                    ) : (
+                      <span className="italic text-muted-foreground">No evidence attached</span>
+                    )
+                  }
+                  action={
+                    <Button type="button" variant="ghost" size="sm" onClick={() => onOpenAttachEvidence(task)}>
+                      <Paperclip className="mr-1 h-4 w-4" /> {task.evidenceLink ? 'Edit' : 'Attach'}
+                    </Button>
+                  }
+                />
                 <div className="md:col-span-2">
-                  <DetailItem icon={ListChecks} label="Deliverables" value={<p className="whitespace-pre-wrap">{task.deliverables}</p>} />
+                  <DetailItem icon={ListChecks} label="Deliverables" value={task.deliverables ? <span className="whitespace-pre-wrap">{task.deliverables}</span> : undefined} />
                 </div>
                 <div className="md:col-span-2">
-                  <DetailItem icon={Edit3} label="Notes/Remarks" value={<p className="whitespace-pre-wrap">{task.notes}</p>} />
+                  <DetailItem icon={Edit3} label="Notes/Remarks" value={task.notes ? <span className="whitespace-pre-wrap">{task.notes}</span> : undefined} />
                 </div>
               </div>
             )}

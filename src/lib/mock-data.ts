@@ -50,6 +50,7 @@ export const mockTasks: Task[] = Array.from({ length: 25 }, (_, i) => {
   }
   
   const taskName = `Task ${i + 1}: ${descriptiveNamePart}`;
+  const hasEvidence = Math.random() > 0.6;
 
   return {
     id: `task_${i + 1}`,
@@ -72,6 +73,7 @@ export const mockTasks: Task[] = Array.from({ length: 25 }, (_, i) => {
       ...(status === 'Completed' ? [{ timestamp: endDate || new Date(), user: assignedStaff, action: 'Task Completed', details: 'Task marked as complete.' }] : []),
       ...(status === 'Blocked' ? [{ timestamp: new Date(startDate.getTime() + 1 * 24 * 60 * 60 * 1000), user: assignedStaff, action: 'Task Blocked', details: 'Issue preventing progress.' }] : []),
     ],
+    evidenceLink: hasEvidence ? `https://docs.google.com/document/d/example${i+1}` : undefined,
   };
 });
 
