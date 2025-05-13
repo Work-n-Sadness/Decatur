@@ -12,14 +12,15 @@ import {
   CircleDot,
   Loader2,
   CheckCircle2,
-  ClockWarning,
+  Clock, // Replaced ClockWarning with Clock
   ShieldX,
   type LucideIcon,
   GanttChartSquare,
   FilePieChart,
-  Settings2
+  Settings2,
+  Repeat
 } from 'lucide-react';
-import type { TaskCategory, TaskStatus } from '@/types';
+import type { TaskCategory, TaskStatus, TaskFrequency } from '@/types';
 
 export const TaskCategoryIcons: Record<TaskCategory, LucideIcon> = {
   'Health Protocols / Medications': HeartPulse,
@@ -37,9 +38,19 @@ export const TaskStatusIcons: Record<TaskStatus, LucideIcon> = {
   Pending: CircleDot,
   'In Progress': Loader2,
   Completed: CheckCircle2,
-  Overdue: ClockWarning,
+  Overdue: Clock, // Replaced ClockWarning with Clock
   Blocked: ShieldX,
 };
+
+export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
+  Daily: Repeat,
+  Weekly: Repeat,
+  Monthly: Repeat,
+  Quarterly: Repeat,
+  Annually: Repeat,
+  'As Needed': Repeat,
+};
+
 
 export const SidebarIcons = {
   Dashboard: GanttChartSquare,
@@ -56,4 +67,8 @@ export const getTaskStatusIcon = (status: TaskStatus) => {
   const Icon = TaskStatusIcons[status] || CircleDot;
   const className = status === 'In Progress' ? 'animate-spin' : '';
   return <Icon className={className} />;
+};
+
+export const getTaskFrequencyIcon = (frequency: TaskFrequency) => {
+  return TaskFrequencyIcons[frequency] || Repeat;
 };
