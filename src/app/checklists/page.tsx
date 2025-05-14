@@ -9,11 +9,12 @@ import { ListTodo } from 'lucide-react';
 export default function ChecklistsPage() {
   return (
     <div className="space-y-6">
+      {/* Banner and Clock are now inside ChecklistTable component */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ListTodo className="h-6 w-6 text-accent" />
-            Recurring Task Checklists
+            Automated Task Checklists
           </CardTitle>
           <CardDescription>
             View and manage checklist items generated from recurring tasks. These items are populated by an automated Firebase Cloud Function.
@@ -33,7 +34,7 @@ export default function ChecklistsPage() {
             <p>To make this fully operational:</p>
             <ul className="list-disc pl-5 space-y-1">
                 <li>Ensure your Firebase project is set up and client-side configuration in `src/lib/firebase.ts` is correct (using your environment variables).</li>
-                <li>Deploy the Firebase Cloud Function from `firebase/functions/index.ts` to your Firebase project and ensure it's scheduled to run.</li>
+                <li>Deploy the Firebase Cloud Function from `firebase/functions/index.ts` to your Firebase project and ensure it's scheduled to run daily.</li>
                 <li>Seed the `recurringTasks` collection in Firestore (example in `firebase/firestore-seed/recurringTasks.json`).</li>
                 <li>Set up appropriate Firestore security rules for the `recurringTasks` and `checklists` collections.</li>
             </ul>

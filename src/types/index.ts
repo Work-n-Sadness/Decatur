@@ -101,13 +101,15 @@ export interface StaffTrainingRecord {
 export interface RecurringTask {
   id: string; // Firestore document ID
   taskName: string;
-  frequency: 'daily' | 'weekly' | 'monthly'; // monthly added based on seed
+  frequency: 'daily' | 'weekly' | 'monthly';
   recurrenceDays?: string[]; // For weekly, e.g., ["Monday", "Friday"]
   recurrenceDayOfMonth?: number; // For monthly
-  assignedStaff: string; // Could be a user ID or name
-  validator?: string; // Could be a user ID or name
+  assignedStaff: string; 
+  validator?: string; 
   autoGenerateChecklist: boolean;
-  category?: string; // Optional category from seed
+  category?: string; 
+  startDateForHistory?: string; // YYYY-MM-DD for client-side backfill simulation
+  generateHistory?: boolean; // Flag for client-side backfill simulation
 }
 
 export interface ChecklistItem {
@@ -115,14 +117,17 @@ export interface ChecklistItem {
   taskName: string;
   assignedStaff: string;
   validator?: string | null;
-  dueDate: string; // Stored as YYYY-MM-DD string, or could be Firestore Timestamp
-  status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>; // Subset of ResolutionStatus
-  createdAt: firebase.firestore.Timestamp | Date; // Firestore Timestamp or Date object on client
-  taskId: string; // ID of the parent RecurringTask
+  dueDate: string; // Stored as YYYY-MM-DD string
+  status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>; 
+  createdAt: firebase.firestore.Timestamp | Date; 
+  statusUpdatedAt?: firebase.firestore.Timestamp | Date | null;
+  taskId: string; 
   notes?: string;
   evidenceLink?: string;
   lastCompletedOn?: firebase.firestore.Timestamp | Date | null;
   completedBy?: string | null;
+  category?: string;
+  backfilled?: boolean;
 }
 
 // Firebase namespace for Timestamp if needed elsewhere

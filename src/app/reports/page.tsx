@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BarChart3, CalendarIcon, Download, Filter, FileText, Repeat, History } from "lucide-react";
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, subWeeks, subQuarters, subYears, type Duration } from "date-fns";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, subWeeks, subQuarters, subYears, type Duration, addDays, subDays } from "date-fns";
 import { allTaskCategories, allResolutionStatuses, allMockRoles, allTaskFrequencies, mockTasks } from '@/lib/mock-data'; 
 import type { TaskCategory, ResolutionStatus, Role, TaskFrequency, Task } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,33 +18,51 @@ import { useToast } from "@/hooks/use-toast";
 
 type PredefinedDateRangeKey = 
   | 'today' | 'this_week' | 'last_week' | 'this_month' | 'last_month' 
-  | 'this_quarter' | 'last_quarter' | 'q4_2024' | 'year_2024' | 'year_2025' | 'custom';
+  | 'this_quarter' | 'last_quarter' | 'q4_2024' | 'year_2024' | 'year_2025' 
+  | 'last_7_days' | 'last_30_days' | 'last_90_days' | 'last_6_months' | 'this_year_so_far'
+  | 'custom';
 
-interface PredefinedDateRange {
-  key: PredefinedDateRangeKey;
-  label: string;
-  getRange?: () => { from: Date; to: Date };
-}
+const nowStatic = new Date(2025, 4, 13); // May 13, 2025 for consistent "today"
 
 const predefinedDateRanges: PredefinedDateRange[] = [
-  { key: 'today', label: 'Today', getRange: () => { const now = new Date(); return { from: now, to: now }; } },
-  { key: 'this_week', label: 'This Week', getRange: () => { const now = new Date(); return { from: startOfWeek(now), to: endOfWeek(now) }; } },
-  { key: 'last_week', label: 'Last Week', getRange: () => { const now = new Date(); return { from: startOfWeek(subWeeks(now, 1)), to: endOfWeek(subWeeks(now, 1)) }; } },
-  { key: 'this_month', label: 'This Month', getRange: () => { const now = new Date(); return { from: startOfMonth(now), to: endOfMonth(now) }; } },
-  { key: 'last_month', label: 'Last Month', getRange: () => { const now = new Date(); return { from: startOfMonth(subMonths(now, 1)), to: endOfMonth(subMonths(now, 1)) }; } },
-  { key: 'this_quarter', label: 'This Quarter', getRange: () => { const now = new Date(); return { from: startOfQuarter(now), to: endOfQuarter(now) }; } },
-  { key: 'last_quarter', label: 'Last Quarter', getRange: () => { const now = new Date(); return { from: startOfQuarter(subQuarters(now, 1)), to: endOfQuarter(subQuarters(now, 1)) }; } },
+  { key: 'today', label: `Today (${format(nowStatic, 'MMM dd, yyyy')})`, getRange: () => ({ from: startOfDay(nowStatic), to: endOfDay(nowStatic) }) },
+  { key: 'this_week', label: 'This Week', getRange: () => ({ from: startOfWeek(nowStatic), to: endOfWeek(nowStatic) }) },
+  { key: 'last_week', label: 'Last Week', getRange: () => ({ from: startOfWeek(subWeeks(nowStatic, 1)), to: endOfWeek(subWeeks(nowStatic, 1)) }) },
+  { key: 'this_month', label: `This Month (${format(nowStatic, 'MMMM yyyy')})`, getRange: () => ({ from: startOfMonth(nowStatic), to: endOfMonth(nowStatic) }) },
+  { key: 'last_month', label: 'Last Month', getRange: () => ({ from: startOfMonth(subMonths(nowStatic, 1)), to: endOfMonth(subMonths(nowStatic, 1)) }) },
+  { key: 'this_quarter', label: 'This Quarter', getRange: () => ({ from: startOfQuarter(nowStatic), to: endOfQuarter(nowStatic) }) },
+  { key: 'last_quarter', label: 'Last Quarter', getRange: () => ({ from: startOfQuarter(subQuarters(nowStatic, 1)), to: endOfQuarter(subQuarters(nowStatic, 1)) }) },
   { key: 'q4_2024', label: 'Q4 2024 (Oct-Dec)', getRange: () => ({ from: new Date(2024, 9, 1), to: new Date(2024, 11, 31, 23, 59, 59) }) },
   { key: 'year_2024', label: 'Year 2024', getRange: () => ({ from: new Date(2024, 0, 1), to: new Date(2024, 11, 31, 23, 59, 59) }) },
   { key: 'year_2025', label: 'Year 2025', getRange: () => ({ from: new Date(2025, 0, 1), to: new Date(2025, 11, 31, 23, 59, 59) }) },
+  { key: 'last_7_days', label: 'Last 7 Days', getRange: () => ({ from: subDays(nowStatic, 6), to: nowStatic }) }, // Includes today
+  { key: 'last_30_days', label: 'Last 30 Days', getRange: () => ({ from: subDays(nowStatic, 29), to: nowStatic }) },
+  { key: 'last_90_days', label: 'Last 90 Days', getRange: () => ({ from: subDays(nowStatic, 89), to: nowStatic }) },
+  { key: 'last_6_months', label: 'Last 6 Months', getRange: () => ({ from: subMonths(nowStatic, 6), to: nowStatic }) },
+  { key: 'this_year_so_far', label: 'This Year (2025) So Far', getRange: () => ({ from: startOfYear(nowStatic), to: nowStatic }) },
   { key: 'custom', label: 'Custom Range' },
 ];
+
+// Helper to ensure dates are consistently at start/end of day for range comparisons
+const startOfDay = (date: Date) => {
+  const newDate = new Date(date);
+  newDate.setHours(0, 0, 0, 0);
+  return newDate;
+};
+const endOfDay = (date: Date) => {
+  const newDate = new Date(date);
+  newDate.setHours(23, 59, 59, 999);
+  return newDate;
+};
 
 
 export default function ReportsPage() {
   const [reportType, setReportType] = useState<string>('');
-  const [selectedPresetDateRangeKey, setSelectedPresetDateRangeKey] = useState<PredefinedDateRangeKey>('this_month');
-  const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({ from: startOfMonth(new Date()), to: endOfMonth(new Date())});
+  const [selectedPresetDateRangeKey, setSelectedPresetDateRangeKey] = useState<PredefinedDateRangeKey>('today'); // Default to today
+  
+  const initialCustomFrom = useMemo(() => startOfDay(nowStatic), []);
+  const initialCustomTo = useMemo(() => endOfDay(nowStatic), []);
+  const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({ from: initialCustomFrom, to: initialCustomTo});
   
   const [selectedCategories, setSelectedCategories] = useState<TaskCategory[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<ResolutionStatus[]>([]);
@@ -54,11 +72,26 @@ export default function ReportsPage() {
 
   const activeDateRange = useMemo(() => {
     if (selectedPresetDateRangeKey === 'custom') {
-      return customDateRange;
+      return {
+        from: customDateRange.from ? startOfDay(customDateRange.from) : undefined,
+        to: customDateRange.to ? endOfDay(customDateRange.to) : undefined,
+      };
     }
     const preset = predefinedDateRanges.find(p => p.key === selectedPresetDateRangeKey);
     return preset?.getRange ? preset.getRange() : { from: undefined, to: undefined };
   }, [selectedPresetDateRangeKey, customDateRange]);
+
+  // Effect to update custom range when preset changes, if not 'custom'
+  useEffect(() => {
+    if (selectedPresetDateRangeKey !== 'custom') {
+      const preset = predefinedDateRanges.find(p => p.key === selectedPresetDateRangeKey);
+      if (preset?.getRange) {
+        const { from, to } = preset.getRange();
+        setCustomDateRange({ from, to });
+      }
+    }
+  }, [selectedPresetDateRangeKey]);
+
 
   const handleGenerateReport = () => {
     if (!reportType) {
@@ -83,14 +116,24 @@ export default function ReportsPage() {
     };
     
     // Simulate filtering mockTasks based on criteria
+    // In a real app, this filtering would happen on Firestore data or a backend
     const filteredReportTasks = mockTasks.filter(task => {
-        const taskDate = task.lastCompletedOn || task.endDate || task.startDate; // Prioritize completion, then due, then start
-        if (!taskDate) return false;
+        let taskDateToCompare: Date | null = null;
+        // Prioritize completion, then due, then start date for filtering
+        if (task.lastCompletedOn && isValidDate(new Date(task.lastCompletedOn))) {
+            taskDateToCompare = new Date(task.lastCompletedOn);
+        } else if (task.endDate && isValidDate(new Date(task.endDate))) {
+            taskDateToCompare = new Date(task.endDate);
+        } else if (task.startDate && isValidDate(new Date(task.startDate))) {
+            taskDateToCompare = new Date(task.startDate);
+        }
         
-        const dateMatch = new Date(taskDate) >= new Date(activeDateRange.from!) && new Date(taskDate) <= new Date(activeDateRange.to!);
+        if (!taskDateToCompare) return false;
+        
+        const dateMatch = startOfDay(taskDateToCompare) >= activeDateRange.from! && endOfDay(taskDateToCompare) <= activeDateRange.to!;
         const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(task.category);
         const statusMatch = selectedStatuses.length === 0 || selectedStatuses.includes(task.status);
-        const roleMatch = selectedRoles.length === 0 || (Array.isArray(task.responsibleRole) ? task.responsibleRole.some(r => selectedRoles.includes(r)) : selectedRoles.includes(task.responsibleRole as Role));
+        const roleMatch = selectedRoles.length === 0 || (Array.isArray(task.responsibleRole) ? task.responsibleRole.some(r => selectedRoles.includes(r as Role)) : selectedRoles.includes(task.responsibleRole as Role));
         const frequencyMatch = selectedFrequencies.length === 0 || selectedFrequencies.includes(task.frequency);
 
         return dateMatch && categoryMatch && statusMatch && roleMatch && frequencyMatch;
@@ -98,8 +141,7 @@ export default function ReportsPage() {
 
     console.log("Generating report with criteria:", finalFilters);
     console.log("Number of tasks matching criteria:", filteredReportTasks.length);
-    // In a real app, here you would format `filteredReportTasks` into CSV/PDF and trigger download.
-    // For example, to show completion rates:
+    
     const totalTasksInRange = filteredReportTasks.length;
     const completedTasksInRange = filteredReportTasks.filter(t => t.status === 'Resolved' || t.status === 'Complete').length;
     const completionRate = totalTasksInRange > 0 ? (completedTasksInRange / totalTasksInRange) * 100 : 0;
@@ -126,7 +168,6 @@ export default function ReportsPage() {
         duration: 7000,
     });
     console.log("Report Summary:", reportSummary);
-    // alert("Report generation initiated. Criteria logged to console. Filtered tasks: " + filteredReportTasks.length);
   };
   
   const toggleSelection = <T extends string>(currentSelection: T[], item: T, setter: React.Dispatch<React.SetStateAction<T[]>>) => {
@@ -179,9 +220,11 @@ export default function ReportsPage() {
                   <SelectValue placeholder="Select predefined range" />
                 </SelectTrigger>
                 <SelectContent>
-                  {predefinedDateRanges.map(range => (
-                    <SelectItem key={range.key} value={range.key}>{range.label}</SelectItem>
-                  ))}
+                   <ScrollArea className="h-[250px]">
+                    {predefinedDateRanges.map(range => (
+                        <SelectItem key={range.key} value={range.key}>{range.label}</SelectItem>
+                    ))}
+                  </ScrollArea>
                 </SelectContent>
               </Select>
             </div>
@@ -198,14 +241,14 @@ export default function ReportsPage() {
                     disabled={selectedPresetDateRangeKey !== 'custom'}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {activeDateRange?.from ? (
-                      activeDateRange.to ? (
+                    {customDateRange.from && isValidDate(customDateRange.from) ? (
+                      customDateRange.to && isValidDate(customDateRange.to) ? (
                         <>
-                          {format(activeDateRange.from, "LLL dd, y")} -{" "}
-                          {format(activeDateRange.to, "LLL dd, y")}
+                          {format(customDateRange.from, "LLL dd, y")} -{" "}
+                          {format(customDateRange.to, "LLL dd, y")}
                         </>
                       ) : (
-                        format(activeDateRange.from, "LLL dd, y")
+                        format(customDateRange.from, "LLL dd, y")
                       )
                     ) : (
                       <span>Pick a date range</span>
@@ -257,7 +300,7 @@ export default function ReportsPage() {
                      <ScrollArea className="h-40 w-full rounded-md border p-2 bg-background">
                         {allMockRoles.map(role => (
                             <div key={role} className="flex items-center space-x-2 mb-1">
-                                <Checkbox id={`role-${role}`} checked={selectedRoles.includes(role)} onCheckedChange={() => toggleSelection(selectedRoles, role, setSelectedRoles)} />
+                                <Checkbox id={`role-${role}`} checked={selectedRoles.includes(role as Role)} onCheckedChange={() => toggleSelection(selectedRoles, role as Role, setSelectedRoles)} />
                                 <Label htmlFor={`role-${role}`} className="text-sm font-normal cursor-pointer">{role}</Label>
                             </div>
                         ))}
@@ -290,7 +333,7 @@ export default function ReportsPage() {
             <div className="text-center text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-2" />
               <p>Select criteria and click "Generate Report".</p>
-              <p className="text-xs">Report details will be logged to the console.</p>
+              <p className="text-xs">Report details (using mock data) will be logged to the console.</p>
             </div>
           </div>
         </CardContent>
@@ -298,4 +341,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
