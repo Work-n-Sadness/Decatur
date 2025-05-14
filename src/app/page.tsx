@@ -6,15 +6,17 @@ import TaskCard from '@/components/dashboard/task-card';
 import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
 import AttachEvidenceDialog from '@/components/dashboard/attach-evidence-dialog';
 import DashboardFilters from '@/components/dashboard/dashboard-filters';
-import WelcomeBanner from '@/components/dashboard/welcome-banner'; // Added import
+import WelcomeBanner from '@/components/dashboard/welcome-banner';
 import { mockTasks, allMockRoles, allMockComplianceChapters, allTaskCategories, allResolutionStatuses, allTaskFrequencies, allMockStaffNames } from '@/lib/mock-data';
 import type { Task, TaskCategory, ResolutionStatus, Role, TaskFrequency, ActivityLog } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Added CardHeader, CardTitle
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getTaskCategoryIcon } from '@/components/icons';
-import { Info } from "lucide-react";
+import { Info, Image as ImageIcon } from "lucide-react"; // Added ImageIcon
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from 'date-fns';
+import Image from 'next/image'; // Added next/image import
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -352,7 +354,28 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <WelcomeBanner /> {/* Added WelcomeBanner component here */}
+      <WelcomeBanner />
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-primary">
+            <ImageIcon className="h-6 w-6" />
+            Facility Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="aspect-video bg-muted rounded-md overflow-hidden flex items-center justify-center">
+            <Image
+              src="https://placehold.co/600x400.png"
+              alt="Facility Exterior"
+              width={600}
+              height={400}
+              className="object-cover w-full h-full"
+              data-ai-hint="facility building"
+              priority 
+            />
+          </div>
+        </CardContent>
+      </Card>
       <DashboardFilters
         onSearch={handleSearch}
         onFilterChange={handleFilterChange}
@@ -427,3 +450,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
