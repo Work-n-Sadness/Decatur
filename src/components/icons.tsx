@@ -1,10 +1,7 @@
+
 import {
   HeartPulse,
   UtensilsCrossed,
-  // Flame, // Replaced by Flame icon from lucide for fire drills
-  // Briefcase, // Replaced by Briefcase icon from lucide for bag checklist
-  // FileText, // Replaced by FileText icon from lucide
-  // Users, // Replaced by Users icon from lucide
   ClipboardList,
   Sparkles,
   ListChecks,
@@ -46,17 +43,14 @@ import {
   Thermometer, // Food Temp Logs
   WashingMachine, // Dishwasher Logs
   Utensils, // Weekly Menu
-  // Scroll, // Grocery Inventory - using Archive
   ChefHat, // Food Safety Audit
   Bug, // Pest Control
-  // Wind, // Oxygen Handling - already there
   Shirt, // PPE Audit (fallback)
   Wrench, // Maintenance Requests
   SearchCheck, // Environmental Hazard Checks (fallback for TriangleAlert)
   DoorOpen, // Entry/Exit Logs
   Cigarette, // Smoking Compliance
   SmilePlus, // Behavior Reports
-  // Users, // Visitor Restrictions - already there
   Ban, // Could be for restrictions too
   Contact, // Face Sheets
   FileText, // Care Plans / Doctor Orders
@@ -66,8 +60,7 @@ import {
   Users2, // Case Management Agencies
   Presentation, // Council Meetings
   UserPlus, // Recruitment (HR)
-  ClipboardPen, // Onboarding (HR) - Replaced ClipboardUser
-  // UserMinus, // Exit Logs (HR) - already there
+  ClipboardPen, // Onboarding (HR)
   Award, // Performance Reviews (HR)
   GraduationCap, // Training & Certs (HR)
   HardHat, // Contractors & Consultants (HR)
@@ -85,7 +78,7 @@ import {
   ScrollText, // Policies (Governance)
   ClipboardSignature, // House Rules (Governance)
   Settings, // Admin Settings (different from Settings2)
-  UserCog, // User Management (Admin) - Was UsersCog
+  UserCog, // User Management (Admin)
   DatabaseZap, // SystemLogs (Admin)
   Network, // API Integrations (Admin)
   Users, // Staff Matrix / Visitor Restrictions (Security)
@@ -118,74 +111,69 @@ export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
 
 
 export const SidebarIcons = {
-  // Core Operations
+  // OPERATIONS
   Dashboard: GanttChartSquare,
   AuditTool: FileSearch, 
   ComplianceSummary: ClipboardCheck,
-  Reports: FilePieChart,
   SurveyReadiness: ClipboardList,
 
-  // Medication & Clinical
-  MedicationOrders: Pill,
+  // RESIDENTS
+  ProfilesFaceSheets: Contact,
+  CarePlans: FileText,
+  ProgressNotes: TrendingUp,
+  CheckInOutLogs: UserCheck,
+  CaseManagement: Users2,
+  CouncilMeetings: Presentation,
+
+  // MEDICATION & ECP
+  MedOrders: Pill,
   MARLogs: Activity,
   PRNMonitoring: Eye,
   PharmacyOrders: ShoppingCart,
   DiscontinuedMeds: Archive,
   TreatmentHistory: Stethoscope,
   DoctorOrders: NotebookPen,
-
-  // ECP Charting
   FlaggedECPActions: Flag,
-  MARCorrectionsLog: FileEdit,
-  MissedDoseTracker: History,
+  MARCorrections: FileEdit,
+  MissedDoses: History,
 
-  // Fire & Emergency Safety
+  // EMERGENCY READINESS
   FireDrills: Flame,
   ExtinguisherChecks: FlameKindling,
   EmergencyLighting: Lightbulb,
   CNFAPosting: Siren,
   EvacuationPlans: Map,
-  BagChecklist: Briefcase,
+  GoBagChecklist: Briefcase,
   NineOneOneLog: PhoneCall,
 
-  // Food & Nutrition
-  FoodTempLogs: Thermometer,
-  DishwasherLogs: WashingMachine,
-  WeeklyMenu: Utensils,
-  GroceryInventory: Archive, // Reusing Archive
-  FoodSafetyAudit: ChefHat,
-
-  // Environmental
+  // ENVIRONMENTAL SAFETY
   PestControl: Bug,
   OxygenHandling: Wind,
-  PPEAudit: Shirt,
+  PPEAudits: Shirt,
   MaintenanceRequests: Wrench,
-  EnvironmentalHazardChecks: SearchCheck,
+  HazardChecks: SearchCheck,
 
-  // Security & Behavior
+  // FOOD & NUTRITION
+  TempLogs: Thermometer,
+  DishwasherLogs: WashingMachine,
+  WeeklyMenu: Utensils,
+  GroceryInventory: Archive, 
+  FoodSafetyAudits: ChefHat,
+
+  // SECURITY & BEHAVIOR
   EntryExitLogs: DoorOpen,
   SmokingCompliance: Cigarette,
   BehaviorReports: SmilePlus,
-  VisitorRestrictions: Ban, // Using Ban for restrictions
+  VisitorRestrictions: Ban, 
 
-  // Resident Records
-  FaceSheets: Contact,
-  CarePlans: FileText,
-  ResidentProgressNotes: TrendingUp,
-  ResidentCheckInOut: UserCheck, // Combine, or could have two if distinct pages later
-  CaseManagementAgencies: Users2,
-  CouncilMeetings: Presentation,
-
-  // Human Resources
-  Recruitment: UserPlus,
-  Onboarding: ClipboardPen, 
-  ExitLogs: UserMinus,
-  PerformanceReviews: Award,
-  StaffMatrix: Users, 
-  TrainingCerts: UsersRound, 
-  ContractorsConsultants: HardHat,
-
-  // Finance
+  // REGULATORY OVERSIGHT
+  FireDeptVisits: Building,
+  StateSurveyVisits: BadgeCheck,
+  RegulatoryVisitLogs: BookCopy,
+  OmbudsmanReports: Gavel,
+  IncidentGrievanceLogs: AlertOctagon,
+  
+  // FINANCE
   PurchaseRequests: ShoppingBag,
   FacilityExpenses: CreditCard,
   RentPayments: Landmark,
@@ -193,20 +181,25 @@ export const SidebarIcons = {
   InsuranceClaims: FileDigit,
   InflowOutflowReports: LineChart,
 
-  // Governance & Regulatory
-  FireDeptVisits: Building,
-  StateSurveyVisits: BadgeCheck,
-  RegulatoryVisitLogs: BookCopy,
-  OmbudsmanReports: Gavel,
-  IncidentGrievanceLogs: AlertOctagon,
-  Policies: ScrollText,
+  // HUMAN RESOURCES
+  Recruitment: UserPlus,
+  Onboarding: ClipboardPen, 
+  StaffMatrix: Users, 
+  TrainingCerts: UsersRound, 
+  PerformanceReviews: Award,
+  ExitLogs: UserMinus,
+  ContractorsConsultants: HardHat,
+
+  // POLICY & COMPLIANCE
+  PoliciesProcedures: ScrollText,
   HouseRules: ClipboardSignature,
 
-  // Admin
-  Settings: Settings,
-  UserManagement: UserCog, // Was UsersCog
+  // INSIGHTS & SYSTEMS
+  Reports: FilePieChart,
   SystemLogs: DatabaseZap,
   ApiIntegrations: Network,
+  UserManagement: UserCog,
+  Settings: Settings,
 };
 
 export const getTaskCategoryIcon = (category: TaskCategory): LucideIcon => {
@@ -222,3 +215,4 @@ export const getTaskFrequencyIcon = (frequency: TaskFrequency): LucideIcon => {
   return TaskFrequencyIcons[frequency] || Repeat;
 };
 
+    
