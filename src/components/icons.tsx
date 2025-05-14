@@ -2,6 +2,10 @@
 import {
   HeartPulse,
   UtensilsCrossed,
+  // Flame, // Replaced by Flame icon from lucide for fire drills
+  // Briefcase, // Replaced by Briefcase icon from lucide for bag checklist
+  // FileText, // Replaced by FileText icon from lucide
+  // Users, // Replaced by Users icon from lucide
   ClipboardList,
   Sparkles,
   ListChecks,
@@ -32,7 +36,7 @@ import {
   NotebookPen, // Doctor Orders (fallback for UserMd)
   Flag, // Flagged ECP Actions
   FileEdit, // MAR Corrections Log
-  History, // Missed Dose Tracker (or CalendarX2)
+  History, // Missed Dose Tracker (or CalendarX2) / Facility Repair History
   Flame, // Fire Drills / Fire Dept Visits
   FlameKindling, // Extinguisher Checks
   Lightbulb, // Emergency Lighting
@@ -40,17 +44,20 @@ import {
   Map, // Evacuation Plans
   Briefcase, // Bag Checklist
   PhoneCall, // 911 Log
-  Thermometer, // Food Temp Logs
-  WashingMachine, // Dishwasher Logs
-  Utensils, // Weekly Menu
+  Thermometer, // Food Temp Logs / Weekly Shower & Sink Temp Logs
+  WashingMachine, // Dishwasher Logs / Dishwasher Cycle Temp Record
+  Utensils, // Weekly Menu / Weekly Meal Schedule
+  // Scroll, // Grocery Inventory - using Archive
   ChefHat, // Food Safety Audit
   Bug, // Pest Control
+  // Wind, // Oxygen Handling - already there
   Shirt, // PPE Audit (fallback)
-  Wrench, // Maintenance Requests
+  Wrench, // Maintenance Requests / Maintenance Request Log
   SearchCheck, // Environmental Hazard Checks (fallback for TriangleAlert)
   DoorOpen, // Entry/Exit Logs
   Cigarette, // Smoking Compliance
   SmilePlus, // Behavior Reports
+  // Users, // Visitor Restrictions - already there
   Ban, // Could be for restrictions too
   Contact, // Face Sheets
   FileText, // Care Plans / Doctor Orders
@@ -60,7 +67,8 @@ import {
   Users2, // Case Management Agencies
   Presentation, // Council Meetings
   UserPlus, // Recruitment (HR)
-  ClipboardPen, // Onboarding (HR)
+  ClipboardPen, // Onboarding (HR) - Replaced ClipboardUser
+  // UserMinus, // Exit Logs (HR) - already there
   Award, // Performance Reviews (HR)
   GraduationCap, // Training & Certs (HR)
   HardHat, // Contractors & Consultants (HR)
@@ -81,7 +89,15 @@ import {
   UserCog, // User Management (Admin)
   DatabaseZap, // SystemLogs (Admin)
   Network, // API Integrations (Admin)
-  Users, // Staff Matrix / Visitor Restrictions (Security)
+  Users, // Staff Matrix / Visitor Restrictions (Security) / Vendor Directory
+  LayoutGrid, // Facility Operations
+  SprayCan, // Cleaning Supplies Orders
+  Boxes, // Cleaning Supplies Inventory
+  CalendarCheck, // Preventive Maintenance Schedule
+  BookUser, // Vendor Contact Directory (Alternative if Users is too generic)
+  Salad, // Therapeutic Diet Tracker
+  Tag, // Leftovers & Labeling Log
+  ShieldAlert, // Scald Risk Audit
 } from 'lucide-react';
 import type { TaskCategory, ResolutionStatus, TaskFrequency } from '@/types';
 
@@ -193,6 +209,25 @@ export const SidebarIcons = {
   // POLICY & COMPLIANCE
   PoliciesProcedures: ScrollText,
   HouseRules: ClipboardSignature,
+
+  // FACILITY OPERATIONS & SERVICES
+  FacilityOperations: LayoutGrid, // Main group icon (if needed for header, not used in items)
+  GroceryFoodPurchases: ShoppingCart,
+  CleaningSuppliesOrders: SprayCan,
+  FoodDryGoodsInventory: Archive,
+  CleaningSuppliesInventory: Boxes,
+  MaintenanceRequestLog: Wrench,
+  FacilityRepairHistory: History,
+  PreventiveMaintenanceSchedule: CalendarCheck,
+  VendorContactDirectory: BookUser, // Using BookUser over Users to be more specific
+  WeeklyMealSchedule: Utensils,
+  MealPrepChecklist: ClipboardCheck,
+  TherapeuticDietTracker: Salad,
+  LeftoversLabelingLog: Tag,
+  WeeklyShowerSinkTempLogs: Thermometer,
+  DishwasherCycleTempRecord: WashingMachine,
+  ScaldRiskAudit: ShieldAlert,
+
 
   // INSIGHTS & SYSTEMS
   Reports: FilePieChart,

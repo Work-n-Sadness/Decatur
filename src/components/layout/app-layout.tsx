@@ -139,6 +139,30 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: 'FACILITY OPERATIONS & SERVICES',
+    items: [
+      // Procurement & Inventory
+      { href: '/facility-operations/procurement/grocery-food-purchases', label: 'Grocery & Food Purchases', icon: SidebarIcons.GroceryFoodPurchases },
+      { href: '/facility-operations/procurement/cleaning-supplies-orders', label: 'Cleaning Supplies Orders', icon: SidebarIcons.CleaningSuppliesOrders },
+      { href: '/facility-operations/procurement/food-dry-goods-inventory', label: 'Food & Dry Goods Inventory', icon: SidebarIcons.FoodDryGoodsInventory },
+      { href: '/facility-operations/procurement/cleaning-supplies-inventory', label: 'Cleaning Supplies Inventory', icon: SidebarIcons.CleaningSuppliesInventory },
+      // Maintenance & Repairs
+      { href: '/facility-operations/maintenance/request-log', label: 'Maintenance Request Log', icon: SidebarIcons.MaintenanceRequestLog },
+      { href: '/facility-operations/maintenance/repair-history', label: 'Facility Repair History', icon: SidebarIcons.FacilityRepairHistory },
+      { href: '/facility-operations/maintenance/preventive-schedule', label: 'Preventive Maintenance', icon: SidebarIcons.PreventiveMaintenanceSchedule },
+      { href: '/facility-operations/maintenance/vendor-directory', label: 'Vendor Directory', icon: SidebarIcons.VendorContactDirectory },
+      // Meal Operations
+      { href: '/facility-operations/meal-ops/weekly-schedule', label: 'Weekly Meal Schedule', icon: SidebarIcons.WeeklyMealSchedule },
+      { href: '/facility-operations/meal-ops/meal-prep-checklist', label: 'Meal Prep Checklist', icon: SidebarIcons.MealPrepChecklist },
+      { href: '/facility-operations/meal-ops/therapeutic-diet-tracker', label: 'Therapeutic Diet Tracker', icon: SidebarIcons.TherapeuticDietTracker },
+      { href: '/facility-operations/meal-ops/leftovers-log', label: 'Leftovers & Labeling Log', icon: SidebarIcons.LeftoversLabelingLog },
+      // Water Temperature & Safety
+      { href: '/facility-operations/water-safety/shower-sink-temp-logs', label: 'Shower & Sink Temp Logs', icon: SidebarIcons.WeeklyShowerSinkTempLogs },
+      { href: '/facility-operations/water-safety/dishwasher-temp-record', label: 'Dishwasher Temp Record', icon: SidebarIcons.DishwasherCycleTempRecord },
+      { href: '/facility-operations/water-safety/scald-risk-audit', label: 'Scald Risk Audit', icon: SidebarIcons.ScaldRiskAudit },
+    ],
+  },
+  {
     label: 'FINANCE',
     items: [
       { href: '/finance/purchase-requests', label: 'Purchase Requests', icon: SidebarIcons.PurchaseRequests },
@@ -171,6 +195,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'INSIGHTS & SYSTEMS',
     items: [
+      // { href: '/reports', label: 'Reports', icon: SidebarIcons.Reports }, // Already in OPERATIONS
       { href: '/admin/system-logs', label: 'System Logs', icon: SidebarIcons.SystemLogs },
       { href: '/admin/api-integrations', label: 'API Integrations', icon: SidebarIcons.ApiIntegrations },
       { href: '/admin/user-management', label: 'User Management', icon: SidebarIcons.UserManagement },
@@ -185,7 +210,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    setMounted(true); // Indicates component has mounted on the client
+    setMounted(true); 
 
     const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (storedTheme) {
@@ -199,47 +224,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   
   const currentTopLevelLabel = React.useMemo(() => {
     if (!mounted) {
-      // Return a default label for SSR or initial client render before hydration
-      // This should match what the server would render or be a safe default.
-      // For instance, the label of the item matching the default route '/'
       const defaultItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
       return defaultItem ? defaultItem.label : 'Dashboard';
     }
 
-    // Client-side logic using the actual pathname
     for (const group of navGroups) {
       for (const item of group.items) {
-        if (pathname === item.href) {
+        if (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))) {
           return item.label;
         }
       }
     }
-    // Fallback for grouped paths if not an exact match
-     for (const group of navGroups) {
-        const groupPathPrefix = `/${group.label.toLowerCase().replace(/\s*&\s*/g, '-').replace(/\s+/g, '-').replace(/[^a-z0-9-]/gi, '')}`;
-        if (pathname.startsWith(groupPathPrefix) || group.items.some(item => pathname.startsWith(item.href.substring(0, item.href.lastIndexOf('/'))) && item.href !== '/')) {
-             const item = group.items.find(i => pathname.startsWith(i.href) && i.href !== '/');
-             if(item) return item.label;
-             
-             const segments = pathname.split('/').filter(Boolean);
-             if (segments.length > 0) {
-                const currentSubPathSegment = segments[segments.length - 1];
-                const matchedItem = group.items.find(i => {
-                    const itemPathSegments = i.href.split('/').filter(Boolean);
-                    const itemLastSegment = itemPathSegments[itemPathSegments.length -1];
-                    return itemLastSegment === currentSubPathSegment || i.label.toLowerCase().replace(/\s+/g, '-') === currentSubPathSegment;
-                });
-                if (matchedItem) return matchedItem.label;
-             }
-             // If still no match, return the group label if the path starts with a prefix derived from it
-             // This part might need refinement if group labels are not desired as page titles
-             // For now, if a deeper match isn't found, but it's within a group prefix, use a specific page title or a more generic one
-             // return group.label; // Potentially problematic if group.label is "OPERATIONS" and path is /core-operations/some-page
-             // Let's try to find the specific page or default to a sensible title
-             const fallbackItem = group.items.find(i => pathname.startsWith(i.href.substring(0, i.href.lastIndexOf('/'))));
-             if(fallbackItem) return fallbackItem.label
-        }
-    }
+    
     return 'Dashboard'; // Default
   }, [pathname, mounted]);
 
@@ -270,7 +266,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <SidebarMenuItem key={item.href}>
                       <Link href={item.href} passHref legacyBehavior>
                         <SidebarMenuButton
-                          isActive={pathname === item.href}
+                          isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
                           tooltip={item.label}
                         >
                           <item.icon className="h-5 w-5" />
@@ -296,7 +292,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
             <h2 className="text-lg font-semibold">
-              {mounted ? currentTopLevelLabel : 'Dashboard'} {/* Display placeholder or default until mounted */}
+              {currentTopLevelLabel}
             </h2>
           </div>
           <DropdownMenu>
