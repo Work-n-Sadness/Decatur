@@ -117,7 +117,7 @@ export interface ChecklistItem {
   taskName: string;
   assignedStaff: string;
   validator?: string | null;
-  dueDate: string; // Stored as YYYY-MM-DD string
+  dueDate: firebase.firestore.Timestamp | Date; // Changed from string to Timestamp or Date
   status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>; 
   createdAt: firebase.firestore.Timestamp | Date; 
   statusUpdatedAt?: firebase.firestore.Timestamp | Date | null;
@@ -131,5 +131,7 @@ export interface ChecklistItem {
 }
 
 // Firebase namespace for Timestamp if needed elsewhere
-import type firebase from 'firebase/compat/app'; // For Timestamp type if using compat
-// Or import { Timestamp } from "firebase/firestore"; for modular SDK
+// import type firebase from 'firebase/compat/app'; // For Timestamp type if using compat
+// Or 
+import type { Timestamp } from "firebase/firestore"; 
+

@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CalendarIcon, Filter, Paperclip, RefreshCw, Save, Upload, AlertCircle, Edit3, Clock, ExternalLink, FileText } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { format, parseISO, isValid as isValidDate, isToday, differenceInCalendarDays } from 'date-fns';
+import { format, parseISO, isValid as isValidDate, isToday, differenceInCalendarDays, startOfDay as dateFnsStartOfDay, isEqual as isEqualDate } from 'date-fns';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -62,10 +62,10 @@ export default function ChecklistTable() {
         items.push({
           id: docSnap.id,
           ...data,
-          dueDate: data.dueDate, // Keep as string YYYY-MM-DD
-          createdAt: (data.createdAt as Timestamp)?.toDate ? (data.createdAt as Timestamp).toDate() : new Date(data.createdAt),
-          lastCompletedOn: (data.lastCompletedOn as Timestamp)?.toDate ? (data.lastCompletedOn as Timestamp).toDate() : null,
-          statusUpdatedAt: (data.statusUpdatedAt as Timestamp)?.toDate ? (data.statusUpdatedAt as Timestamp).toDate() : null,
+          dueDate: (data.dueDate as Timestamp)?.toDate() || new Date(), // Convert Firestore Timestamp to JS Date
+          createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(data.createdAt),
+          lastCompletedOn: (data.lastCompletedOn as Timestamp)?.toDate() || null,
+          statusUpdatedAt: (data.statusUpdatedAt as Timestamp)?.toDate() || null,
         } as ChecklistItem);
       });
       setChecklistItems(items);
@@ -82,20 +82,21 @@ export default function ChecklistTable() {
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
     const itemRef = doc(db, 'checklists', itemId);
+    const nowTimestamp = Timestamp.now();
     try {
-      const updatePayload: Partial<ChecklistItem> = { 
+      const updatePayload: Partial<Omit<ChecklistItem, 'id' | 'dueDate' | 'createdAt' | 'taskId'>> & { statusUpdatedAt: Timestamp, lastCompletedOn?: Timestamp | null, completedBy?: string | null } = { 
         status: newStatus,
-        statusUpdatedAt: Timestamp.now(),
+        statusUpdatedAt: nowTimestamp,
       };
       if (newStatus === 'Complete') {
-        updatePayload.lastCompletedOn = Timestamp.now();
+        updatePayload.lastCompletedOn = nowTimestamp;
         const item = checklistItems.find(i => i.id === itemId);
-        updatePayload.completedBy = item?.assignedStaff || "System"; // Consider a more robust way to get current user
+        updatePayload.completedBy = item?.assignedStaff || "System"; 
       } else if (newStatus !== 'Complete' && checklistItems.find(i => i.id === itemId)?.status === 'Complete') {
         updatePayload.lastCompletedOn = null;
         updatePayload.completedBy = null;
       }
-      await updateDoc(itemRef, updatePayload as any); // Use `any` to bypass strict type checking for partial update if needed
+      await updateDoc(itemRef, updatePayload as any); 
       toast({ title: "Status Updated", description: `Task status changed to ${newStatus}.` });
     } catch (err) {
       console.error("Error updating status:", err);
@@ -126,7 +127,7 @@ export default function ChecklistTable() {
   const openNotesModal = (item: ChecklistItem) => {
     setSelectedItemForModal(item);
     setCurrentNotes(item.notes || '');
-    setCurrentValidator(item.validator || ''); // Also load validator for editing in notes modal for now
+    setCurrentValidator(item.validator || ''); 
     setIsNotesModalOpen(true);
   };
 
@@ -150,8 +151,10 @@ export default function ChecklistTable() {
 
   const filteredItems = useMemo(() => {
     return checklistItems.filter(item => {
-      const dueDateObj = item.dueDate ? parseISO(item.dueDate) : null;
-      const dateMatch = !filterDate || (dueDateObj && isValidDate(dueDateObj) && format(dueDateObj, 'yyyy-MM-dd') === format(filterDate, 'yyyy-MM-dd'));
+      const itemDueDateAsDate = item.dueDate instanceof Date ? item.dueDate : (item.dueDate as Timestamp)?.toDate();
+      if (!itemDueDateAsDate || !isValidDate(itemDueDateAsDate)) return false;
+
+      const dateMatch = !filterDate || isEqualDate(dateFnsStartOfDay(itemDueDateAsDate), dateFnsStartOfDay(filterDate));
       const statusMatch = filterStatus === 'all' || item.status === filterStatus;
       const staffMatch = !filterStaff || (item.assignedStaff && item.assignedStaff.toLowerCase().includes(filterStaff.toLowerCase()));
       const validatorMatch = !filterValidator || (item.validator && item.validator.toLowerCase().includes(filterValidator.toLowerCase()));
@@ -180,7 +183,9 @@ export default function ChecklistTable() {
             return;
         }
 
-        const today = new Date();
+        const clientToday = new Date();
+        const clientTodayStart = dateFnsStartOfDay(clientToday);
+
         const batch = writeBatch(db);
         let tasksToCreateCount = 0;
         let tasksSkippedCount = 0;
@@ -190,97 +195,101 @@ export default function ChecklistTable() {
             const taskId = docSnap.id;
 
             if (taskData.generateHistory && taskData.startDateForHistory) {
-                let currentDate = parseISO(taskData.startDateForHistory);
-                if (!isValidDate(currentDate)) {
+                let loopCurrentDate = parseISO(taskData.startDateForHistory);
+                if (!isValidDate(loopCurrentDate)) {
                     console.warn(`Invalid startDateForHistory for ${taskData.taskName}: ${taskData.startDateForHistory}`);
                     continue;
                 }
                 
-                console.log(`Processing history for ${taskData.taskName} from ${format(currentDate, 'yyyy-MM-dd')} to ${format(today, 'yyyy-MM-dd')}`);
+                loopCurrentDate = dateFnsStartOfDay(loopCurrentDate); // Ensure we start at beginning of day
+                console.log(`Processing history for ${taskData.taskName} from ${format(loopCurrentDate, 'yyyy-MM-dd')} to ${format(clientTodayStart, 'yyyy-MM-dd')}`);
 
-                while (differenceInCalendarDays(currentDate, today) <= 0) {
-                    const currentDayNameLoop = format(currentDate, 'EEEE'); // Full day name e.g. "Monday"
-                    const loopDateString = format(currentDate, 'yyyy-MM-dd');
+                while (differenceInCalendarDays(loopCurrentDate, clientTodayStart) <= 0) {
+                    const loopCurrentDayName = format(loopCurrentDate, 'EEEE'); 
+                    const historicalDueTimestamp = Timestamp.fromDate(loopCurrentDate); // Due date is start of the historical day
+                    
                     let shouldGenerateHistorical = false;
-
                     if (taskData.frequency === 'daily') {
                         shouldGenerateHistorical = true;
-                    } else if (taskData.frequency === 'weekly' && taskData.recurrenceDays?.includes(currentDayNameLoop)) {
+                    } else if (taskData.frequency === 'weekly' && taskData.recurrenceDays?.includes(loopCurrentDayName)) {
                         shouldGenerateHistorical = true;
-                    } else if (taskData.frequency === 'monthly' && taskData.recurrenceDayOfMonth && currentDate.getDate() === taskData.recurrenceDayOfMonth) {
+                    } else if (taskData.frequency === 'monthly' && taskData.recurrenceDayOfMonth && loopCurrentDate.getDate() === taskData.recurrenceDayOfMonth) {
                         shouldGenerateHistorical = true;
                     }
                     
                     if (shouldGenerateHistorical) {
                         const checklistQueryHistorical = await getDocs(query(collection(db, 'checklists'),
                             where('taskId', '==', taskId),
-                            where('dueDate', '==', loopDateString),
+                            where('dueDate', '==', historicalDueTimestamp),
                             limit(1)
                         ));
 
                         if (checklistQueryHistorical.empty) {
                             const newChecklistItemRef = doc(collection(db, 'checklists'));
-                            const isPastDate = differenceInCalendarDays(currentDate, today) < 0;
+                            const isPastDate = differenceInCalendarDays(loopCurrentDate, clientTodayStart) < 0;
                             batch.set(newChecklistItemRef, {
                                 taskName: taskData.taskName,
                                 assignedStaff: taskData.assignedStaff,
                                 validator: taskData.validator || null,
-                                dueDate: loopDateString,
+                                dueDate: historicalDueTimestamp,
                                 status: isPastDate ? 'Complete' : 'Pending',
-                                createdAt: Timestamp.fromDate(currentDate),
-                                statusUpdatedAt: Timestamp.fromDate(currentDate),
+                                createdAt: historicalDueTimestamp, // For backfill, createdAt can be same as dueDate
+                                statusUpdatedAt: historicalDueTimestamp,
                                 taskId: taskId,
                                 notes: isPastDate ? 'Auto-completed during backfill.' : '',
                                 evidenceLink: '',
-                                lastCompletedOn: isPastDate ? Timestamp.fromDate(currentDate) : null,
+                                lastCompletedOn: isPastDate ? historicalDueTimestamp : null,
                                 completedBy: isPastDate ? 'System (Backfill)' : null,
                                 category: taskData.category || null,
                                 backfilled: true,
                             });
                             tasksToCreateCount++;
-                            console.log(`Queued historical task: ${taskData.taskName} for ${loopDateString}`);
                         } else {
                             tasksSkippedCount++;
-                            // console.log(`Skipped existing historical task: ${taskData.taskName} for ${loopDateString}`);
                         }
                     }
-                    currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+                    loopCurrentDate.setDate(loopCurrentDate.getDate() + 1); // Increment day
                 }
             } else {
                 // Regular generation for today if generateHistory is false or not set
-                const currentDayName = format(today, 'EEEE');
-                const todayDateString = format(today, 'yyyy-MM-dd');
+                const currentDayName = format(clientToday, 'EEEE');
+                const todayDueTimestamp = Timestamp.fromDate(clientTodayStart);
                 let shouldGenerateToday = false;
                 if (taskData.frequency === 'daily') {
                     shouldGenerateToday = true;
                 } else if (taskData.frequency === 'weekly' && taskData.recurrenceDays?.includes(currentDayName)) {
                     shouldGenerateToday = true;
-                } else if (taskData.frequency === 'monthly' && taskData.recurrenceDayOfMonth && today.getDate() === taskData.recurrenceDayOfMonth) {
+                } else if (taskData.frequency === 'monthly' && taskData.recurrenceDayOfMonth && clientToday.getDate() === taskData.recurrenceDayOfMonth) {
                     shouldGenerateToday = true;
                 }
 
                 if (shouldGenerateToday) {
                     const checklistQueryToday = await getDocs(query(collection(db, 'checklists'),
                         where('taskId', '==', taskId),
-                        where('dueDate', '==', todayDateString),
+                        where('dueDate', '==', todayDueTimestamp),
                         limit(1)
                     ));
                     if (checklistQueryToday.empty) {
                         const newChecklistItemRef = doc(collection(db, 'checklists'));
+                        const nowTimestamp = Timestamp.now();
                         batch.set(newChecklistItemRef, {
                             taskName: taskData.taskName,
                             assignedStaff: taskData.assignedStaff,
                             validator: taskData.validator || null,
-                            dueDate: todayDateString,
+                            dueDate: todayDueTimestamp,
                             status: 'Pending',
-                            createdAt: Timestamp.now(),
-                            statusUpdatedAt: Timestamp.now(),
+                            createdAt: nowTimestamp,
+                            statusUpdatedAt: nowTimestamp,
                             taskId: taskId,
                             category: taskData.category || null,
+                            notes: '', 
+                            evidenceLink: '', 
+                            lastCompletedOn: null, 
+                            completedBy: null,
                             backfilled: false,
                         });
                         tasksToCreateCount++;
-                        console.log(`Queued task for today: ${taskData.taskName}`);
+                        console.log(`Manually queued task for today: ${taskData.taskName}`);
                     } else {
                         tasksSkippedCount++;
                     }
@@ -291,13 +300,13 @@ export default function ChecklistTable() {
         if (tasksToCreateCount > 0) {
             await batch.commit();
             toast({ title: "Success", description: `${tasksToCreateCount} checklist items were generated/queued.` });
-            console.log(`Successfully created/queued ${tasksToCreateCount} new checklist items.`);
+            console.log(`Successfully created/queued ${tasksToCreateCount} new checklist items via manual trigger.`);
         } else {
             toast({ title: "No new tasks", description: "No new tasks were due for generation or they already exist." });
-            console.log("No new tasks created. All due tasks may already exist.");
+            console.log("No new tasks created by manual trigger. All due tasks may already exist.");
         }
         if (tasksSkippedCount > 0) {
-             console.log(`Skipped ${tasksSkippedCount} tasks as they already existed for their respective due dates.`);
+             console.log(`Skipped ${tasksSkippedCount} tasks (manual trigger) as they already existed for their respective due dates.`);
         }
         console.log("Manual task generation process finished.");
 
@@ -308,32 +317,41 @@ export default function ChecklistTable() {
   };
 
   const handleExportToday = () => {
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const itemsToExport = checklistItems.filter(item => item.dueDate === todayStr);
+    const todayClient = new Date();
+    const itemsToExport = checklistItems.filter(item => {
+        const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : (item.dueDate as Timestamp)?.toDate();
+        return itemDueDateJs && isValidDate(itemDueDateJs) && isToday(itemDueDateJs);
+    });
+
     if (itemsToExport.length === 0) {
       toast({ title: "No Tasks Today", description: "No tasks are due today to export.", variant: "default" });
       return;
     }
 
     const headers = ["Task Name", "Assigned Staff", "Due Date", "Status", "Validator", "Last Completed", "Completed By", "Evidence Link", "Notes", "Category"];
-    const rows = itemsToExport.map(item => [
-      item.taskName,
-      item.assignedStaff,
-      item.dueDate,
-      item.status,
-      item.validator || 'N/A',
-      item.lastCompletedOn && isValidDate(new Date(item.lastCompletedOn)) ? format(new Date(item.lastCompletedOn), 'PPp') : 'N/A',
-      item.completedBy || 'N/A',
-      item.evidenceLink || 'N/A',
-      item.notes || 'N/A',
-      item.category || 'N/A',
-    ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','));
+    const rows = itemsToExport.map(item => {
+      const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : (item.dueDate as Timestamp)?.toDate();
+      const itemLastCompletedJs = item.lastCompletedOn instanceof Date ? item.lastCompletedOn : (item.lastCompletedOn as Timestamp)?.toDate();
+      
+      return [
+        item.taskName,
+        item.assignedStaff,
+        itemDueDateJs && isValidDate(itemDueDateJs) ? format(itemDueDateJs, 'PP') : 'N/A',
+        item.status,
+        item.validator || 'N/A',
+        itemLastCompletedJs && isValidDate(itemLastCompletedJs) ? format(itemLastCompletedJs, 'PPp') : 'N/A',
+        item.completedBy || 'N/A',
+        item.evidenceLink || 'N/A',
+        item.notes || 'N/A',
+        item.category || 'N/A',
+      ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',');
+    });
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `checklist_today_${todayStr}.csv`);
+    link.setAttribute("download", `checklist_today_${format(todayClient, 'yyyy-MM-dd')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -440,18 +458,20 @@ export default function ChecklistTable() {
           </TableHeader>
           <TableBody>
             {filteredItems.length > 0 ? filteredItems.map((item) => {
-              const dueDateObj = item.dueDate ? parseISO(item.dueDate) : null;
-              const displayDueDate = dueDateObj && isValidDate(dueDateObj)
-                ? isToday(dueDateObj) ? <span className="text-accent font-semibold">Today</span> : format(dueDateObj, 'PP')
+              const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : (item.dueDate as Timestamp)?.toDate();
+              const displayDueDate = itemDueDateJs && isValidDate(itemDueDateJs)
+                ? isToday(itemDueDateJs) ? <span className="text-accent font-semibold">Today</span> : format(itemDueDateJs, 'PP')
                 : 'N/A';
               
               let lastActionDate: Date | null = null;
-              if (item.status === 'Complete' && item.lastCompletedOn && isValidDate(new Date(item.lastCompletedOn))) {
-                  lastActionDate = new Date(item.lastCompletedOn);
-              } else if (item.statusUpdatedAt && isValidDate(new Date(item.statusUpdatedAt))) {
-                  lastActionDate = new Date(item.statusUpdatedAt);
-              }
+              const itemStatusUpdatedAtJs = item.statusUpdatedAt instanceof Date ? item.statusUpdatedAt : (item.statusUpdatedAt as Timestamp)?.toDate();
+              const itemLastCompletedOnJs = item.lastCompletedOn instanceof Date ? item.lastCompletedOn : (item.lastCompletedOn as Timestamp)?.toDate();
 
+              if (item.status === 'Complete' && itemLastCompletedOnJs && isValidDate(itemLastCompletedOnJs)) {
+                  lastActionDate = itemLastCompletedOnJs;
+              } else if (itemStatusUpdatedAtJs && isValidDate(itemStatusUpdatedAtJs)) {
+                  lastActionDate = itemStatusUpdatedAtJs;
+              }
 
               return (
               <TableRow key={item.id}>
@@ -463,7 +483,7 @@ export default function ChecklistTable() {
                 </TableCell>
                 <TableCell>{item.validator || 'N/A'}</TableCell>
                 <TableCell>
-                  {lastActionDate
+                  {lastActionDate && isValidDate(lastActionDate)
                     ? `${format(lastActionDate, 'PPp')} ${item.status === 'Complete' && item.completedBy ? `by ${item.completedBy}` : ''}`
                     : 'N/A'}
                 </TableCell>
@@ -569,3 +589,4 @@ export default function ChecklistTable() {
     </div>
   );
 }
+

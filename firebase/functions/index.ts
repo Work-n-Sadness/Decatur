@@ -24,9 +24,17 @@ export const generateRecurringTasks = functions.pubsub
   // .schedule('every 1 minutes') // For testing
   .onRun(async (context) => {
     console.log('generateRecurringTasks function triggered');
+    
     const today = new Date();
-    const currentDayName = today.toLocaleDateString('en-US', { weekday: 'long' }); // "Monday", "Tuesday", etc.
-    const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD for dueDate
+    const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' }); // "Monday", "Tuesday", etc.
+    
+    // Calculate the start of today (00:00:00) as a JS Date
+    const startOfTodayDate = new Date(today);
+    startOfTodayDate.setHours(0, 0, 0, 0);
+    
+    // Convert to Firestore Timestamp
+    const dueTimestamp = admin.firestore.Timestamp.fromDate(startOfTodayDate);
+    const serverTimestamp = admin.firestore.FieldValue.serverTimestamp();
 
     const recurringTasksSnapshot = await db.collection('recurringTasks').where('autoGenerateChecklist', '==', true).get();
 
@@ -47,22 +55,20 @@ export const generateRecurringTasks = functions.pubsub
       if (taskData.frequency === 'daily') {
         shouldGenerate = true;
       } else if (taskData.frequency === 'weekly') {
-        if (taskData.recurrenceDays && taskData.recurrenceDays.includes(currentDayName)) {
+        if (taskData.recurrenceDays && taskData.recurrenceDays.includes(todayDayName)) {
           shouldGenerate = true;
         }
       } else if (taskData.frequency === 'monthly') {
-        // Check if the task specified a day of the month for recurrence
         if (taskData.recurrenceDayOfMonth && today.getDate() === taskData.recurrenceDayOfMonth) {
             shouldGenerate = true;
         }
       }
 
-
       if (shouldGenerate) {
-        // Check if a checklist item for this task on this day already exists to prevent duplicates
+        // Check if a checklist item for this task on this day (using Timestamp) already exists
         const checklistQuery = await db.collection('checklists')
           .where('taskId', '==', taskId)
-          .where('dueDate', '==', todayDateString) // Query by YYYY-MM-DD string
+          .where('dueDate', '==', dueTimestamp) 
           .limit(1)
           .get();
 
@@ -72,22 +78,22 @@ export const generateRecurringTasks = functions.pubsub
             taskName: taskData.taskName,
             assignedStaff: taskData.assignedStaff || null,
             validator: taskData.validator || null,
-            dueDate: todayDateString, // Store as YYYY-MM-DD string
+            dueDate: dueTimestamp, // Store as Firestore Timestamp (start of day)
             status: 'Pending',
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            statusUpdatedAt: admin.firestore.FieldValue.serverTimestamp(), // Initialize
+            createdAt: serverTimestamp,
+            statusUpdatedAt: serverTimestamp, 
             taskId: taskId,
-            notes: '', // Default empty notes
-            evidenceLink: '', // Default empty evidence link
-            lastCompletedOn: null, // Default null
-            completedBy: null, // Default null
+            notes: '', 
+            evidenceLink: '', 
+            lastCompletedOn: null, 
+            completedBy: null, 
             category: taskData.category || null,
             backfilled: false,
           });
           tasksCreated++;
-          console.log(`Scheduled to create checklist item for task: ${taskData.taskName} (ID: ${taskId}) for dueDate: ${todayDateString}`);
+          console.log(`Scheduled to create checklist item for task: ${taskData.taskName} (ID: ${taskId}) for dueDate: ${startOfTodayDate.toISOString()}`);
         } else {
-          console.log(`Checklist item for task ${taskData.taskName} (ID: ${taskId}) on ${todayDateString} already exists. Skipping.`);
+          console.log(`Checklist item for task ${taskData.taskName} (ID: ${taskId}) with dueDate ${startOfTodayDate.toISOString()} already exists. Skipping.`);
         }
       }
     }
@@ -98,6 +104,7 @@ export const generateRecurringTasks = functions.pubsub
     } else {
       console.log('No new checklist items were due to be created today.');
     }
-
+    console.log("Checklist tasks generation finished at:", new Date().toISOString());
     return null;
   });
+
