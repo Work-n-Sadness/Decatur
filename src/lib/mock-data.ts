@@ -1,6 +1,7 @@
 
-import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, Role, AuditCategory, AuditItem, StaffTrainingRecord, TrainingType, TrainingStatus, RecurrenceConfig } from '@/types';
-import { addDays, startOfDay, getDay, getDate } from 'date-fns';
+
+import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, Role, AuditCategory, AuditItem, StaffTrainingRecord, TrainingType, TrainingStatus, RecurrenceConfig, FacilityCertification, CertificationStatus, FacilityInstallation, InstallationStatus } from '@/types';
+import { addDays, startOfDay, getDay, getDate, subDays, subMonths, addMonths, endOfMonth } from 'date-fns';
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -18,7 +19,7 @@ export const allTaskCategories: TaskCategory[] = [
 ];
 
 export const allTaskFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'As Needed', 'Annually', 'Bi-annually', 'Mid Yearly'];
-export const allResolutionStatuses: ResolutionStatus[] = ['Pending', 'Resolved', 'Escalated'];
+export const allResolutionStatuses: ResolutionStatus[] = ['Pending', 'Resolved', 'Escalated', 'Complete', 'Flagged'];
 export const allMockRoles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director', 'Wellness Nurse', 'Housekeeping Supervisor', 'QMAP Supervisor', 'Housekeeping / Aide'];
 
 const staffNamesByRole: Record<Role, string[]> = {
@@ -85,13 +86,13 @@ const specificTasksSeed: SeedTask[] = [
 export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
   const instanceStartDate = getRandomDate(new Date(2023, 0, 1), new Date(2024, 11, 31));
   const patternStartDate = new Date(instanceStartDate.getFullYear(), instanceStartDate.getMonth(), 1); // Example pattern start
-  
+
   const freqCycleDaysMap: Record<TaskFrequency, number> = {
-    'Daily': 1, 'Weekly': 7, 'Monthly': 30, 'Quarterly': 90, 
+    'Daily': 1, 'Weekly': 7, 'Monthly': 30, 'Quarterly': 90,
     'Mid Yearly': 182, 'Annually': 365, 'Bi-annually': 730, 'As Needed': 0 // 'As Needed' has no fixed cycle
   };
   const cycleDays = freqCycleDaysMap[seed.frequency] || 0;
-  
+
   // endDate for the instance (due date)
   let instanceEndDate: Date | null = null;
   if (cycleDays > 0) {
@@ -102,7 +103,7 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
 
 
   const status = getRandomElement(allResolutionStatuses);
-  
+
   let assignedStaffMember: string;
   if (Array.isArray(seed.responsibleRole)) {
     assignedStaffMember = getRandomElement(staffNamesByRole[seed.responsibleRole[0]] || allStaffNames);
@@ -114,12 +115,12 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
   let completedBy: string | null = null;
 
   if (status === 'Resolved') {
-    lastCompletedOn = cycleDays > 0 
-        ? getRandomDate(addDays(instanceStartDate, -cycleDays), instanceStartDate) 
-        : getRandomDate(addDays(new Date(), -30), new Date()); 
+    lastCompletedOn = cycleDays > 0
+        ? getRandomDate(addDays(instanceStartDate, -cycleDays), instanceStartDate)
+        : getRandomDate(addDays(new Date(), -30), new Date());
     completedBy = assignedStaffMember;
   }
-  
+
   const initialActivityTimestamp = addDays(instanceStartDate, -(Math.floor(Math.random() * 5) + 1));
 
   const recurrenceConfig: RecurrenceConfig = {
@@ -173,12 +174,12 @@ const originalCategoriesForAudit: string[] = [
   'Documentation & Compliance',
   'Personnel File & Staff Training',
   'Postings & Required Notices',
-  'Environmental & Sanitation Safety', 
+  'Environmental & Sanitation Safety',
   'Additional ALR-Required Tasks'
 ];
 export const mockAuditCategories: AuditCategory[] = originalCategoriesForAudit.map((catName, index) => ({
   id: `auditcat_${index + 1}`,
-  name: catName as TaskCategory | string, 
+  name: catName as TaskCategory | string,
   items: Array.from({ length: Math.floor(Math.random() * 5) + 3 }, (_, j) => ({
     id: `audititem_${index + 1}_${j + 1}`,
     description: `${getRandomElement(['Verify', 'Ensure', 'Check for', 'Confirm'])} ${getRandomElement(['item A', 'procedure B', 'log C', 'documentation D'])} for ${catName}.`,
@@ -192,7 +193,7 @@ export const mockStaffResponsibilityMatrix = allMockRoles.map(role => ({
   role,
   responsibilities: mockTasks
     .filter(task => task.responsibleRole === role || (Array.isArray(task.responsibleRole) && task.responsibleRole.includes(role)))
-    .slice(0, Math.floor(Math.random() * 3) + 2) 
+    .slice(0, Math.floor(Math.random() * 3) + 2)
     .map(task => ({ taskName: task.name, deliverables: task.deliverables, category: task.category })),
 }));
 
@@ -209,7 +210,7 @@ const generateTrainingDates = (): { completionDate?: Date | null, expiryDate?: D
   if (!completionDate) {
     status = 'Pending Documentation';
   } else {
-    const hasExpiry = Math.random() > 0.3; 
+    const hasExpiry = Math.random() > 0.3;
     if (hasExpiry) {
       expiryDate = new Date(completionDate.getFullYear() + getRandomElement([1, 2]), completionDate.getMonth(), completionDate.getDate());
       const daysUntilExpiry = (expiryDate.getTime() - today.getTime()) / (1000 * 3600 * 24);
@@ -220,8 +221,8 @@ const generateTrainingDates = (): { completionDate?: Date | null, expiryDate?: D
       } else {
         status = 'Compliant';
       }
-    } else { 
-      status = 'Compliant'; 
+    } else {
+      status = 'Compliant';
     }
   }
   return { completionDate, expiryDate, status };
@@ -230,15 +231,15 @@ const generateTrainingDates = (): { completionDate?: Date | null, expiryDate?: D
 const staffForTrainingRawNames = ['Olivia Chen', 'Michael Brown', 'Sophia Rodriguez', 'Ethan Miller', 'Isabella Wilson', 'Liam Garcia', 'Ava Davis', 'Noah Martinez'];
 
 
-export const mockStaffTrainingData: StaffTrainingRecord[] = staffForTrainingRawNames.flatMap((staffName, staffIndex) => 
+export const mockStaffTrainingData: StaffTrainingRecord[] = staffForTrainingRawNames.flatMap((staffName, staffIndex) =>
   allTrainingTypes.map((trainingType, trainingTypeIndex) => {
     const { completionDate, expiryDate, status } = generateTrainingDates();
-    const assignedRole = allMockRoles[staffIndex % allMockRoles.length]; 
-    const staffMemberFullName = `${staffName} (${assignedRole})`; 
-    
+    const assignedRole = allMockRoles[staffIndex % allMockRoles.length];
+    const staffMemberFullName = `${staffName} (${assignedRole})`;
+
     return {
       id: `training_${staffIndex + 1}_${trainingTypeIndex + 1}`,
-      staffMemberName: staffMemberFullName, 
+      staffMemberName: staffMemberFullName,
       staffRole: assignedRole,
       trainingType,
       completionDate,
@@ -249,7 +250,7 @@ export const mockStaffTrainingData: StaffTrainingRecord[] = staffForTrainingRawN
     };
   })
 );
-export const allMockStaffNames = allStaffNames; 
+export const allMockStaffNames = allStaffNames;
 export const allMockComplianceChapters = Array.from(new Set(mockTasks.map(t => t.complianceChapterTag).filter(Boolean).concat(complianceChapterTagsPool.filter(Boolean) as string[]))) as string[];
 
 export const amenities: string[] = [
@@ -267,4 +268,35 @@ export const amenities: string[] = [
   "Private & semi-private rooms",
   "Wheelchair accessible",
   "Fire sprinkler system"
+];
+
+
+// Mock Data for Facility Certifications
+const certificationStatuses: CertificationStatus[] = ['Active', 'Expired', 'Due Soon'];
+const mockCertifyingAgencies = ['State Health Dept.', 'City Fire Marshal', 'CDPHE', 'EPA', 'County Public Health', 'Boiler Safety Division', 'HVAC Licensing Board'];
+
+export const mockCertifications: FacilityCertification[] = [
+  { id: 'cert1', certificationName: 'State Assisted Living License', certifyingAgency: 'State Health Dept.', issueDate: new Date(2023, 0, 15), expirationDate: new Date(2025, 0, 14), status: 'Active', certificateUploadUrl: 'https://example.com/license.pdf', lastReviewedBy: 'Admin', notes: 'Annual renewal completed.' },
+  { id: 'cert2', certificationName: 'Fire Department Inspection Report', certifyingAgency: 'City Fire Marshal', issueDate: new Date(2024, 5, 10), expirationDate: new Date(2025, 5, 9), status: 'Due Soon', lastReviewedBy: 'Director' },
+  { id: 'cert3', certificationName: 'CDPHE Certification', certifyingAgency: 'CDPHE', issueDate: new Date(2022, 8, 1), expirationDate: new Date(2024, 7, 31), status: 'Expired', certificateUploadUrl: 'https://example.com/cdphe.pdf', lastReviewedBy: 'Admin', notes: 'Renewal application pending.' },
+  { id: 'cert4', certificationName: 'Kitchen/Public Health Inspection', certifyingAgency: 'County Public Health', issueDate: new Date(2024, 2, 20), expirationDate: new Date(2025, 2, 19), status: 'Active' },
+  { id: 'cert5', certificationName: 'Boiler Inspection Certificate', certifyingAgency: 'Boiler Safety Division', issueDate: new Date(2023, 10, 5), expirationDate: new Date(2024, 10, 4), status: 'Active', certificateUploadUrl: 'https://example.com/boiler.pdf' },
+  { id: 'cert6', certificationName: 'HVAC Compliance Document', certifyingAgency: 'HVAC Licensing Board', issueDate: new Date(2024, 0, 30), expirationDate: new Date(2026, 0, 29), status: 'Active' },
+  { id: 'cert7', certificationName: 'Building Occupancy Permit', certifyingAgency: 'City Planning Dept.', issueDate: new Date(2010, 6, 1), expirationDate: addMonths(new Date(2010, 6, 1), 600), status: 'Active', notes: 'Long-term permit.' }, // Example very long term
+];
+
+// Mock Data for Facility Installations
+const installationStatuses: InstallationStatus[] = ['Operational', 'Needs Repair', 'Out of Service'];
+const installationCategories: FacilityInstallation['category'][] = ['Fire Safety', 'HVAC', 'Water Systems', 'Electrical', 'Accessibility', 'Sanitation', 'Gas Systems', 'Air Quality', 'General Safety'];
+
+export const mockInstallations: FacilityInstallation[] = [
+  { id: 'inst1', installationName: 'Main Fire Alarm Panel', category: 'Fire Safety', location: 'Lobby', lastInspectionDate: new Date(2024, 3, 10), nextInspectionDue: new Date(2025, 3, 10), inspectionFrequency: 'Annually', serviceVendor: 'SafeGuard Systems', status: 'Operational', inspectionLogUrl: 'https://example.com/firealarm.pdf' },
+  { id: 'inst2', installationName: 'Sprinkler System - Zone A', category: 'Fire Safety', location: 'North Wing', lastInspectionDate: new Date(2024, 0, 15), nextInspectionDue: new Date(2024, 6, 15), inspectionFrequency: 'Semi-Annually', serviceVendor: 'AquaSafe Sprinklers', status: 'Operational' },
+  { id: 'inst3', installationName: 'Central HVAC Unit 1', category: 'HVAC', location: 'Roof', lastInspectionDate: new Date(2023, 11, 5), nextInspectionDue: new Date(2024, 5, 5), inspectionFrequency: 'Quarterly', serviceVendor: 'CoolAir Inc.', status: 'Needs Repair', notes: 'Filter change overdue, slight noise.' },
+  { id: 'inst4', installationName: 'Main Water Heater', category: 'Water Systems', location: 'Utility Room', lastInspectionDate: new Date(2024, 1, 20), nextInspectionDue: new Date(2025, 1, 20), inspectionFrequency: 'Annually', serviceVendor: 'ProPlumb', status: 'Operational' },
+  { id: 'inst5', installationName: 'Backup Generator', category: 'Electrical', location: 'Exterior Shed', lastInspectionDate: new Date(2024, 4, 1), nextInspectionDue: new Date(2024, 10, 1), inspectionFrequency: 'Monthly Test, Semi-Annual Service', serviceVendor: 'PowerGen Solutions', status: 'Operational', inspectionLogUrl: 'https://example.com/generator.pdf' },
+  { id: 'inst6', installationName: 'Fire Extinguisher - Lobby', category: 'Fire Safety', location: 'Lobby Near Entrance', lastInspectionDate: new Date(2024, 2, 5), nextInspectionDue: new Date(2025, 2, 5), inspectionFrequency: 'Annually (Visual Monthly)', serviceVendor: 'In-house Maintenance', status: 'Operational' },
+  { id: 'inst7', installationName: 'Sanitation Station - Dining Hall', category: 'Sanitation', location: 'Dining Hall Entrance', lastInspectionDate: null, nextInspectionDue: null, inspectionFrequency: 'Daily Check', serviceVendor: 'In-house Staff', status: 'Operational', notes: 'Refilled daily.' },
+  { id: 'inst8', installationName: 'Kitchen Gas Range', category: 'Gas Systems', location: 'Kitchen', lastInspectionDate: new Date(2023, 9, 15), nextInspectionDue: new Date(2024, 9, 15), inspectionFrequency: 'Annually', serviceVendor: 'GasSafe Co.', status: 'Operational'},
+  { id: 'inst9', installationName: 'Air Purifier Unit - Common Area', category: 'Air Quality', location: 'Main Common Area', lastInspectionDate: new Date(2024, 4, 10), nextInspectionDue: addMonths(new Date(2024, 4, 10), 3), inspectionFrequency: 'Quarterly Filter Change', serviceVendor: 'In-house Maintenance', status: 'Operational'},
 ];

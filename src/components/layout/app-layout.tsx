@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Building2, LogOut, UserCircle, Moon, Sun } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
-import { SidebarIcons } from '@/components/icons'; 
+import { SidebarIcons } from '@/components/icons';
 
 interface NavItem {
   href: string;
@@ -43,6 +43,7 @@ interface NavItem {
 interface NavGroup {
   label: string;
   items: NavItem[];
+  icon?: LucideIcon; // Optional icon for the group itself
 }
 
 const navGroups: NavGroup[] = [
@@ -160,6 +161,14 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: 'FACILITY CERTIFICATIONS & INSTALLATIONS',
+    icon: SidebarIcons.FacilityCertsInstallationsGroup,
+    items: [
+      { href: '/facility-certs-installations/certifications', label: 'Certifications', icon: SidebarIcons.Certifications },
+      { href: '/facility-certs-installations/installations', label: 'Installations & Infrastructure', icon: SidebarIcons.InstallationsInfrastructure },
+    ],
+  },
+  {
     label: 'FINANCE',
     items: [
       { href: '/finance/purchase-requests', label: 'Purchase Requests', icon: SidebarIcons.PurchaseRequests },
@@ -176,7 +185,7 @@ const navGroups: NavGroup[] = [
       { href: '/human-resources/recruitment', label: 'Recruitment', icon: SidebarIcons.Recruitment },
       { href: '/human-resources/onboarding', label: 'Onboarding', icon: SidebarIcons.Onboarding },
       { href: '/human-resources/staff-matrix', label: 'Staff Matrix', icon: SidebarIcons.StaffMatrix },
-      { href: '/human-resources/training-certs', label: 'Training & Certs', icon: SidebarIcons.TrainingCerts }, 
+      { href: '/human-resources/training-certs', label: 'Training & Certs', icon: SidebarIcons.TrainingCerts },
       { href: '/human-resources/performance-reviews', label: 'Performance Reviews', icon: SidebarIcons.PerformanceReviews },
       { href: '/human-resources/exit-logs', label: 'Exit Logs', icon: SidebarIcons.ExitLogs },
       { href: '/human-resources/contractors-consultants', label: 'Contractors & Consultants', icon: SidebarIcons.ContractorsConsultants },
@@ -206,7 +215,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    setMounted(true); 
+    setMounted(true);
 
     const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (storedTheme) {
@@ -217,7 +226,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       document.documentElement.classList.add('dark');
     }
   }, []);
-  
+
   const currentTopLevelLabel = React.useMemo(() => {
     if (!mounted) { // Prevents SSR mismatch for dynamic header titles based on path
       const defaultItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
@@ -232,7 +241,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
       }
     }
-    
+
     // Fallback if no specific match (e.g. for the root path if it's not explicitly in navGroups)
     const rootItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
     return rootItem ? rootItem.label : 'Dashboard';
@@ -245,7 +254,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
-  
+
   return (
     <SidebarProvider defaultOpen>
       <Sidebar>
@@ -258,7 +267,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           {navGroups.map((group) => (
             <SidebarGroup key={group.label}>
-              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupLabel>
+                {group.icon && <group.icon className="mr-2 h-4 w-4 inline-block" />}
+                {group.label}
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {group.items.map((item) => (
@@ -326,4 +338,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-

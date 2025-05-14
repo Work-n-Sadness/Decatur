@@ -5,94 +5,97 @@ import {
   ClipboardList,
   Sparkles,
   ListChecks,
-  CircleDot, 
-  Loader2, 
-  CheckCircle2, 
-  AlertTriangle, 
-  ShieldX, 
+  CircleDot,
+  Loader2,
+  CheckCircle2,
+  AlertTriangle,
+  ShieldX,
   type LucideIcon,
-  GanttChartSquare, 
-  FilePieChart, 
-  Settings2, 
-  Repeat, 
-  CalendarClock, 
-  Pill, 
-  FileHeart, 
-  ShieldCheck, 
-  Wind, 
-  ClipboardCheck, 
-  UsersRound, 
-  Clock, 
-  FileSearch, 
-  Activity, 
-  Eye, 
-  ShoppingCart, 
-  Archive, 
-  Stethoscope, 
-  NotebookPen, 
-  Flag, 
-  FileEdit, 
-  History, 
-  Flame, 
-  FlameKindling, 
-  Lightbulb, 
-  Siren, 
-  Map, 
-  Briefcase, 
-  PhoneCall, 
-  Thermometer, 
-  WashingMachine, 
-  Utensils, 
-  ChefHat, 
-  Bug, 
-  Shirt, 
-  Wrench, 
-  SearchCheck, 
-  DoorOpen, 
-  Cigarette, 
-  SmilePlus, 
-  Ban, 
-  Contact, 
-  FileText, 
-  TrendingUp, 
-  UserCheck, 
-  UserMinus, 
-  Users2, 
-  Presentation, 
-  UserPlus, 
-  ClipboardPen, 
-  Award, 
-  GraduationCap, 
-  HardHat, 
-  ShoppingBag, 
-  CreditCard, 
-  Landmark, 
-  DollarSign, 
-  FileDigit, 
-  LineChart, 
-  Building, 
-  BadgeCheck, 
-  BookCopy, 
-  Gavel, 
-  AlertOctagon, 
-  ScrollText, 
-  ClipboardSignature, 
-  Settings, 
-  UserCog, 
-  DatabaseZap, 
-  Network, 
-  Users, 
-  LayoutGrid, 
-  SprayCan, 
-  Boxes, 
-  CalendarCheck, 
-  BookUser, 
-  Salad, 
-  Tag, 
+  GanttChartSquare,
+  FilePieChart,
+  Settings2,
+  Repeat,
+  CalendarClock,
+  Pill,
+  FileHeart,
+  ShieldCheck,
+  Wind,
+  ClipboardCheck,
+  UsersRound,
+  Clock,
+  FileSearch,
+  Activity,
+  Eye,
+  ShoppingCart,
+  Archive,
+  Stethoscope,
+  NotebookPen,
+  Flag,
+  FileEdit,
+  History,
+  Flame,
+  FlameKindling,
+  Lightbulb,
+  Siren,
+  Map,
+  Briefcase,
+  PhoneCall,
+  Thermometer,
+  WashingMachine,
+  Utensils,
+  ChefHat,
+  Bug,
+  Shirt,
+  Wrench,
+  SearchCheck,
+  DoorOpen,
+  Cigarette,
+  SmilePlus,
+  Ban,
+  Contact,
+  FileText,
+  TrendingUp,
+  UserCheck,
+  UserMinus,
+  Users2,
+  Presentation,
+  UserPlus,
+  ClipboardPen, // Replaced ClipboardUser
+  Award,
+  GraduationCap,
+  HardHat, // For Contractors & Consultants and Facility Installations
+  ShoppingBag,
+  CreditCard,
+  Landmark,
+  DollarSign,
+  FileDigit,
+  LineChart,
+  Building,
+  BadgeCheck,
+  BookCopy,
+  Gavel,
+  AlertOctagon,
+  ScrollText,
+  ClipboardSignature,
+  Settings,
+  UserCog, // Replaced UsersCog with UserCog
+  DatabaseZap,
+  Network,
+  Users,
+  LayoutGrid,
+  SprayCan,
+  Boxes,
+  CalendarCheck,
+  BookUser,
+  Salad,
+  Tag,
   ShieldAlert,
   ListTodo, // Added for Checklists
+  Building2 as FacilityIcon, // Facility Certs & Installations group icon
+  Shield as ShieldIcon, // Certifications sub-item icon (alternative to ShieldCheck if needed for distinction)
+  Cpu as CpuIcon, // Installations & Infrastructure (alternative to Wrench/HardHat)
 } from 'lucide-react';
-import type { TaskCategory, ResolutionStatus, TaskFrequency } from '@/types';
+import type { TaskCategory, ResolutionStatus, TaskFrequency, FacilityInstallation } from '@/types';
 
 export const TaskCategoryIcons: Record<TaskCategory, LucideIcon> = {
   'Medication Management & ECP Audits': Pill,
@@ -112,7 +115,7 @@ export const ResolutionStatusIcons: Record<ResolutionStatus, LucideIcon> = {
 
 export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
   Daily: Repeat,
-  Weekly: CalendarClock, 
+  Weekly: CalendarClock,
   Monthly: CalendarClock,
   Quarterly: CalendarClock,
   'Mid Yearly': CalendarClock,
@@ -125,11 +128,11 @@ export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
 export const SidebarIcons = {
   // OPERATIONS
   Dashboard: GanttChartSquare,
-  AuditTool: FileSearch, 
+  AuditTool: FileSearch,
   ComplianceSummary: ClipboardCheck,
-  Reports: FilePieChart, // Moved from Insights & Systems
+  Reports: FilePieChart,
   SurveyReadiness: ClipboardList,
-  Checklists: ListTodo, // Added for Checklists
+  Checklists: ListTodo,
 
   // RESIDENTS
   ProfilesFaceSheets: Contact,
@@ -137,7 +140,7 @@ export const SidebarIcons = {
   ProgressNotes: TrendingUp,
   CheckInOutLogs: UserCheck,
   CaseManagement: Users2,
-  CouncilMeetings: Presentation,
+  CouncilMeetings: Presentation, // Will be renamed to ResidentManagementForum but icon remains
 
   // MEDICATION & ECP
   MedOrders: Pill,
@@ -147,59 +150,57 @@ export const SidebarIcons = {
   DiscontinuedMeds: Archive,
   TreatmentHistory: Stethoscope,
   DoctorOrders: NotebookPen,
-  // ECP CHARTING (Now part of MEDICATION & ECP items based on user's detailed list for sidebar groups)
+  // ECP CHARTING
   FlaggedECPActions: Flag,
   MARCorrections: FileEdit,
   MissedDoses: History,
 
 
-  // EMERGENCY READINESS (Was FIRE & EMERGENCY SAFETY)
+  // EMERGENCY READINESS
   FireDrills: Flame,
   ExtinguisherChecks: FlameKindling,
   EmergencyLighting: Lightbulb,
   CNFAPosting: Siren,
   EvacuationPlans: Map,
-  GoBagChecklist: Briefcase, // Renamed from Bag Checklist
+  GoBagChecklist: Briefcase,
   NineOneOneLog: PhoneCall,
 
-  // FACILITY OPERATIONS & SERVICES (New Top Level Group)
-  FacilityOperations: LayoutGrid, // Icon for the group itself if needed, or can be one of the items
+  // FACILITY OPERATIONS & SERVICES
   GroceryFoodPurchases: ShoppingCart,
   CleaningSuppliesOrders: SprayCan,
-  FoodDryGoodsInventory: Archive, // Re-using Archive, Boxes could also be an option
-  CleaningSuppliesInventory: Boxes,
-  MaintenanceRequestLog: Wrench, // Also used in Environmental Safety
+  FoodDryGoodsInventory: Boxes, // Changed from Archive to Boxes
+  CleaningSuppliesInventory: Archive, // Using Archive here
+  MaintenanceRequestLog: Wrench,
   FacilityRepairHistory: History,
   PreventiveMaintenanceSchedule: CalendarCheck,
   VendorContactDirectory: BookUser,
-  WeeklyMealSchedule: Utensils, // Also used in Food & Nutrition
-  MealPrepChecklist: ClipboardCheck, // Also used for Compliance Summary
+  WeeklyMealSchedule: Utensils,
+  MealPrepChecklist: ClipboardCheck,
   TherapeuticDietTracker: Salad,
   LeftoversLabelingLog: Tag,
-  WeeklyShowerSinkTempLogs: Thermometer, // Also used in Food & Nutrition
-  DishwasherCycleTempRecord: WashingMachine, // Also used in Food & Nutrition
+  WeeklyShowerSinkTempLogs: Thermometer,
+  DishwasherCycleTempRecord: WashingMachine,
   ScaldRiskAudit: ShieldAlert,
-
 
   // ENVIRONMENTAL SAFETY
   PestControl: Bug,
   OxygenHandling: Wind,
   PPEAudits: Shirt,
-  MaintenanceRequests: Wrench, // Note: Duplicate, consider if this should be its own page or link to the one in Facility Ops
+  MaintenanceRequests: Wrench, // Note: Duplicate icon, consider if pages are distinct enough
   HazardChecks: SearchCheck,
 
   // FOOD & NUTRITION
   TempLogs: Thermometer,
   DishwasherLogs: WashingMachine,
   WeeklyMenu: Utensils,
-  GroceryInventory: Archive, 
+  GroceryInventory: Archive,
   FoodSafetyAudits: ChefHat,
 
   // SECURITY & BEHAVIOR
   EntryExitLogs: DoorOpen,
   SmokingCompliance: Cigarette,
   BehaviorReports: SmilePlus,
-  VisitorRestrictions: Ban, 
+  VisitorRestrictions: Ban,
 
   // REGULATORY OVERSIGHT
   FireDeptVisits: Building,
@@ -207,7 +208,12 @@ export const SidebarIcons = {
   RegulatoryVisitLogs: BookCopy,
   OmbudsmanReports: Gavel,
   IncidentGrievanceLogs: AlertOctagon,
-  
+
+  // FACILITY CERTIFICATIONS & INSTALLATIONS (NEW SECTION)
+  FacilityCertsInstallationsGroup: FacilityIcon, // Group Icon
+  Certifications: ShieldIcon, // Using Shield for Certifications
+  InstallationsInfrastructure: CpuIcon, // Using Cpu for Installations & Infra
+
   // FINANCE
   PurchaseRequests: ShoppingBag,
   FacilityExpenses: CreditCard,
@@ -218,9 +224,9 @@ export const SidebarIcons = {
 
   // HUMAN RESOURCES
   Recruitment: UserPlus,
-  Onboarding: ClipboardPen, 
-  StaffMatrix: Users, 
-  TrainingCerts: UsersRound, 
+  Onboarding: ClipboardPen,
+  StaffMatrix: Users,
+  TrainingCerts: UsersRound,
   PerformanceReviews: Award,
   ExitLogs: UserMinus,
   ContractorsConsultants: HardHat,
@@ -230,19 +236,18 @@ export const SidebarIcons = {
   HouseRules: ClipboardSignature,
 
   // INSIGHTS & SYSTEMS
-  // Reports: FilePieChart, // Moved to OPERATIONS
   SystemLogs: DatabaseZap,
   ApiIntegrations: Network,
   UserManagement: UserCog,
-  Settings: Settings, // Admin Settings is just Settings
+  Settings: Settings,
 };
 
 export const getTaskCategoryIcon = (category: TaskCategory): LucideIcon => {
-  return TaskCategoryIcons[category] || ListChecks; 
+  return TaskCategoryIcons[category] || ListChecks;
 };
 
 export const getResolutionStatusIcon = (status: ResolutionStatus): JSX.Element => {
-  const Icon = ResolutionStatusIcons[status] || CircleDot; 
+  const Icon = ResolutionStatusIcons[status] || CircleDot;
   let className = '';
   switch (status) {
     case 'Pending': className = 'text-yellow-500'; break;
@@ -256,3 +261,19 @@ export const getResolutionStatusIcon = (status: ResolutionStatus): JSX.Element =
 export const getTaskFrequencyIcon = (frequency: TaskFrequency): LucideIcon => {
   return TaskFrequencyIcons[frequency] || Repeat;
 };
+
+export const getInstallationCategoryIcon = (category: FacilityInstallation['category']): LucideIcon => {
+  const map: Record<FacilityInstallation['category'], LucideIcon> = {
+    'Fire Safety': Flame,
+    'HVAC': Wind, // Using Wind as a generic for air systems
+    'Water Systems': WashingMachine, // Generic water related
+    'Electrical': Lightbulb, // Using Lightbulb as generic for electrical
+    'Accessibility': Users, // Generic for accessibility
+    'Sanitation': SprayCan,
+    'Gas Systems': FlameKindling, // Re-using, could be more specific
+    'Air Quality': Wind,
+    'General Safety': ShieldCheck,
+  };
+  return map[category] || HardHat; // Default icon
+};
+
