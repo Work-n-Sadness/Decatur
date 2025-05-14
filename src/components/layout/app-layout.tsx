@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import * as React from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // Added useState, useEffect
 import type { LucideIcon } from 'lucide-react';
 import {
   SidebarProvider,
@@ -52,16 +52,17 @@ const navGroups: NavGroup[] = [
       { href: '/', label: 'Dashboard', icon: SidebarIcons.Dashboard },
       { href: '/core-operations/audit-tool', label: 'Audit Tool', icon: SidebarIcons.AuditTool },
       { href: '/compliance-summary', label: 'Compliance Summary', icon: SidebarIcons.ComplianceSummary },
+      { href: '/reports', label: 'Reports', icon: SidebarIcons.Reports },
       { href: '/core-operations/survey-readiness', label: 'Survey Readiness', icon: SidebarIcons.SurveyReadiness },
     ],
   },
   {
     label: 'RESIDENTS',
     items: [
-      { href: '/resident-records/face-sheets', label: 'Profiles & Face Sheets', icon: SidebarIcons.ProfilesFaceSheets },
+      { href: '/resident-records/face-sheets', label: 'Face Sheets', icon: SidebarIcons.ProfilesFaceSheets },
       { href: '/resident-records/care-plans', label: 'Care Plans', icon: SidebarIcons.CarePlans },
       { href: '/resident-records/progress-notes', label: 'Progress Notes', icon: SidebarIcons.ProgressNotes },
-      { href: '/resident-records/check-in-out', label: 'Check-in/Exit Logs', icon: SidebarIcons.CheckInOutLogs },
+      { href: '/resident-records/check-in-out', label: 'Check-in/Exit', icon: SidebarIcons.CheckInOutLogs },
       { href: '/resident-records/case-management', label: 'Case Management', icon: SidebarIcons.CaseManagement },
       { href: '/resident-records/council-meetings', label: 'Council Meetings', icon: SidebarIcons.CouncilMeetings },
     ],
@@ -76,10 +77,15 @@ const navGroups: NavGroup[] = [
       { href: '/medication-clinical/discontinued-meds', label: 'Discontinued Meds', icon: SidebarIcons.DiscontinuedMeds },
       { href: '/medication-clinical/treatment-history', label: 'Treatment History', icon: SidebarIcons.TreatmentHistory },
       { href: '/medication-clinical/doctor-orders', label: 'Doctor Orders', icon: SidebarIcons.DoctorOrders },
-      { href: '/ecp-charting/flagged-actions', label: 'Flagged ECP Actions', icon: SidebarIcons.FlaggedECPActions },
-      { href: '/ecp-charting/mar-corrections', label: 'MAR Corrections', icon: SidebarIcons.MARCorrections },
-      { href: '/ecp-charting/missed-doses', label: 'Missed Doses', icon: SidebarIcons.MissedDoses },
     ],
+  },
+  {
+    label: 'ECP CHARTING',
+    items: [
+        { href: '/ecp-charting/flagged-actions', label: 'Flagged ECP Actions', icon: SidebarIcons.FlaggedECPActions },
+        { href: '/ecp-charting/mar-corrections', label: 'MAR Corrections Log', icon: SidebarIcons.MARCorrections },
+        { href: '/ecp-charting/missed-doses', label: 'Missed Dose Tracker', icon: SidebarIcons.MissedDoses },
+    ]
   },
   {
     label: 'EMERGENCY READINESS',
@@ -165,7 +171,6 @@ const navGroups: NavGroup[] = [
   {
     label: 'INSIGHTS & SYSTEMS',
     items: [
-      { href: '/reports', label: 'Reports', icon: SidebarIcons.Reports },
       { href: '/admin/system-logs', label: 'System Logs', icon: SidebarIcons.SystemLogs },
       { href: '/admin/api-integrations', label: 'API Integrations', icon: SidebarIcons.ApiIntegrations },
       { href: '/admin/user-management', label: 'User Management', icon: SidebarIcons.UserManagement },
@@ -177,8 +182,31 @@ const navGroups: NavGroup[] = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true); // Indicates component has mounted on the client
+
+    const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (storedTheme) {
+      setTheme(storedTheme);
+      document.documentElement.classList.toggle('dark', storedTheme === 'dark');
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark');
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
   
   const currentTopLevelLabel = React.useMemo(() => {
+    if (!mounted) {
+      // Return a default label for SSR or initial client render before hydration
+      // This should match what the server would render or be a safe default.
+      // For instance, the label of the item matching the default route '/'
+      const defaultItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
+      return defaultItem ? defaultItem.label : 'Dashboard';
+    }
+
+    // Client-side logic using the actual pathname
     for (const group of navGroups) {
       for (const item of group.items) {
         if (pathname === item.href) {
@@ -189,13 +217,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     // Fallback for grouped paths if not an exact match
      for (const group of navGroups) {
         const groupPathPrefix = `/${group.label.toLowerCase().replace(/\s*&\s*/g, '-').replace(/\s+/g, '-').replace(/[^a-z0-9-]/gi, '')}`;
-        if (pathname.startsWith(groupPathPrefix) || group.items.some(item => pathname.startsWith(item.href.substring(0, item.href.lastIndexOf('/'))))) {
+        if (pathname.startsWith(groupPathPrefix) || group.items.some(item => pathname.startsWith(item.href.substring(0, item.href.lastIndexOf('/'))) && item.href !== '/')) {
              const item = group.items.find(i => pathname.startsWith(i.href) && i.href !== '/');
              if(item) return item.label;
              
              const segments = pathname.split('/').filter(Boolean);
              if (segments.length > 0) {
-                // Try to match based on the last segment of the path with item labels
                 const currentSubPathSegment = segments[segments.length - 1];
                 const matchedItem = group.items.find(i => {
                     const itemPathSegments = i.href.split('/').filter(Boolean);
@@ -205,23 +232,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 if (matchedItem) return matchedItem.label;
              }
              // If still no match, return the group label if the path starts with a prefix derived from it
-             if (pathname.startsWith(groupPathPrefix)) return group.label;
+             // This part might need refinement if group labels are not desired as page titles
+             // For now, if a deeper match isn't found, but it's within a group prefix, use a specific page title or a more generic one
+             // return group.label; // Potentially problematic if group.label is "OPERATIONS" and path is /core-operations/some-page
+             // Let's try to find the specific page or default to a sensible title
+             const fallbackItem = group.items.find(i => pathname.startsWith(i.href.substring(0, i.href.lastIndexOf('/'))));
+             if(fallbackItem) return fallbackItem.label
         }
     }
     return 'Dashboard'; // Default
-  }, [pathname]);
+  }, [pathname, mounted]);
 
-
-  React.useEffect(() => {
-    const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    if (storedTheme) {
-      setTheme(storedTheme);
-      document.documentElement.classList.toggle('dark', storedTheme === 'dark');
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark');
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -275,14 +296,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
             <h2 className="text-lg font-semibold">
-              {currentTopLevelLabel}
+              {mounted ? currentTopLevelLabel : 'Dashboard'} {/* Display placeholder or default until mounted */}
             </h2>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://picsum.photos/seed/user/40/40" alt="User Avatar" data-ai-hint="user avatar" />
+                  <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="user avatar" />
                   <AvatarFallback>
                     <UserCircle className="h-6 w-6" />
                   </AvatarFallback>
