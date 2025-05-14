@@ -252,3 +252,19 @@ export const mockStaffTrainingData: StaffTrainingRecord[] = staffForTrainingRawN
 export const allMockStaffNames = allStaffNames; 
 export const allMockComplianceChapters = Array.from(new Set(mockTasks.map(t => t.complianceChapterTag).filter(Boolean).concat(complianceChapterTagsPool.filter(Boolean) as string[]))) as string[];
 
+export const amenities: string[] = [
+  "In-house doctor visit",
+  "On-call physician or Registered Nurse",
+  "Home cooked meals",
+  "Bathing, grooming, dressing, hygiene assistance",
+  "Laundry, housekeeping, linen services",
+  "Daily activities, games, movie days",
+  "Transportation and appointment assistance",
+  "Respite services",
+  "Medication administration & monitoring",
+  "Hair & nail care on call",
+  "State-licensed facility",
+  "Private & semi-private rooms",
+  "Wheelchair accessible",
+  "Fire sprinkler system"
+];
