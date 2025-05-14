@@ -8,8 +8,8 @@ import { mockTasks, allTaskCategories } from '@/lib/mock-data';
 import type { Task, TaskCategory } from '@/types';
 import { getTaskCategoryIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
-import { ChartContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LabelList } from 'recharts';
-import type { ChartConfig } from "@/components/ui/chart"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LabelList } from 'recharts';
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { ClipboardCheck } from 'lucide-react';
 
 
@@ -172,3 +172,4 @@ export default function ComplianceSummaryPage() {
     </div>
   );
 }
+
