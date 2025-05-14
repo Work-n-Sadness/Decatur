@@ -1,5 +1,6 @@
 
-import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, Role, AuditCategory, AuditItem, StaffTrainingRecord, TrainingType, TrainingStatus } from '@/types';
+import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, Role, AuditCategory, AuditItem, StaffTrainingRecord, TrainingType, TrainingStatus, RecurrenceConfig } from '@/types';
+import { addDays, startOfDay, getDay, getDate } from 'date-fns';
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -13,19 +14,19 @@ export const allTaskCategories: TaskCategory[] = [
   'Resident Documentation & Clinical Care',
   'Compliance & Survey Prep Tasks',
   'Smoking, Behavior, and Environment',
+  'Facility Operations & Services',
 ];
 
 export const allTaskFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'As Needed', 'Annually', 'Bi-annually', 'Mid Yearly'];
 export const allResolutionStatuses: ResolutionStatus[] = ['Pending', 'Resolved', 'Escalated'];
 export const allMockRoles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director', 'Wellness Nurse', 'Housekeeping Supervisor', 'QMAP Supervisor', 'Housekeeping / Aide'];
 
-// Expanded list based on roles mentioned in task assignments
 const staffNamesByRole: Record<Role, string[]> = {
     'Wellness Nurse': ['Alice Smith (Wellness Nurse)', 'Olivia Chen (Wellness Nurse)'],
     'QMAP Supervisor': ['Bob Johnson (QMAP Sup.)', 'Noah Martinez (QMAP Sup.)'],
     'Admin': ['Carol Williams (Admin)', 'Sophia Rodriguez (Admin)'],
     'Director': ['David Brown (Director)', 'Isabella Wilson (Director)'],
-    'Nurse': ['Eve Davis (Nurse)', 'Grace Lee (Nurse)'], // Assuming Grace can also be a Nurse
+    'Nurse': ['Eve Davis (Nurse)', 'Grace Lee (Nurse)'],
     'Caregiver': ['Frank Wilson (Caregiver)', 'Michael Brown (Caregiver)'],
     'Housekeeping Supervisor': ['Grace Lee (Housekeeping Sup.)', 'Ava Davis (Housekeeping Sup.)'],
     'Maintenance': ['Henry Miller (Maintenance)', 'Ethan Miller (Maintenance)'],
@@ -78,21 +79,32 @@ const specificTasksSeed: SeedTask[] = [
   { name: "Log all resident smoking activity", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Housekeeping Supervisor', frequency: 'Daily', deliverables: "Time-stamped log", validator: 'Admin' },
   { name: "Audit compliance with smoking safety", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Admin', frequency: 'Weekly', deliverables: "Violation log", validator: 'Director' },
   { name: "Observe and document behavioral incidents", category: 'Smoking, Behavior, and Environment', responsibleRole: ['Caregiver', 'Nurse'], frequency: 'As Needed', deliverables: "Incident form", validator: 'Wellness Nurse' },
+  { name: "Perform Resident Room Safety Compliance Check", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Housekeeping Supervisor', frequency: 'Weekly', deliverables: "Room safety checklist", validator: 'Admin', complianceChapterTag: "Ch. 12.4" },
 ];
 
 export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
-  const startDate = getRandomDate(new Date(2023, 0, 1), new Date(2024, 11, 31));
-  const freqCycleDays = {
-    'Daily': 1, 'Weekly': 7, 'Monthly': 30, 'Quarterly': 90, 'Mid Yearly': 182, 'Annually': 365, 'Bi-annually': 730, 'As Needed': 0
-  };
-  const cycleDays = freqCycleDays[seed.frequency] || 0;
-  const endDate = cycleDays > 0 ? new Date(startDate.getTime() + (cycleDays * 24 * 60 * 60 * 1000)) : null;
+  const instanceStartDate = getRandomDate(new Date(2023, 0, 1), new Date(2024, 11, 31));
+  const patternStartDate = new Date(instanceStartDate.getFullYear(), instanceStartDate.getMonth(), 1); // Example pattern start
   
+  const freqCycleDaysMap: Record<TaskFrequency, number> = {
+    'Daily': 1, 'Weekly': 7, 'Monthly': 30, 'Quarterly': 90, 
+    'Mid Yearly': 182, 'Annually': 365, 'Bi-annually': 730, 'As Needed': 0 // 'As Needed' has no fixed cycle
+  };
+  const cycleDays = freqCycleDaysMap[seed.frequency] || 0;
+  
+  // endDate for the instance (due date)
+  let instanceEndDate: Date | null = null;
+  if (cycleDays > 0) {
+    instanceEndDate = addDays(startOfDay(instanceStartDate), cycleDays -1); // Task due by end of cycle
+  } else if (seed.frequency === 'As Needed') {
+    instanceEndDate = addDays(startOfDay(instanceStartDate), Math.floor(Math.random() * 7) + 1); // 'As Needed' might have a loose due date
+  }
+
+
   const status = getRandomElement(allResolutionStatuses);
   
   let assignedStaffMember: string;
   if (Array.isArray(seed.responsibleRole)) {
-    // If multiple roles, pick a staff member from the first role in the array for assignment
     assignedStaffMember = getRandomElement(staffNamesByRole[seed.responsibleRole[0]] || allStaffNames);
   } else {
     assignedStaffMember = getRandomElement(staffNamesByRole[seed.responsibleRole] || allStaffNames);
@@ -103,12 +115,25 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
 
   if (status === 'Resolved') {
     lastCompletedOn = cycleDays > 0 
-        ? getRandomDate(new Date(startDate.getTime() - cycleDays * 24 * 60 * 60 * 1000), startDate) 
-        : getRandomDate(new Date(new Date().getTime() - 30 * 24*60*60*1000), new Date()); // For 'As Needed' tasks
+        ? getRandomDate(addDays(instanceStartDate, -cycleDays), instanceStartDate) 
+        : getRandomDate(addDays(new Date(), -30), new Date()); 
     completedBy = assignedStaffMember;
   }
   
-  const initialActivityTimestamp = new Date(startDate.getTime() - (Math.floor(Math.random() * 5) + 1) * 24 * 60 * 60 * 1000);
+  const initialActivityTimestamp = addDays(instanceStartDate, -(Math.floor(Math.random() * 5) + 1));
+
+  const recurrenceConfig: RecurrenceConfig = {
+    frequency: seed.frequency,
+    patternStartDate: patternStartDate,
+    interval: 1, // Default interval
+  };
+
+  if (seed.frequency === 'Weekly') {
+    recurrenceConfig.recurrenceDaysOfWeek = [getDay(instanceStartDate)]; // Assume it recurs on the same day of the week as this instance's start
+  } else if (seed.frequency === 'Monthly') {
+    recurrenceConfig.recurrenceDayOfMonth = getDate(instanceStartDate); // Assume it recurs on the same day of the month
+  }
+
 
   return {
     id: `task_${i + 1}`,
@@ -120,14 +145,14 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
     validator: seed.validator || null,
     assignedStaff: assignedStaffMember,
     status,
-    startDate,
-    endDate,
+    startDate: instanceStartDate, // This instance's start/due window
+    endDate: instanceEndDate,   // This instance's due date
     time: Math.random() > 0.5 ? `${Math.floor(Math.random() * 12) + 1}:${['00', '15', '30', '45'][Math.floor(Math.random()*4)]} ${getRandomElement(['AM', 'PM'])}` : null,
     progress: status === 'Resolved' ? 100 : (status === 'Pending' ? 0 : (status === 'Escalated' ? Math.floor(Math.random() * 50) : Math.floor(Math.random() * 80) + 10)),
-    notes: `Task initialized. Last review was on ${new Date(startDate.getTime() - (Math.floor(Math.random() * 30) + 7) * 24 * 60 * 60 * 1000).toLocaleDateString()}. ${getRandomElement(['Ensure proper documentation.', 'Follow up with validator.', 'Report any deviations.',''])}`,
+    notes: `Task instance for ${instanceStartDate.toLocaleDateString()}. ${getRandomElement(['Ensure proper documentation.', 'Follow up with validator.', 'Report any deviations.',''])}`,
     activities: [
-      { timestamp: initialActivityTimestamp > new Date() ? new Date() : initialActivityTimestamp, user: 'System', action: 'Task Generated', details: 'Task created based on compliance schedule.' },
-      ...(status !== 'Pending' && startDate < new Date() ? [{ timestamp: startDate, user: assignedStaffMember, action: 'Task Actioned', details: `Task status set to ${status}.` }] : []),
+      { timestamp: initialActivityTimestamp > new Date() ? new Date() : initialActivityTimestamp, user: 'System', action: 'Task Instance Generated', details: 'Task instance created based on recurrence pattern.' },
+      ...(status !== 'Pending' && instanceStartDate < new Date() ? [{ timestamp: instanceStartDate, user: assignedStaffMember, action: 'Task Actioned', details: `Task status set to ${status}.` }] : []),
       ...(status === 'Resolved' && lastCompletedOn ? [{ timestamp: lastCompletedOn, user: completedBy || assignedStaffMember, action: 'Task Resolved', details: 'Task marked as resolved.' }] : []),
     ],
     evidenceLink: Math.random() > 0.6 ? `https://docs.google.com/document/d/example_evidence_${i+1}` : undefined,
@@ -135,11 +160,11 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
     completedBy,
     validatorApproval: status === 'Resolved' && seed.validator && Math.random() > 0.4 ? `Approved by ${getRandomElement(allStaffNames.filter(s => s !== completedBy))}` : null,
     complianceChapterTag: seed.complianceChapterTag || getRandomElement(complianceChapterTagsPool.filter(Boolean) as string[]) || undefined,
+    recurrenceConfig: recurrenceConfig,
   };
 });
 
 
-// Keeping existing mock data structures for other pages
 const originalCategoriesForAudit: string[] = [
   'Health Protocols / Medications',
   'Food Safety',
@@ -172,7 +197,6 @@ export const mockStaffResponsibilityMatrix = allMockRoles.map(role => ({
 }));
 
 
-// Mock Data for Staff Training Dashboard
 export const allTrainingTypes: TrainingType[] = ['QMAP Training', 'TB Test', 'CPR Certification', 'Orientation'];
 export const allTrainingStatuses: TrainingStatus[] = ['Compliant', 'Expiring Soon', 'Overdue', 'Pending Documentation'];
 
@@ -209,12 +233,12 @@ const staffForTrainingRawNames = ['Olivia Chen', 'Michael Brown', 'Sophia Rodrig
 export const mockStaffTrainingData: StaffTrainingRecord[] = staffForTrainingRawNames.flatMap((staffName, staffIndex) => 
   allTrainingTypes.map((trainingType, trainingTypeIndex) => {
     const { completionDate, expiryDate, status } = generateTrainingDates();
-    const assignedRole = allMockRoles[staffIndex % allMockRoles.length]; // Assign roles cyclically from the main list
-    const staffMemberFullName = `${staffName} (${assignedRole})`; // Use full name with role for display if needed elsewhere
+    const assignedRole = allMockRoles[staffIndex % allMockRoles.length]; 
+    const staffMemberFullName = `${staffName} (${assignedRole})`; 
     
     return {
       id: `training_${staffIndex + 1}_${trainingTypeIndex + 1}`,
-      staffMemberName: staffMemberFullName, // Store with role for consistency with other staff name usage
+      staffMemberName: staffMemberFullName, 
       staffRole: assignedRole,
       trainingType,
       completionDate,
@@ -225,5 +249,6 @@ export const mockStaffTrainingData: StaffTrainingRecord[] = staffForTrainingRawN
     };
   })
 );
-export const allMockStaffNames = allStaffNames; // Use the comprehensive list
+export const allMockStaffNames = allStaffNames; 
 export const allMockComplianceChapters = Array.from(new Set(mockTasks.map(t => t.complianceChapterTag).filter(Boolean).concat(complianceChapterTagsPool.filter(Boolean) as string[]))) as string[];
+
