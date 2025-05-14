@@ -43,7 +43,7 @@ interface NavItem {
 interface NavGroup {
   label: string;
   items: NavItem[];
-  icon?: LucideIcon; 
+  icon?: LucideIcon;
 }
 
 const navGroups: NavGroup[] = [
@@ -152,7 +152,7 @@ const navGroups: NavGroup[] = [
       { href: '/food-nutrition/food-temp-logs', label: 'Temperature Logs', icon: SidebarIcons.TempLogs },
       { href: '/food-nutrition/dishwasher-logs', label: 'Dishwasher Logs', icon: SidebarIcons.DishwasherLogs },
       { href: '/food-nutrition/weekly-menu', label: 'Weekly Menu', icon: SidebarIcons.WeeklyMenu },
-      { href: '/food-nutrition/grocery-inventory', label: 'Grocery Inventory', icon: SidebarIcons.ShoppingCart }, // Uses ShoppingCart, consistent with Facility Ops
+      { href: '/food-nutrition/grocery-inventory', label: 'Grocery Inventory', icon: SidebarIcons.ShoppingCart },
       { href: '/food-nutrition/food-safety-audit', label: 'Food Safety Audits', icon: SidebarIcons.FoodSafetyAudits },
     ],
   },
@@ -225,7 +225,7 @@ const navGroups: NavGroup[] = [
       { href: '/admin/system-logs', label: 'System Logs', icon: SidebarIcons.SystemLogs },
       { href: '/admin/api-integrations', label: 'API Integrations', icon: SidebarIcons.ApiIntegrations },
       { href: '/admin/user-management', label: 'User Management', icon: SidebarIcons.UserManagement },
-      { href: '/admin/settings', label: 'Settings', icon: SidebarIcons.Settings }, // Using general settings icon for the item
+      { href: '/admin/settings', label: 'Settings', icon: SidebarIcons.Settings },
     ],
   },
 ];
@@ -248,7 +248,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const currentTopLevelLabel = React.useMemo(() => {
-    if (!mounted) { 
+    if (!mounted) {
+      // Default value before client-side hydration
       const defaultItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
       return defaultItem ? defaultItem.label : 'Dashboard';
     }
@@ -271,8 +272,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
+  // Prevent rendering until mounted to avoid hydration mismatch related to currentTopLevelLabel or theme
   if (!mounted) {
-    return null; // Or a loading spinner, to prevent hydration mismatch for theme-dependent rendering
+    return null;
   }
 
   return (

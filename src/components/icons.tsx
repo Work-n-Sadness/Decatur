@@ -1,7 +1,6 @@
 
 import {
   HeartPulse, // Used for Hypertension
-  UtensilsCrossed,
   ClipboardList,
   Sparkles,
   ListChecks,
@@ -9,11 +8,9 @@ import {
   Loader2,
   CheckCircle2,
   AlertTriangle, // Used for High Fall Risk
-  ShieldX,
   type LucideIcon,
   GanttChartSquare,
   FilePieChart,
-  Settings2,
   Repeat,
   CalendarClock,
   Pill, // Used for Controlled Meds
@@ -51,7 +48,6 @@ import {
   DoorOpen,
   Cigarette,
   SmilePlus,
-  Ban,
   Contact,
   FileText,
   TrendingUp,
@@ -60,10 +56,10 @@ import {
   Users2,
   Presentation,
   UserPlus,
-  ClipboardPen, 
+  ClipboardPen,
   Award,
   GraduationCap,
-  HardHat, 
+  HardHat,
   ShoppingBag,
   CreditCard,
   Landmark,
@@ -79,7 +75,7 @@ import {
   ScrollText,
   ClipboardSignature,
   Settings,
-  UserCog, 
+  UserCog,
   DatabaseZap,
   Network,
   Users,
@@ -91,16 +87,15 @@ import {
   Salad,
   Tag,
   ShieldAlert,
-  ListTodo, 
-  Shield as ShieldIcon, 
-  Cpu as CpuIcon, 
+  ListTodo,
+  Shield as ShieldIcon,
+  Cpu as CpuIcon,
   HeartHandshake, // For Medical Needs & Care Tags group
   Tags, // For Special Care Tags item
-  // Wheelchair, // For Wheelchair care flag - Removed as it causes build issues
   Brain, // For Dementia care flag
   Droplets, // For Diabetes care flag
   FileLock, // For HIPAA Note Available care flag
-  Accessibility // Added for DashboardFilters and TaskCard, and as fallback for Wheelchair
+  Accessibility
 } from 'lucide-react';
 import type { TaskCategory, ResolutionStatus, TaskFrequency, FacilityInstallation, ResidentCareFlag } from '@/types';
 
@@ -116,8 +111,8 @@ export const ResolutionStatusIcons: Record<ResolutionStatus, LucideIcon> = {
   Pending: CircleDot,
   Resolved: CheckCircle2,
   Escalated: AlertTriangle,
-  Complete: CheckCircle2, 
-  Flagged: AlertTriangle, 
+  Complete: CheckCircle2,
+  Flagged: AlertTriangle,
 };
 
 export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
@@ -145,9 +140,9 @@ export const SidebarIcons = {
   ProfilesFaceSheets: Contact,
   CarePlans: FileText,
   ProgressNotes: TrendingUp,
-  ResidentsMovingInOut: UserCheck, 
+  ResidentsMovingInOut: UserCheck,
   CaseManagement: Users2,
-  ResidentManagementForum: Presentation, 
+  ResidentManagementForum: Presentation,
 
   // MEDICAL NEEDS & CARE TAGS
   MedicalNeedsCareTagsGroup: HeartHandshake,
@@ -161,6 +156,7 @@ export const SidebarIcons = {
   DiscontinuedMeds: Archive,
   TreatmentHistory: Stethoscope,
   DoctorOrders: NotebookPen,
+
   // ECP CHARTING
   FlaggedECPActions: Flag,
   MARCorrections: FileEdit,
@@ -179,8 +175,8 @@ export const SidebarIcons = {
   FacilityOpsServicesGroup: LayoutGrid,
   GroceryFoodPurchases: ShoppingCart,
   CleaningSuppliesOrders: SprayCan,
-  FoodDryGoodsInventory: Boxes, 
-  CleaningSuppliesInventory: Archive, 
+  FoodDryGoodsInventory: Boxes,
+  CleaningSuppliesInventory: Archive,
   MaintenanceRequestLog: Wrench,
   FacilityRepairHistory: History,
   PreventiveMaintenanceSchedule: CalendarCheck,
@@ -198,7 +194,7 @@ export const SidebarIcons = {
   PestControl: Bug,
   OxygenHandling: Wind,
   PPEAudits: Shirt,
-  MaintenanceRequests: Wrench, 
+  MaintenanceRequests: Wrench,
   HazardChecks: SearchCheck,
 
   // FOOD & NUTRITION
@@ -206,15 +202,15 @@ export const SidebarIcons = {
   TempLogs: Thermometer,
   DishwasherLogs: WashingMachine,
   WeeklyMenu: Utensils,
-  // GroceryInventory: Archive, // Already under Facility Ops
+  // GroceryInventory icon is ShoppingCart, covered under Facility Ops
   FoodSafetyAudits: ChefHat,
 
   // SECURITY & BEHAVIOR
-  SecurityBehaviorGroup: ShieldCheck, 
+  SecurityBehaviorGroup: ShieldCheck,
   EntryExitLogs: DoorOpen,
   SmokingCompliance: Cigarette,
   BehaviorReports: SmilePlus,
-  VisitorLogNotifications: Users, 
+  VisitorLogNotifications: Users, // Replaced UsersThree
 
   // REGULATORY OVERSIGHT
   RegulatoryOversightGroup: Gavel,
@@ -224,10 +220,10 @@ export const SidebarIcons = {
   OmbudsmanReports: Gavel,
   IncidentGrievanceLogs: AlertOctagon,
 
-  // FACILITY CERTIFICATIONS & INSTALLATIONS 
-  FacilityCertsInstallationsGroup: Building2, 
-  Certifications: ShieldIcon, 
-  InstallationsInfrastructure: CpuIcon, 
+  // FACILITY CERTIFICATIONS & INSTALLATIONS
+  FacilityCertsInstallationsGroup: Building2,
+  Certifications: ShieldIcon, // Alias for Shield
+  InstallationsInfrastructure: CpuIcon, // Alias for Cpu
 
   // FINANCE
   FinanceGroup: DollarSign,
@@ -241,7 +237,7 @@ export const SidebarIcons = {
   // HUMAN RESOURCES
   HumanResourcesGroup: Users,
   Recruitment: UserPlus,
-  Onboarding: ClipboardPen,
+  Onboarding: ClipboardPen, // Replaced ClipboardUser
   StaffMatrix: Users,
   TrainingCerts: UsersRound,
   PerformanceReviews: Award,
@@ -257,8 +253,8 @@ export const SidebarIcons = {
   InsightsSystemsGroup: Settings,
   SystemLogs: DatabaseZap,
   ApiIntegrations: Network,
-  UserManagement: UserCog,
-  // Settings: Settings, // Settings is already group icon
+  UserManagement: UserCog, // Replaced UsersCog
+  Settings: Settings, // For the actual settings item
 };
 
 export const getTaskCategoryIcon = (category: TaskCategory): LucideIcon => {
@@ -284,16 +280,16 @@ export const getTaskFrequencyIcon = (frequency: TaskFrequency): LucideIcon => {
 export const getInstallationCategoryIcon = (category: FacilityInstallation['category']): LucideIcon => {
   const map: Record<FacilityInstallation['category'], LucideIcon> = {
     'Fire Safety': Flame,
-    'HVAC': Wind, 
-    'Water Systems': WashingMachine, 
-    'Electrical': Lightbulb, 
-    'Accessibility': Users, 
+    'HVAC': Wind,
+    'Water Systems': WashingMachine,
+    'Electrical': Lightbulb,
+    'Accessibility': Users,
     'Sanitation': SprayCan,
-    'Gas Systems': FlameKindling, 
+    'Gas Systems': FlameKindling,
     'Air Quality': Wind,
     'General Safety': ShieldCheck,
   };
-  return map[category] || HardHat; 
+  return map[category] || HardHat;
 };
 
 export const getCareFlagIcon = (flag: ResidentCareFlag): LucideIcon | null => {
@@ -304,10 +300,6 @@ export const getCareFlagIcon = (flag: ResidentCareFlag): LucideIcon | null => {
     case 'hypertension': return HeartPulse;
     case 'diabetes': return Droplets;
     case 'fall_risk_high': return AlertTriangle;
-    // For 'walker', 'fall_risk_medium', 'fall_risk_low', 'elopement_risk_yes', 'elopement_risk_no'
-    // you might want specific icons or handle them differently (e.g., text badges or combined icons)
-    // For now, returning null for flags without direct icon mapping for card display
     default: return Accessibility; // Fallback icon for other care flags
   }
 };
-
