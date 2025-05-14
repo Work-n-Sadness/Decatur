@@ -6,6 +6,7 @@ import TaskCard from '@/components/dashboard/task-card';
 import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
 import AttachEvidenceDialog from '@/components/dashboard/attach-evidence-dialog';
 import DashboardFilters from '@/components/dashboard/dashboard-filters';
+import WelcomeBanner from '@/components/dashboard/welcome-banner'; // Added import
 import { mockTasks, allMockRoles, allMockComplianceChapters, allTaskCategories, allResolutionStatuses, allTaskFrequencies, allMockStaffNames } from '@/lib/mock-data';
 import type { Task, TaskCategory, ResolutionStatus, Role, TaskFrequency, ActivityLog } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -351,6 +352,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <WelcomeBanner /> {/* Added WelcomeBanner component here */}
       <DashboardFilters
         onSearch={handleSearch}
         onFilterChange={handleFilterChange}
