@@ -5,10 +5,10 @@ export type TaskCategory =
   | 'Food Safety' 
   | 'Fire Safety' 
   | 'Office Admin' 
-  | 'Documentation & Compliance' 
-  | 'Personnel File & Staff Training' 
-  | 'Postings & Required Notices' 
-  | 'Environmental & Sanitation Checks' 
+  | 'Documentation & Compliance' // New
+  | 'Personnel File & Staff Training' // New
+  | 'Postings & Required Notices' // New
+  | 'Environmental & Sanitation Safety' // Renamed/Expanded
   | 'Additional ALR-Required Tasks';
 export type TaskFrequency = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Mid Yearly' | 'Annually' | 'Bi-annually' | 'As Needed';
 export type Role = 'Nurse' | 'Caregiver' | 'Admin' | 'Maintenance' | 'Director' | 'Wellness Nurse' | 'Housekeeping Supervisor' | 'QMAP Supervisor';
@@ -45,7 +45,7 @@ export interface Task {
 
 export interface AuditCategory {
   id: string;
-  name: TaskCategory | 'General Compliance';
+  name: TaskCategory | 'General Compliance'; // Updated to use the new TaskCategory type
   items: AuditItem[];
 }
 
