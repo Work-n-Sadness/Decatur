@@ -1,6 +1,6 @@
 
 import * as functions from 'firebase-functions';
-import *อนadmin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 
 admin.initializeApp();
 
@@ -8,23 +8,15 @@ const db = admin.firestore();
 
 interface RecurringTaskData {
   taskName: string;
-  frequency: 'daily' | 'weekly';
-  recurrenceDays?: string[]; // e.g., ["Monday", "Tuesday"]
+  frequency: 'daily' | 'weekly' | 'monthly'; // Added 'monthly' for flexibility, function currently handles daily/weekly
+  recurrenceDays?: string[]; // e.g., ["Monday", "Tuesday"] for weekly
+  recurrenceDayOfMonth?: number; // For monthly tasks
   assignedStaff: string;
   validator?: string;
   autoGenerateChecklist: boolean;
+  category?: string;
   // Add any other fields from your recurringTasks documents
 }
-
-const daysMap: { [key: string]: number } = {
-  Sunday: 0,
-  Monday: 1,
-  Tuesday: 2,
-  Wednesday: 3,
-  Thursday: 4,
-  Friday: 5,
-  Saturday: 6,
-};
 
 export const generateRecurringTasks = functions.pubsub
   .schedule('every 24 hours') // Runs daily
@@ -58,9 +50,15 @@ export const generateRecurringTasks = functions.pubsub
           shouldGenerate = true;
         }
       }
+      // Placeholder for monthly task generation logic if needed in the future
+      // else if (taskData.frequency === 'monthly') {
+      //   if (taskData.recurrenceDayOfMonth && today.getDate() === taskData.recurrenceDayOfMonth) {
+      //     shouldGenerate = true;
+      //   }
+      // }
 
       if (shouldGenerate) {
-        // Optional: Check if a checklist item for this task on this day already exists to prevent duplicates if function runs multiple times a day
+        // Check if a checklist item for this task on this day already exists to prevent duplicates
         const checklistQuery = await db.collection('checklists')
           .where('taskId', '==', taskId)
           .where('dueDate', '==', todayDateString)
@@ -71,17 +69,17 @@ export const generateRecurringTasks = functions.pubsub
           const newChecklistItemRef = db.collection('checklists').doc(); // Auto-generate ID
           batch.set(newChecklistItemRef, {
             taskName: taskData.taskName,
-            assignedStaff: taskData.assignedStaff,
+            assignedStaff: taskData.assignedStaff || null,
             validator: taskData.validator || null,
-            dueDate: todayDateString, // Store as YYYY-MM-DD string or Firestore Timestamp
+            dueDate: todayDateString, // Store as YYYY-MM-DD string
             status: 'Pending',
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             taskId: taskId,
-            notes: '',
-            evidenceLink: '',
-            lastCompletedOn: null,
-            completedBy: null,
-            // any other default fields
+            notes: '', // Default empty notes
+            evidenceLink: '', // Default empty evidence link
+            lastCompletedOn: null, // Default null
+            completedBy: null, // Default null
+            category: taskData.category || null, // Carry over category if present
           });
           tasksCreated++;
           console.log(`Scheduled to create checklist item for task: ${taskData.taskName} (ID: ${taskId})`);
@@ -102,19 +100,52 @@ export const generateRecurringTasks = functions.pubsub
   });
 
 // To deploy, you would typically run `firebase deploy --only functions`
+// from your project's root or your functions directory.
 // Ensure you have firebase-admin and firebase-functions in your functions/package.json
-// And configure the schedule in firebase.json or via Google Cloud Console.
+// (Typically located at `your-project/functions/package.json`)
 //
 // Example of functions/package.json dependencies:
 // "dependencies": {
-//   "firebase-admin": "^12.0.0",
-//   "firebase-functions": "^5.0.0"
+//   "firebase-admin": "^12.0.0", // Or your current version
+//   "firebase-functions": "^5.0.0" // Or your current version
 // },
 // "devDependencies": {
-//   "typescript": "^5.0.0",
-//   "firebase-functions-test": "^0.2.0"
+//   "typescript": "^5.0.0", // Or your current version
+//   "firebase-functions-test": "^0.2.0" // Or your current version
 // }
 //
 // Configure environment variables for Firebase if needed.
 // Set up Firestore rules for 'recurringTasks' (e.g., read-only for functions)
 // and 'checklists' (e.g., write by functions, read/write by authenticated users based on roles).
+//
+// You will also need to ensure your Firebase project is on the Blaze (pay-as-you-go) plan
+// to use scheduled functions outside of the Firebase free tier limits for invoking external services.
+// The schedule can be configured in firebase.json or via Google Cloud Console.
+// Example firebase.json entry (though functions.pubsub.schedule in code is often preferred):
+// {
+//   "functions": [
+//     {
+//       "source": "functions", // or your functions directory
+//       "codebase": "default", // or your codebase name
+//       "ignore": [
+//         "node_modules",
+//         ".git",
+//         "firebase-debug.log",
+//         "firebase-debug.*.log"
+//       ],
+//       "predeploy": [
+//         "npm --prefix \"$RESOURCE_DIR\" run lint", // Example
+//         "npm --prefix \"$RESOURCE_DIR\" run build" // If using TypeScript
+//       ]
+//     }
+//   ],
+//   "hosting": { /* ... */ },
+//   "firestore": { /* ... */ },
+//   // "emulators": { /* ... */ } // For local testing
+// }
+// To deploy this function specifically, if you have multiple:
+// firebase deploy --only functions:generateRecurringTasks
+//
+// Make sure your `functions/package.json` has "main": "lib/index.js" (if your TS output is to lib)
+// and your `functions/tsconfig.json` has "outDir": "lib".
+// Build your TypeScript to JavaScript before deploying (e.g., `npm run build` in functions dir).
