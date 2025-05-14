@@ -1,0 +1,4 @@
+// Correct default export
+export default function MyComponent() {
+  return <div>Content</div>;
+}
