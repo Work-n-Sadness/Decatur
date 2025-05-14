@@ -1,13 +1,13 @@
 
 "use client";
 
-import type { Task } from '@/types';
+import type { Task, Role } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getTaskCategoryIcon, getTaskStatusIcon, getTaskFrequencyIcon } from '@/components/icons';
-import { CalendarDays, User, CheckSquare, Tag, Paperclip, ExternalLink, Repeat, BookOpen } from 'lucide-react'; // Added BookOpen
+import { getTaskCategoryIcon, getResolutionStatusIcon, getTaskFrequencyIcon } from '@/components/icons';
+import { CalendarDays, User, Users, CheckSquare, Tag, Paperclip, ExternalLink, Repeat, BookOpen, Milestone } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TaskCardProps {
@@ -18,52 +18,34 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: TaskCardProps) {
   const CategoryIcon = getTaskCategoryIcon(task.category);
-  const StatusIconWithClass = getTaskStatusIcon(task.status);
+  const StatusIconWithClass = getResolutionStatusIcon(task.status);
   const FrequencyIcon = getTaskFrequencyIcon(task.frequency);
   
-  const getStatusColor = (status: Task['status'], frequency: Task['frequency'], endDate: Task['endDate']) => {
-    let baseColorClass = '';
+  const getStatusColorClass = (status: Task['status']) => {
     switch (status) {
-      case 'Completed': baseColorClass = 'bg-green-500/20 text-green-700 border-green-500/50 dark:text-green-400 dark:bg-green-500/10 dark:border-green-500/30'; break;
-      case 'In Progress': baseColorClass = 'bg-blue-500/20 text-blue-700 border-blue-500/50 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30'; break;
-      case 'Overdue': baseColorClass = 'bg-red-500/20 text-red-700 border-red-500/50 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30'; break;
-      case 'Blocked': baseColorClass = 'bg-yellow-500/20 text-yellow-700 border-yellow-500/50 dark:text-yellow-400 dark:bg-yellow-500/10 dark:border-yellow-500/30'; break;
-      case 'Pending': baseColorClass = 'bg-gray-500/20 text-gray-700 border-gray-500/50 dark:text-gray-400 dark:bg-gray-500/10 dark:border-gray-500/30'; break;
-      default: baseColorClass = 'bg-secondary text-secondary-foreground border-border';
+      case 'Resolved': return 'bg-green-500/20 text-green-700 border-green-500/50 dark:text-green-400 dark:bg-green-500/10 dark:border-green-500/30';
+      case 'Pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/50 dark:text-yellow-400 dark:bg-yellow-500/10 dark:border-yellow-500/30';
+      case 'Escalated': return 'bg-red-500/20 text-red-700 border-red-500/50 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-700 border-gray-500/50 dark:text-gray-400 dark:bg-gray-500/10 dark:border-gray-500/30';
     }
-
-    // Additional logic for overdue risk based on frequency
-    if (status !== 'Completed' && endDate) {
-      const now = new Date();
-      const dueDate = new Date(endDate);
-      const diffDays = (dueDate.getTime() - now.getTime()) / (1000 * 3600 * 24);
-
-      let riskThreshold = 7; // Default for monthly or less frequent
-      if (frequency === 'Daily') riskThreshold = 0; // Due today or past
-      if (frequency === 'Weekly') riskThreshold = 1; // Due in 1 day or past
-
-      if (diffDays < 0) { // Already overdue
-         baseColorClass = 'bg-red-600/30 text-red-800 border-red-600/60 dark:text-red-300 dark:bg-red-600/20 dark:border-red-600/40 font-bold';
-      } else if (diffDays <= riskThreshold) {
-        // Nearing deadline, could be orange or yellow
-        baseColorClass = 'bg-yellow-500/20 text-yellow-700 border-yellow-500/50 dark:text-yellow-400 dark:bg-yellow-500/10 dark:border-yellow-500/30';
-      }
-    }
-    return baseColorClass;
   };
 
+  const displayResponsibleRole = (role: Role | Role[]) => {
+    if (Array.isArray(role)) return role.join(', ');
+    return role;
+  }
+
   return (
-    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <CardHeader>
+    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
+      <CardHeader className="pb-3">
         <div className="flex justify-between items-start mb-2">
           <CategoryIcon className="h-7 w-7 text-accent" />
-          <Badge variant="outline" className={`flex items-center gap-1.5 ${getStatusColor(task.status, task.frequency, task.endDate)}`}>
+          <Badge variant="outline" className={`flex items-center gap-1.5 text-xs px-2 py-1 ${getStatusColorClass(task.status)}`}>
             {StatusIconWithClass}
             {task.status}
-             {task.status === 'Overdue' && (task.frequency === 'Daily' || task.frequency === 'Weekly') && <span className="font-semibold ml-1"> ({task.frequency})</span>}
           </Badge>
         </div>
-        <CardTitle className="text-lg leading-tight">{task.name}</CardTitle>
+        <CardTitle className="text-base leading-tight font-semibold">{task.name}</CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
           <Tag className="inline-block h-3 w-3 mr-1" /> {task.category}
         </CardDescription>
@@ -76,28 +58,45 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
           </CardDescription>
         )}
       </CardHeader>
-      <CardContent className="flex-grow space-y-3">
-        <div className="text-sm text-muted-foreground">
-          <Progress value={task.progress} className="w-full h-2" 
-            aria-label={`Task progress ${task.progress}%`} />
-          <p className="text-xs text-right mt-1">{task.progress}% complete</p>
-        </div>
-        <div className="text-xs space-y-1.5">
+      <CardContent className="flex-grow space-y-2.5 text-xs">
+        {task.status !== 'Resolved' && (
+            <div className="text-muted-foreground">
+                <Progress value={task.progress} className="w-full h-1.5" 
+                aria-label={`Task progress ${task.progress}%`} />
+                <p className="text-xs text-right mt-0.5">{task.progress}% complete</p>
+            </div>
+        )}
+        
+        <div className="space-y-1">
+          {task.endDate && (
+            <div className="flex items-center">
+              <CalendarDays className="h-3.5 w-3.5 mr-2 text-muted-foreground shrink-0" />
+              <span className="font-medium mr-1">Due:</span> {format(new Date(task.endDate), 'MMM dd, yyyy')}
+            </div>
+          )}
+           {task.lastCompletedOn && (
+             <div className="flex items-center">
+                <Milestone className="h-3.5 w-3.5 mr-2 text-muted-foreground shrink-0" />
+                <span className="font-medium mr-1">Resolved:</span> {format(new Date(task.lastCompletedOn), 'MMM dd, yyyy')} by {task.completedBy || 'N/A'}
+             </div>
+           )}
           <div className="flex items-center">
-            <CalendarDays className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-            <span className="font-medium mr-1">Due:</span> {task.endDate ? format(new Date(task.endDate), 'MMM dd, yyyy') : 'N/A'}
+            <Users className="h-3.5 w-3.5 mr-2 text-muted-foreground shrink-0" />
+            <span className="font-medium mr-1">Role:</span> {displayResponsibleRole(task.responsibleRole)}
           </div>
           <div className="flex items-center">
-            <User className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-            <span className="font-medium mr-1">Assigned:</span> {task.assignedStaff} ({task.responsibleRole})
+            <User className="h-3.5 w-3.5 mr-2 text-muted-foreground shrink-0" />
+            <span className="font-medium mr-1">Assigned:</span> {task.assignedStaff || 'N/A'}
           </div>
-          <div className="flex items-center">
-            <CheckSquare className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-            <span className="font-medium mr-1">Validator:</span> {task.validator} (Role)
-          </div>
+          {task.validator && (
+            <div className="flex items-center">
+                <CheckSquare className="h-3.5 w-3.5 mr-2 text-muted-foreground shrink-0" />
+                <span className="font-medium mr-1">Validator:</span> {task.validator}
+            </div>
+          )}
         </div>
       </CardContent>
-      <CardFooter className="flex-col items-stretch space-y-2">
+      <CardFooter className="flex-col items-stretch space-y-2 pt-3">
         <Button variant="default" size="sm" className="w-full" onClick={() => onOpenDetails(task)}>
           View Details
         </Button>
@@ -117,4 +116,3 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
     </Card>
   );
 }
-

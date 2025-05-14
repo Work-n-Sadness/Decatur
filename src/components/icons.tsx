@@ -1,48 +1,45 @@
 
 import {
-  HeartPulse,
-  UtensilsCrossed,
-  Flame,
-  Briefcase,
-  FileText,
-  Users,
-  ClipboardList,
-  Sparkles,
-  ListChecks,
-  CircleDot,
-  Loader2,
-  CheckCircle2,
-  AlertTriangle,
-  ShieldX,
+  HeartPulse, // Existing, can be reused or remapped
+  UtensilsCrossed, // Existing
+  Flame, // Existing
+  Briefcase, // Existing
+  FileText, // Existing
+  Users, // Existing
+  ClipboardList, // Existing
+  Sparkles, // Existing
+  ListChecks, // Existing
+  CircleDot, // Pending
+  Loader2, // Could be 'In Progress' if that status returns
+  CheckCircle2, // Resolved
+  AlertTriangle, // Escalated
+  ShieldX, // Blocked (if status returns)
   type LucideIcon,
-  GanttChartSquare,
-  FilePieChart,
-  Settings2,
-  Repeat,
-  CalendarClock,
-  ClipboardCheck, // Added for Compliance Summary
-  UsersRound, // Added for Staff Training
+  GanttChartSquare, // Dashboard
+  FilePieChart, // Reports
+  Settings2, // AuditTool (if page remains)
+  Repeat, // Frequency
+  CalendarClock, // Frequency
+  Pill, // Medication Management
+  FileHeart, // Resident Documentation
+  ShieldCheck, // Compliance & Survey Prep
+  Wind, // Environment / Smoking
+  ClipboardCheck, // Compliance Summary
+  UsersRound, // Staff Training
 } from 'lucide-react';
-import type { TaskCategory, TaskStatus, TaskFrequency } from '@/types';
+import type { TaskCategory, ResolutionStatus, TaskFrequency } from '@/types';
 
 export const TaskCategoryIcons: Record<TaskCategory, LucideIcon> = {
-  'Health Protocols / Medications': HeartPulse,
-  'Food Safety': UtensilsCrossed,
-  'Fire Safety': Flame,
-  'Office Admin': Briefcase,
-  'Documentation & Compliance': FileText,
-  'Personnel File & Staff Training': Users,
-  'Postings & Required Notices': ClipboardList,
-  'Environmental & Sanitation Checks': Sparkles,
-  'Additional ALR-Required Tasks': ListChecks,
+  'Medication Management & ECP Audits': Pill,
+  'Resident Documentation & Clinical Care': FileHeart,
+  'Compliance & Survey Prep Tasks': ShieldCheck,
+  'Smoking, Behavior, and Environment': Wind,
 };
 
-export const TaskStatusIcons: Record<TaskStatus, LucideIcon> = {
+export const ResolutionStatusIcons: Record<ResolutionStatus, LucideIcon> = {
   Pending: CircleDot,
-  'In Progress': Loader2,
-  Completed: CheckCircle2,
-  Overdue: AlertTriangle,
-  Blocked: ShieldX,
+  Resolved: CheckCircle2,
+  Escalated: AlertTriangle,
 };
 
 export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
@@ -50,9 +47,9 @@ export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
   Weekly: CalendarClock, 
   Monthly: CalendarClock,
   Quarterly: CalendarClock,
-  'Mid Yearly': CalendarClock,
+  'Mid Yearly': CalendarClock, // Keep if this frequency is used
   Annually: CalendarClock,
-  'Bi-annually': CalendarClock,
+  'Bi-annually': CalendarClock, // Keep if this frequency is used
   'As Needed': Repeat,
 };
 
@@ -66,17 +63,17 @@ export const SidebarIcons = {
   StaffTraining: UsersRound,
 };
 
-export const getTaskCategoryIcon = (category: TaskCategory) => {
-  return TaskCategoryIcons[category] || ListChecks;
+export const getTaskCategoryIcon = (category: TaskCategory): LucideIcon => {
+  return TaskCategoryIcons[category] || ListChecks; // Fallback icon
 };
 
-export const getTaskStatusIcon = (status: TaskStatus) => {
-  const Icon = TaskStatusIcons[status] || CircleDot;
-  const className = status === 'In Progress' ? 'animate-spin' : '';
-  return <Icon className={className} />;
+export const getResolutionStatusIcon = (status: ResolutionStatus): JSX.Element => {
+  const Icon = ResolutionStatusIcons[status] || CircleDot; // Fallback icon
+  // Add animation if needed, e.g. for a hypothetical "In Progress" like state
+  // const className = status === 'In Progress' ? 'animate-spin' : ''; 
+  return <Icon />;
 };
 
-export const getTaskFrequencyIcon = (frequency: TaskFrequency) => {
+export const getTaskFrequencyIcon = (frequency: TaskFrequency): LucideIcon => {
   return TaskFrequencyIcons[frequency] || Repeat;
 };
-

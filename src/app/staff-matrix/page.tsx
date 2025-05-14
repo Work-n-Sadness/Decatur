@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { mockStaffResponsibilityMatrix } from '@/lib/mock-data';
+import { mockStaffResponsibilityMatrix, allMockRoles } from '@/lib/mock-data';
 import type { Role, TaskCategory } from '@/types';
 import { User, Briefcase, ListChecks, Filter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,14 +20,13 @@ interface StaffResponsibility {
   }[];
 }
 
-const allRoles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director'];
+// const allRoles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director', 'Wellness Nurse', 'Housekeeping Supervisor', 'QMAP Supervisor']; // Using from mock-data
 
 export default function StaffMatrixPage() {
   const [matrixData, setMatrixData] = useState<StaffResponsibility[]>([]);
   const [selectedRole, setSelectedRole] = useState<Role | 'all'>('all');
 
   useEffect(() => {
-    // Simulate fetching data
     setMatrixData(mockStaffResponsibilityMatrix);
   }, []);
 
@@ -55,7 +54,7 @@ export default function StaffMatrixPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                {allRoles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+                {allMockRoles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

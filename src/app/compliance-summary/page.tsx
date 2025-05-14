@@ -4,8 +4,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { mockTasks, allTaskCategories } from '@/lib/mock-data';
-import type { Task, TaskCategory } from '@/types';
+import { mockTasks as allMockTasks, allTaskCategories } from '@/lib/mock-data'; // Use allTaskCategories from new mock-data
+import type { Task, TaskCategory, ResolutionStatus } from '@/types'; // Use ResolutionStatus from new types
 import { getTaskCategoryIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LabelList } from 'recharts';
@@ -15,7 +15,7 @@ import { ClipboardCheck } from 'lucide-react';
 
 interface ComplianceStats {
   totalTasks: number;
-  completedTasks: number;
+  resolvedTasks: number; // Changed from completedTasks
   completionPercentage: number;
 }
 
@@ -32,21 +32,24 @@ export default function ComplianceSummaryPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
-    setTasks(mockTasks);
+    // For this summary, we might treat "Resolved" as "Completed"
+    // Or, we define what "completion" means in the context of ResolutionStatus
+    // For now, let's consider 'Resolved' as the target completion state.
+    setTasks(allMockTasks);
   }, []);
 
   const complianceData = useMemo(() => {
     const dataByCategory: Record<TaskCategory, ComplianceStats> = {} as Record<TaskCategory, ComplianceStats>;
 
     allTaskCategories.forEach(category => {
-      dataByCategory[category] = { totalTasks: 0, completedTasks: 0, completionPercentage: 0 };
+      dataByCategory[category] = { totalTasks: 0, resolvedTasks: 0, completionPercentage: 0 };
     });
 
     tasks.forEach(task => {
       if (dataByCategory[task.category]) {
         dataByCategory[task.category].totalTasks++;
-        if (task.status === 'Completed') {
-          dataByCategory[task.category].completedTasks++;
+        if (task.status === 'Resolved') { // Check for 'Resolved' status
+          dataByCategory[task.category].resolvedTasks++;
         }
       }
     });
@@ -54,7 +57,7 @@ export default function ComplianceSummaryPage() {
     allTaskCategories.forEach(category => {
       const categoryData = dataByCategory[category];
       if (categoryData.totalTasks > 0) {
-        categoryData.completionPercentage = Math.round((categoryData.completedTasks / categoryData.totalTasks) * 100);
+        categoryData.completionPercentage = Math.round((categoryData.resolvedTasks / categoryData.totalTasks) * 100);
       }
     });
     
@@ -90,7 +93,7 @@ export default function ComplianceSummaryPage() {
             Compliance Summary Panel
           </CardTitle>
           <CardDescription>
-            Real-time overview of task completion percentages per ALR domain.
+            Real-time overview of task resolution percentages per ALR domain.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,7 +107,7 @@ export default function ComplianceSummaryPage() {
                   <BarChart
                     data={chartData}
                     layout="vertical"
-                    margin={{ left: 120, right: 50 }}
+                    margin={{ left: 120, right: 50 }} // Increased left margin for longer category names
                     barCategoryGap="20%"
                   >
                     <CartesianGrid horizontal={false} strokeDasharray="3 3" />
@@ -114,14 +117,14 @@ export default function ComplianceSummaryPage() {
                         type="category" 
                         tickLine={false} 
                         axisLine={false} 
-                        width={200} 
-                        style={{ fontSize: '12px' }}
+                        width={250} // Adjusted width for potentially longer category names
+                        style={{ fontSize: '11px' }} // Slightly smaller font for Y-axis labels
                         interval={0}
                     />
                     <RechartsTooltip
                       cursor={{ fill: 'hsl(var(--muted))' }}
                       contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
-                      formatter={(value: number) => [`${value}%`, "Completion"]}
+                      formatter={(value: number) => [`${value}%`, "Resolution"]}
                     />
                     <Bar dataKey="percentage" radius={[0, 4, 4, 0]} barSize={20}>
                        <LabelList 
@@ -139,16 +142,16 @@ export default function ComplianceSummaryPage() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Adjusted for potentially 2 wide cards */}
             {allTaskCategories.map(category => {
               const stats = complianceData[category];
-              if (!stats) return null; // Should not happen if allTaskCategories is source of truth
+              if (!stats) return null;
               const CategoryIcon = getTaskCategoryIcon(category);
               return (
                 <Card key={category} className="shadow-md">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2">
+                      <CardTitle className="text-base flex items-center gap-2"> {/* Reduced title size */}
                         <CategoryIcon className="h-5 w-5 text-muted-foreground" />
                         {category}
                       </CardTitle>
@@ -160,7 +163,7 @@ export default function ComplianceSummaryPage() {
                   <CardContent>
                     <Progress value={stats.completionPercentage} className="w-full h-3 mb-2" />
                     <p className="text-sm text-muted-foreground">
-                      {stats.completedTasks} out of {stats.totalTasks} tasks completed.
+                      {stats.resolvedTasks} out of {stats.totalTasks} tasks resolved.
                     </p>
                   </CardContent>
                 </Card>
@@ -172,4 +175,3 @@ export default function ComplianceSummaryPage() {
     </div>
   );
 }
-

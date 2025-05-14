@@ -32,7 +32,7 @@ import { SidebarIcons } from '@/components/icons';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: SidebarIcons.Dashboard },
-  { href: '/audit-tool', label: 'Audit Tool', icon: SidebarIcons.AuditTool },
+  // { href: '/audit-tool', label: 'Audit Tool', icon: SidebarIcons.AuditTool }, // Removed
   { href: '/staff-matrix', label: 'Staff Matrix', icon: SidebarIcons.StaffMatrix },
   { href: '/reports', label: 'Reports', icon: SidebarIcons.Reports },
   { href: '/compliance-summary', label: 'Compliance Summary', icon: SidebarIcons.ComplianceSummary },

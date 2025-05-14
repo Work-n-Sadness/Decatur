@@ -4,18 +4,18 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText, Package } from "lucide-react"; // Added Package for Survey Prep
-import type { TaskCategory, TaskStatus, Role, TaskFrequency } from "@/types";
+import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText, Package } from "lucide-react";
+import type { TaskCategory, ResolutionStatus, Role, TaskFrequency } from "@/types";
 
 interface DashboardFiltersProps {
   onSearch: (term: string) => void;
-  onFilterChange: (filters: Partial<{ category: TaskCategory; status: TaskStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>) => void;
+  onFilterChange: (filters: Partial<{ category: TaskCategory; status: ResolutionStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>) => void;
   onSortChange: (sortBy: string) => void;
   onExportReport: () => void;
   onExportAuditLog: () => void;
-  onExportSurveyPrepPacket: () => void; // Added new prop
+  onExportSurveyPrepPacket: () => void;
   categories: TaskCategory[];
-  statuses: TaskStatus[];
+  statuses: ResolutionStatus[];
   roles: Role[];
   frequencies: TaskFrequency[];
   complianceChapterTags: string[];
@@ -27,7 +27,7 @@ export default function DashboardFilters({
   onSortChange, 
   onExportReport,
   onExportAuditLog,
-  onExportSurveyPrepPacket, // Added new prop
+  onExportSurveyPrepPacket,
   categories,
   statuses,
   roles,
@@ -35,8 +35,8 @@ export default function DashboardFilters({
   complianceChapterTags
 }: DashboardFiltersProps) {
   return (
-    <div className="mb-6 p-4 bg-card rounded-lg shadow space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 items-end"> {/* Main filters row */}
+    <div className="mb-6 p-4 bg-card rounded-lg shadow-lg space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 items-end">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -58,7 +58,7 @@ export default function DashboardFilters({
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => onFilterChange({ status: value === 'all' ? undefined : value as TaskStatus })}>
+        <Select onValueChange={(value) => onFilterChange({ status: value === 'all' ? undefined : value as ResolutionStatus })}>
           <SelectTrigger>
             <FilterIcon className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue placeholder="Filter by Status" />
@@ -72,7 +72,7 @@ export default function DashboardFilters({
         <Select onValueChange={(value) => onFilterChange({ role: value === 'all' ? undefined : value as Role })}>
           <SelectTrigger>
              <FilterIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-            <SelectValue placeholder="Filter by Role" />
+            <SelectValue placeholder="Filter by Responsible Role" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
@@ -103,7 +103,7 @@ export default function DashboardFilters({
         </Select>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end"> {/* Sort and Export row, adjusted to 4 columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
         <Select onValueChange={(value) => onSortChange(value)}>
           <SelectTrigger>
               <ArrowDownUp className="mr-2 h-4 w-4" />
@@ -131,7 +131,7 @@ export default function DashboardFilters({
           Export Audit Log
         </Button>
 
-        <Button onClick={onExportSurveyPrepPacket} variant="outline" className="w-full"> {/* New Button */}
+        <Button onClick={onExportSurveyPrepPacket} variant="outline" className="w-full">
           <Package className="mr-2 h-4 w-4" />
           Export Survey Packet
         </Button>

@@ -6,25 +6,21 @@ import TaskCard from '@/components/dashboard/task-card';
 import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
 import AttachEvidenceDialog from '@/components/dashboard/attach-evidence-dialog';
 import DashboardFilters from '@/components/dashboard/dashboard-filters';
-import { mockTasks, allMockRoles, allMockComplianceChapters } from '@/lib/mock-data';
-import type { Task, TaskCategory, TaskStatus, Role, TaskFrequency, ActivityLog } from '@/types';
+import { mockTasks, allMockRoles, allMockComplianceChapters, allTaskCategories, allResolutionStatuses, allTaskFrequencies } from '@/lib/mock-data';
+import type { Task, TaskCategory, ResolutionStatus, Role, TaskFrequency, ActivityLog } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { getTaskCategoryIcon } from '@/components/icons';
 import { Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format, addDays, addWeeks, addMonths, addYears, startOfDay, endOfDay } from 'date-fns';
-
-const uniqueCategories = Array.from(new Set(mockTasks.map(task => task.category))) as TaskCategory[];
-const uniqueStatuses = Array.from(new Set(mockTasks.map(task => task.status))) as TaskStatus[];
-const uniqueRoles = allMockRoles; // Use all defined roles for filter
-const allFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Mid Yearly', 'Annually', 'Bi-annually', 'As Needed'];
-const uniqueComplianceChapterTags = allMockComplianceChapters;
+import { format } from 'date-fns';
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState<Partial<{ category: TaskCategory; status: TaskStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>>({});
+  const [filters, setFilters] = useState<Partial<{ category: TaskCategory; status: ResolutionStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>>({});
   const [sortBy, setSortBy] = useState<string>('dueDate_asc');
   
   const [isAttachEvidenceDialogOpen, setIsAttachEvidenceDialogOpen] = useState(false);
@@ -33,11 +29,12 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    setTasks(mockTasks);
+    // Initialize tasks with an 'activities' array if it's missing
+    setTasks(mockTasks.map(task => ({ ...task, activities: task.activities || [] })));
   }, []);
 
   const handleSearch = (term: string) => setSearchTerm(term.toLowerCase());
-  const handleFilterChange = (newFilters: Partial<{ category: TaskCategory; status: TaskStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>) => {
+  const handleFilterChange = (newFilters: Partial<{ category: TaskCategory; status: ResolutionStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
   const handleSortChange = (newSortBy: string) => setSortBy(newSortBy);
@@ -56,112 +53,60 @@ export default function DashboardPage() {
     let taskToProcess = { ...updatedTaskFromDialog };
     const originalTaskState = tasks.find(t => t.id === taskToProcess.id);
   
-    const isCompletingNow = taskToProcess.status === 'Completed' && originalTaskState?.status !== 'Completed';
+    // Ensure activities array exists
+    const baseActivities = originalTaskState?.activities || [];
+    let newActivities: ActivityLog[] = [...baseActivities];
+
+    // Log status change if it occurred
+    if (originalTaskState && originalTaskState.status !== taskToProcess.status) {
+      newActivities.push({
+        timestamp: new Date(),
+        user: taskToProcess.assignedStaff || 'System',
+        action: `Status Change: ${originalTaskState.status} -> ${taskToProcess.status}`,
+        details: `Task status updated to ${taskToProcess.status}.`,
+      });
+    }
+    
+    // If task is resolved now and wasn't before
+    const isResolvingNow = taskToProcess.status === 'Resolved' && originalTaskState?.status !== 'Resolved';
   
-    if (isCompletingNow) {
-      const completedAt = new Date();
-      const completedByUser = taskToProcess.assignedStaff; 
+    if (isResolvingNow) {
+      const resolvedAt = new Date();
+      const resolvedByUser = taskToProcess.assignedStaff; 
   
-      const completionActivity: ActivityLog = {
-        timestamp: completedAt,
-        user: completedByUser || 'User', 
-        action: 'Task Completed',
-        details: `Task marked as complete. Progress set to 100%.`,
-      };
-      
-      const baseActivities = originalTaskState?.activities || [];
+      newActivities.push({
+        timestamp: resolvedAt,
+        user: resolvedByUser || 'User', 
+        action: 'Task Resolved',
+        details: `Task marked as resolved. Progress set to 100%.`,
+      });
       
       taskToProcess = {
         ...taskToProcess,
-        lastCompletedOn: completedAt,
-        completedBy: completedByUser,
+        lastCompletedOn: resolvedAt, // 'lastCompletedOn' used for resolution date
+        completedBy: resolvedByUser, // 'completedBy' used for resolver
         progress: 100,
-        activities: [...baseActivities, completionActivity],
       };
       
-      const recurringFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Mid Yearly', 'Annually', 'Bi-annually'];
-      if (recurringFrequencies.includes(taskToProcess.frequency)) {
-        const anchorDate = taskToProcess.lastCompletedOn as Date; 
-        
-        let newStartDate: Date;
-        let newEndDate: Date | null = null; 
-  
-        switch (taskToProcess.frequency) {
-          case 'Daily':
-            newStartDate = startOfDay(addDays(anchorDate, 1));
-            newEndDate = endOfDay(addDays(anchorDate, 1));
-            break;
-          case 'Weekly':
-            newStartDate = startOfDay(addWeeks(anchorDate, 1)); 
-            newEndDate = endOfDay(addWeeks(anchorDate, 1));
-            break;
-          case 'Monthly':
-            newStartDate = startOfDay(addMonths(anchorDate, 1));
-            newEndDate = endOfDay(addMonths(anchorDate, 1));
-            break;
-          case 'Quarterly':
-            newStartDate = startOfDay(addMonths(anchorDate, 3));
-            newEndDate = endOfDay(addMonths(anchorDate, 3));
-            break;
-          case 'Mid Yearly': 
-            newStartDate = startOfDay(addMonths(anchorDate, 6));
-            newEndDate = endOfDay(addMonths(anchorDate, 6));
-            break;
-          case 'Annually':
-            newStartDate = startOfDay(addYears(anchorDate, 1));
-            newEndDate = endOfDay(addYears(anchorDate, 1));
-            break;
-          case 'Bi-annually': 
-            newStartDate = startOfDay(addYears(anchorDate, 2));
-            newEndDate = endOfDay(addYears(anchorDate, 2));
-            break;
-          default:
-            newStartDate = startOfDay(addDays(anchorDate, 1)); // Fallback
-            newEndDate = endOfDay(addDays(anchorDate, 1));
-            break;
-        }
-  
-        taskToProcess = {
-          ...taskToProcess, 
-          startDate: newStartDate,
-          endDate: newEndDate,
-          status: 'Pending',
-          progress: 0,
-          validatorApproval: undefined, 
-          evidenceLink: undefined, 
-        };
-        
-        const recurrenceActivity: ActivityLog = {
-          timestamp: new Date(),
-          user: 'System',
-          action: 'Task Auto-Regenerated',
-          details: `Task set for next cycle (${taskToProcess.frequency}). Next due: ${newEndDate ? format(newEndDate, 'PPp') : 'N/A'}.`,
-        };
-        taskToProcess.activities = [...taskToProcess.activities, recurrenceActivity];
-        
-        toast({
-          title: "Task Completed & Regenerated",
-          description: `"${taskToProcess.name}" completed. Next cycle due ${newEndDate ? format(newEndDate, 'MMM dd, yyyy') : 'N/A'}.`,
-        });
-  
-      } else { 
-         toast({
-          title: "Task Completed",
-          description: `"${taskToProcess.name}" has been successfully completed.`,
-        });
-      }
-    } else if (taskToProcess.status === 'Completed' && originalTaskState?.status === 'Completed') {
+      toast({
+        title: "Task Resolved",
+        description: `"${taskToProcess.name}" has been successfully resolved.`,
+      });
+    } else if (taskToProcess.status === 'Resolved' && originalTaskState?.status === 'Resolved') {
+       // If it was already resolved, just a general update
        toast({
           title: "Task Updated",
           description: `Task "${originalTaskState?.name || taskToProcess.name}" details saved.`,
         });
     } else { 
+       // For other statuses or general updates
        toast({
           title: "Task Updated",
           description: `Task "${taskToProcess.name}" has been saved successfully.`,
         });
     }
     
+    taskToProcess.activities = newActivities;
     setTasks(prevTasks => prevTasks.map(t => (t.id === taskToProcess.id ? taskToProcess : t)));
     
     if (selectedTask && selectedTask.id === taskToProcess.id) {
@@ -182,7 +127,7 @@ export default function DashboardPage() {
   const handleSaveEvidenceLink = (taskId: string, evidenceLink: string) => {
     setTasks(prevTasks => 
       prevTasks.map(task => 
-        task.id === taskId ? { ...task, evidenceLink: evidenceLink || undefined } : task
+        task.id === taskId ? { ...task, evidenceLink: evidenceLink || undefined, activities: [...(task.activities || []), { timestamp: new Date(), user: task.assignedStaff || 'System', action: 'Evidence Updated', details: `Evidence link ${evidenceLink ? 'added/updated' : 'removed'}.`}] } : task
       )
     );
     toast({
@@ -201,13 +146,13 @@ export default function DashboardPage() {
   };
 
   const handleExportReport = () => {
-    const headers = ["ID", "Name", "Category", "Frequency", "Responsible Role", "Status", "Progress", "Assigned Staff", "Validator Role", "Start Date", "End Date", "Deliverables", "Notes", "Evidence Link", "Last Completed On", "Completed By", "Validator Approval", "Compliance Chapter"];
+    const headers = ["ID", "Name", "Category", "Frequency", "Responsible Role", "Status", "Progress", "Assigned Staff", "Validator Role", "Start Date", "End Date", "Deliverables", "Notes", "Evidence Link", "Last Resolved On", "Resolved By", "Validator Approval", "Compliance Chapter"];
     const rows = filteredAndSortedTasks.map(task => [
       task.id,
       task.name,
       task.category,
       task.frequency,
-      task.responsibleRole,
+      Array.isArray(task.responsibleRole) ? task.responsibleRole.join('; ') : task.responsibleRole,
       task.status,
       task.progress,
       task.assignedStaff,
@@ -217,8 +162,8 @@ export default function DashboardPage() {
       task.deliverables,
       task.notes,
       task.evidenceLink || '',
-      task.lastCompletedOn ? format(new Date(task.lastCompletedOn), 'yyyy-MM-dd HH:mm') : '',
-      task.completedBy || '',
+      task.lastCompletedOn ? format(new Date(task.lastCompletedOn), 'yyyy-MM-dd HH:mm') : '', // Mapped to Last Resolved On
+      task.completedBy || '', // Mapped to Resolved By
       task.validatorApproval || '',
       task.complianceChapterTag || '',
     ].map(escapeCsvField).join(','));
@@ -238,7 +183,7 @@ export default function DashboardPage() {
     const headers = [
       "Task ID", "Task Name", "Category", "Frequency", "Responsible Role", "Assigned Staff", 
       "Validator Role", "Initial Start Date", "Initial End Date", "Current Status", "Progress", 
-      "Last Completed On", "Completed By", "Validator Approval", "Compliance Chapter", 
+      "Last Resolved On", "Resolved By", "Validator Approval", "Compliance Chapter", 
       "Activity Timestamp", "Activity User", "Activity Action", "Activity Details"
     ];
     
@@ -246,13 +191,15 @@ export default function DashboardPage() {
 
     filteredAndSortedTasks.forEach(task => {
       const commonTaskData = [
-        task.id, task.name, task.category, task.frequency, task.responsibleRole, task.assignedStaff,
+        task.id, task.name, task.category, task.frequency, 
+        Array.isArray(task.responsibleRole) ? task.responsibleRole.join('; ') : task.responsibleRole, 
+        task.assignedStaff,
         task.validator,
         task.startDate ? format(new Date(task.startDate), 'yyyy-MM-dd HH:mm') : '',
         task.endDate ? format(new Date(task.endDate), 'yyyy-MM-dd HH:mm') : '',
         task.status, task.progress,
-        task.lastCompletedOn ? format(new Date(task.lastCompletedOn), 'yyyy-MM-dd HH:mm') : '',
-        task.completedBy || '',
+        task.lastCompletedOn ? format(new Date(task.lastCompletedOn), 'yyyy-MM-dd HH:mm') : '', // Mapped to Last Resolved On
+        task.completedBy || '', // Mapped to Resolved By
         task.validatorApproval || '',
         task.complianceChapterTag || ''
       ];
@@ -268,7 +215,6 @@ export default function DashboardPage() {
           rows.push([...commonTaskData, ...activityData].map(escapeCsvField).join(','));
         });
       } else {
-        // Task with no activities, still list it with empty activity fields
         rows.push([...commonTaskData, '', '', '', ''].map(escapeCsvField).join(','));
       }
     });
@@ -288,7 +234,7 @@ export default function DashboardPage() {
     const headers = [
       "Task ID", "Task Name", "Category", "Frequency", "Responsible Role", "Assigned Staff", 
       "Validator Role", "Status", "Progress", "Start Date", "End Date", 
-      "Deliverables", "Notes", "Evidence Link", "Last Completed On", "Completed By", 
+      "Deliverables", "Notes", "Evidence Link", "Last Resolved On", "Resolved By", 
       "Validator Approval", "Compliance Chapter", "Activities (JSON)"
     ];
     const rows = filteredAndSortedTasks.map(task => [
@@ -296,7 +242,7 @@ export default function DashboardPage() {
       task.name,
       task.category,
       task.frequency,
-      task.responsibleRole,
+      Array.isArray(task.responsibleRole) ? task.responsibleRole.join('; ') : task.responsibleRole,
       task.status,
       task.progress,
       task.assignedStaff,
@@ -306,11 +252,11 @@ export default function DashboardPage() {
       task.deliverables,
       task.notes,
       task.evidenceLink || '',
-      task.lastCompletedOn ? format(new Date(task.lastCompletedOn), 'yyyy-MM-dd HH:mm') : '',
-      task.completedBy || '',
+      task.lastCompletedOn ? format(new Date(task.lastCompletedOn), 'yyyy-MM-dd HH:mm') : '', // Mapped
+      task.completedBy || '', // Mapped
       task.validatorApproval || '',
       task.complianceChapterTag || '',
-      JSON.stringify(task.activities.map(act => ({ ...act, timestamp: act.timestamp ? format(new Date(act.timestamp), 'yyyy-MM-dd HH:mm') : ''})))
+      JSON.stringify(task.activities?.map(act => ({ ...act, timestamp: act.timestamp ? format(new Date(act.timestamp), 'yyyy-MM-dd HH:mm') : ''})) || [])
     ].map(escapeCsvField).join(','));
     
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
@@ -330,10 +276,9 @@ export default function DashboardPage() {
       .filter(task => task.name.toLowerCase().includes(searchTerm))
       .filter(task => !filters.category || filters.category === 'all' || task.category === filters.category)
       .filter(task => !filters.status || filters.status === 'all' || task.status === filters.status)
-      .filter(task => !filters.role || filters.role === 'all' || task.responsibleRole === filters.role)
+      .filter(task => !filters.role || filters.role === 'all' || (Array.isArray(task.responsibleRole) ? task.responsibleRole.includes(filters.role as Role) : task.responsibleRole === filters.role))
       .filter(task => !filters.frequency || filters.frequency === 'all' || task.frequency === filters.frequency)
       .filter(task => !filters.complianceChapterTag || filters.complianceChapterTag === 'all' || task.complianceChapterTag === filters.complianceChapterTag);
-
 
     switch (sortBy) {
       case 'name_asc':
@@ -362,12 +307,18 @@ export default function DashboardPage() {
         currentTasks.sort((a,b) => frequencyOrder.indexOf(a.frequency) - frequencyOrder.indexOf(b.frequency));
         break;
       default:
-        // Default sort by due date ascending
         currentTasks.sort((a, b) => (a.endDate ? new Date(a.endDate).getTime() : Infinity) - (b.endDate ? new Date(b.endDate).getTime() : Infinity));
         break;
     }
     return currentTasks;
   }, [tasks, searchTerm, filters, sortBy]);
+
+  const groupedTasks = useMemo(() => {
+    return allTaskCategories.map(category => ({
+      category,
+      tasks: filteredAndSortedTasks.filter(task => task.category === category),
+    }));
+  }, [filteredAndSortedTasks]);
 
   return (
     <div className="space-y-6">
@@ -377,25 +328,49 @@ export default function DashboardPage() {
         onSortChange={handleSortChange}
         onExportReport={handleExportReport}
         onExportAuditLog={handleExportAuditLog}
-        onExportSurveyPrepPacket={handleExportSurveyPrepPacket} // Added
-        categories={uniqueCategories}
-        statuses={uniqueStatuses}
-        roles={uniqueRoles}
-        frequencies={allFrequencies} 
-        complianceChapterTags={uniqueComplianceChapterTags}
+        onExportSurveyPrepPacket={handleExportSurveyPrepPacket}
+        categories={allTaskCategories}
+        statuses={allResolutionStatuses}
+        roles={allMockRoles}
+        frequencies={allTaskFrequencies} 
+        complianceChapterTags={allMockComplianceChapters}
       />
 
       {filteredAndSortedTasks.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredAndSortedTasks.map(task => (
-            <TaskCard 
-              key={task.id} 
-              task={task} 
-              onOpenDetails={handleOpenDetails}
-              onOpenAttachEvidence={handleOpenAttachEvidence}
-            />
-          ))}
-        </div>
+        <Accordion type="multiple" defaultValue={allTaskCategories} className="w-full space-y-4">
+          {groupedTasks.map(({ category, tasks: categoryTasks }) => {
+            if (categoryTasks.length === 0 && (!filters.category || filters.category === 'all')) return null; // Hide empty categories unless specifically filtered to
+            if (categoryTasks.length === 0 && filters.category && filters.category !== 'all' && filters.category !== category) return null;
+
+            const CategoryIcon = getTaskCategoryIcon(category);
+            return (
+              <AccordionItem value={category} key={category} className="border rounded-lg overflow-hidden bg-card shadow-sm">
+                <AccordionTrigger className="bg-muted/50 hover:bg-muted/80 px-4 py-3 text-lg font-medium">
+                  <div className="flex items-center gap-2">
+                    <CategoryIcon className="h-6 w-6 text-accent" />
+                    {category} ({categoryTasks.length})
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="p-4 bg-background">
+                  {categoryTasks.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                      {categoryTasks.map(task => (
+                        <TaskCard 
+                          key={task.id} 
+                          task={task} 
+                          onOpenDetails={handleOpenDetails}
+                          onOpenAttachEvidence={handleOpenAttachEvidence}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                     <div className="text-center py-4 text-muted-foreground">No tasks match current filters for this category.</div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
       ) : (
         <Alert>
           <Info className="h-4 w-4" />
@@ -422,4 +397,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
