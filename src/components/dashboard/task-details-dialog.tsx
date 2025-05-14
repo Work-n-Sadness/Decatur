@@ -20,6 +20,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import React, { useEffect, useState } from 'react';
 import { allResolutionStatuses, allMockRoles, allTaskFrequencies, allTaskCategories, allMockStaffNames } from '@/lib/mock-data'; 
+import { cn } from '@/lib/utils'; // Added import for cn
 
 const taskSchema = z.object({
   name: z.string().min(1, "Task name is required"),
@@ -503,3 +504,4 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
     </Dialog>
   );
 }
+
