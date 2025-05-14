@@ -1,5 +1,4 @@
 
-
 export type ResolutionStatus = 'Pending' | 'Resolved' | 'Escalated' | 'Complete' | 'Flagged'; // Added Complete, Flagged
 
 export type TaskCategory =
@@ -117,14 +116,14 @@ export interface ChecklistItem {
   taskName: string;
   assignedStaff: string;
   validator?: string | null;
-  dueDate: firebase.firestore.Timestamp | Date;
+  dueDate: firebase.firestore.Timestamp | Date; // Will be Timestamp from Firestore, Date on client
   status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>;
-  createdAt: firebase.firestore.Timestamp | Date;
-  statusUpdatedAt?: firebase.firestore.Timestamp | Date | null;
+  createdAt: firebase.firestore.Timestamp | Date; // Will be Timestamp from Firestore, Date on client
+  statusUpdatedAt?: firebase.firestore.Timestamp | Date | null; // Will be Timestamp from Firestore, Date on client
   taskId: string;
   notes?: string;
   evidenceLink?: string;
-  lastCompletedOn?: firebase.firestore.Timestamp | Date | null;
+  lastCompletedOn?: firebase.firestore.Timestamp | Date | null; // Will be Timestamp from Firestore, Date on client
   completedBy?: string | null;
   category?: string;
   backfilled?: boolean;
@@ -139,6 +138,8 @@ import type { Timestamp } from "firebase/firestore";
 // New types for Facility Certifications & Installations
 export type CertificationStatus = 'Active' | 'Expired' | 'Due Soon';
 export type InstallationStatus = 'Operational' | 'Needs Repair' | 'Out of Service';
+export type InstallationFrequency = 'Monthly' | 'Quarterly' | 'Annually' | 'Semi-Annually' | 'Daily Check' | 'Monthly Test, Semi-Annual Service';
+
 
 export interface FacilityCertification {
   id: string;
@@ -147,10 +148,11 @@ export interface FacilityCertification {
   issueDate: Date;
   expirationDate: Date;
   status: CertificationStatus;
-  certificateUploadUrl?: string; // URL to the uploaded certificate
+  certificateUpload?: string; // URL to the uploaded certificate (renamed)
   lastReviewedBy?: string;
   notes?: string;
-  // auto-alert 30 days before expiration (this would be a computed or backend-driven state)
+  createdAt: Date; // Added
+  updatedAt: Date; // Added
 }
 
 export interface FacilityInstallation {
@@ -160,9 +162,11 @@ export interface FacilityInstallation {
   location?: string;
   lastInspectionDate?: Date | null;
   nextInspectionDue?: Date | null;
-  inspectionFrequency?: string; // e.g., "Monthly", "Quarterly", "Annually"
+  inspectionFrequency?: InstallationFrequency; // Updated to specific union type
   serviceVendor?: string;
   status: InstallationStatus;
-  inspectionLogUrl?: string; // URL to the uploaded inspection log
+  uploadInspectionLog?: string; // URL to the uploaded inspection log (renamed)
   notes?: string;
+  createdAt: Date; // Added
+  updatedAt: Date; // Added
 }
