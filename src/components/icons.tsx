@@ -202,7 +202,7 @@ export const SidebarIcons = {
   TempLogs: Thermometer,
   DishwasherLogs: WashingMachine,
   WeeklyMenu: Utensils,
-  // GroceryInventory icon is ShoppingCart, covered under Facility Ops
+  GroceryInventory: ShoppingCart, // Corrected key
   FoodSafetyAudits: ChefHat,
 
   // SECURITY & BEHAVIOR
@@ -210,7 +210,7 @@ export const SidebarIcons = {
   EntryExitLogs: DoorOpen,
   SmokingCompliance: Cigarette,
   BehaviorReports: SmilePlus,
-  VisitorLogNotifications: Users, // Replaced UsersThree
+  VisitorLogNotifications: Users,
 
   // REGULATORY OVERSIGHT
   RegulatoryOversightGroup: Gavel,
@@ -222,8 +222,8 @@ export const SidebarIcons = {
 
   // FACILITY CERTIFICATIONS & INSTALLATIONS
   FacilityCertsInstallationsGroup: Building2,
-  Certifications: ShieldIcon, // Alias for Shield
-  InstallationsInfrastructure: CpuIcon, // Alias for Cpu
+  Certifications: ShieldIcon,
+  InstallationsInfrastructure: CpuIcon,
 
   // FINANCE
   FinanceGroup: DollarSign,
@@ -237,7 +237,7 @@ export const SidebarIcons = {
   // HUMAN RESOURCES
   HumanResourcesGroup: Users,
   Recruitment: UserPlus,
-  Onboarding: ClipboardPen, // Replaced ClipboardUser
+  Onboarding: ClipboardPen,
   StaffMatrix: Users,
   TrainingCerts: UsersRound,
   PerformanceReviews: Award,
@@ -253,8 +253,8 @@ export const SidebarIcons = {
   InsightsSystemsGroup: Settings,
   SystemLogs: DatabaseZap,
   ApiIntegrations: Network,
-  UserManagement: UserCog, // Replaced UsersCog
-  Settings: Settings, // For the actual settings item
+  UserManagement: UserCog,
+  Settings: Settings,
 };
 
 export const getTaskCategoryIcon = (category: TaskCategory): LucideIcon => {
@@ -294,12 +294,12 @@ export const getInstallationCategoryIcon = (category: FacilityInstallation['cate
 
 export const getCareFlagIcon = (flag: ResidentCareFlag): LucideIcon | null => {
   switch (flag) {
-    case 'wheelchair': return Accessibility; // Using Accessibility as fallback
+    case 'wheelchair': return Accessibility;
     case 'dementia': return Brain;
     case 'controlled_meds': return Pill;
     case 'hypertension': return HeartPulse;
     case 'diabetes': return Droplets;
     case 'fall_risk_high': return AlertTriangle;
-    default: return Accessibility; // Fallback icon for other care flags
+    default: return Accessibility;
   }
 };
