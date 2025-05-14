@@ -7,11 +7,11 @@ import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
 import AttachEvidenceDialog from '@/components/dashboard/attach-evidence-dialog';
 import DashboardFilters from '@/components/dashboard/dashboard-filters';
 import { mockTasks, allMockRoles, allMockComplianceChapters } from '@/lib/mock-data';
-import type { Task, TaskCategory, TaskStatus, Role, TaskFrequency } from '@/types';
+import type { Task, TaskCategory, TaskStatus, Role, TaskFrequency, ActivityLog } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from 'date-fns';
+import { format, addDays, addWeeks, addMonths, addYears, startOfDay, endOfDay } from 'date-fns';
 
 const uniqueCategories = Array.from(new Set(mockTasks.map(task => task.category))) as TaskCategory[];
 const uniqueStatuses = Array.from(new Set(mockTasks.map(task => task.status))) as TaskStatus[];
@@ -52,12 +52,121 @@ export default function DashboardPage() {
     setSelectedTask(null);
   };
 
-  const handleSaveTask = (updatedTask: Task) => {
-    setTasks(prevTasks => prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t));
-    toast({
-      title: "Task Updated",
-      description: `Task "${updatedTask.name}" has been saved successfully.`,
-    });
+  const handleSaveTask = (updatedTaskFromDialog: Task) => {
+    let taskToProcess = { ...updatedTaskFromDialog };
+    const originalTaskState = tasks.find(t => t.id === taskToProcess.id);
+  
+    const isCompletingNow = taskToProcess.status === 'Completed' && originalTaskState?.status !== 'Completed';
+  
+    if (isCompletingNow) {
+      const completedAt = new Date();
+      const completedByUser = taskToProcess.assignedStaff; 
+  
+      const completionActivity: ActivityLog = {
+        timestamp: completedAt,
+        user: completedByUser || 'User', 
+        action: 'Task Completed',
+        details: `Task marked as complete. Progress set to 100%.`,
+      };
+      
+      const baseActivities = originalTaskState?.activities || [];
+      
+      taskToProcess = {
+        ...taskToProcess,
+        lastCompletedOn: completedAt,
+        completedBy: completedByUser,
+        progress: 100,
+        activities: [...baseActivities, completionActivity],
+      };
+      
+      const recurringFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Mid Yearly', 'Annually', 'Bi-annually'];
+      if (recurringFrequencies.includes(taskToProcess.frequency)) {
+        const anchorDate = taskToProcess.lastCompletedOn as Date; 
+        
+        let newStartDate: Date;
+        let newEndDate: Date | null = null; 
+  
+        switch (taskToProcess.frequency) {
+          case 'Daily':
+            newStartDate = startOfDay(addDays(anchorDate, 1));
+            newEndDate = endOfDay(addDays(anchorDate, 1));
+            break;
+          case 'Weekly':
+            newStartDate = startOfDay(addWeeks(anchorDate, 1)); 
+            newEndDate = endOfDay(addWeeks(anchorDate, 1));
+            break;
+          case 'Monthly':
+            newStartDate = startOfDay(addMonths(anchorDate, 1));
+            newEndDate = endOfDay(addMonths(anchorDate, 1));
+            break;
+          case 'Quarterly':
+            newStartDate = startOfDay(addMonths(anchorDate, 3));
+            newEndDate = endOfDay(addMonths(anchorDate, 3));
+            break;
+          case 'Mid Yearly': 
+            newStartDate = startOfDay(addMonths(anchorDate, 6));
+            newEndDate = endOfDay(addMonths(anchorDate, 6));
+            break;
+          case 'Annually':
+            newStartDate = startOfDay(addYears(anchorDate, 1));
+            newEndDate = endOfDay(addYears(anchorDate, 1));
+            break;
+          case 'Bi-annually': 
+            newStartDate = startOfDay(addYears(anchorDate, 2));
+            newEndDate = endOfDay(addYears(anchorDate, 2));
+            break;
+          default:
+            newStartDate = startOfDay(addDays(anchorDate, 1)); // Fallback
+            newEndDate = endOfDay(addDays(anchorDate, 1));
+            break;
+        }
+  
+        taskToProcess = {
+          ...taskToProcess, 
+          startDate: newStartDate,
+          endDate: newEndDate,
+          status: 'Pending',
+          progress: 0,
+          validatorApproval: undefined, 
+          evidenceLink: undefined, 
+        };
+        
+        const recurrenceActivity: ActivityLog = {
+          timestamp: new Date(),
+          user: 'System',
+          action: 'Task Auto-Regenerated',
+          details: `Task set for next cycle (${taskToProcess.frequency}). Next due: ${newEndDate ? format(newEndDate, 'PPp') : 'N/A'}.`,
+        };
+        taskToProcess.activities = [...taskToProcess.activities, recurrenceActivity];
+        
+        toast({
+          title: "Task Completed & Regenerated",
+          description: `"${taskToProcess.name}" completed. Next cycle due ${newEndDate ? format(newEndDate, 'MMM dd, yyyy') : 'N/A'}.`,
+        });
+  
+      } else { 
+         toast({
+          title: "Task Completed",
+          description: `"${taskToProcess.name}" has been successfully completed.`,
+        });
+      }
+    } else if (taskToProcess.status === 'Completed' && originalTaskState?.status === 'Completed') {
+       toast({
+          title: "Task Updated",
+          description: `Task "${originalTaskState?.name || taskToProcess.name}" details saved.`,
+        });
+    } else { 
+       toast({
+          title: "Task Updated",
+          description: `Task "${taskToProcess.name}" has been saved successfully.`,
+        });
+    }
+    
+    setTasks(prevTasks => prevTasks.map(t => (t.id === taskToProcess.id ? taskToProcess : t)));
+    
+    if (selectedTask && selectedTask.id === taskToProcess.id) {
+      setSelectedTask(taskToProcess);
+    }
   };
 
   const handleOpenAttachEvidence = (task: Task) => {
@@ -313,3 +422,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
