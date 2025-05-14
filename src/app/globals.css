@@ -17,7 +17,7 @@ body {
     --popover: 0 0% 100%; /* White */
     --popover-foreground: 0 5% 20%; /* Dark Gray for text on popover */
 
-    --primary: 18 94% 54%; /* Orange #f86f2d */
+    --primary: 18 94% 58%; /* Orange #f86f2d */
     --primary-foreground: 0 0% 100%; /* White for text on primary */
 
     --secondary: 188 70% 88%; /* Lighter Sea Blue for panels */
@@ -26,7 +26,7 @@ body {
     --muted: 188 60% 94%; /* Very light Sea Blue, almost white */
     --muted-foreground: 0 0% 45%; /* Medium gray #737373 */
 
-    --accent: 18 94% 54%; /* Orange #f86f2d */
+    --accent: 18 94% 58%; /* Orange #f86f2d */
     --accent-foreground: 0 0% 100%; /* White for text on accent */
 
     --destructive: 0 84.2% 60.2%;
@@ -34,9 +34,9 @@ body {
 
     --border: 188 50% 70%; /* Darker Sea Blue for borders */
     --input: 0 0% 98%; /* Off-white for input background */
-    --ring: 18 94% 54%; /* Orange #f86f2d for focus rings */
+    --ring: 18 94% 58%; /* Orange #f86f2d for focus rings */
 
-    --chart-1: 18 94% 54%; /* Orange */
+    --chart-1: 18 94% 58%; /* Orange #f86f2d */
     --chart-2: 188 60% 65%; /* Darker Sea Blue */
     --chart-3: 35 90% 60%; /* Yellow/Gold to complement Orange */
     --chart-4: 190 40% 50%; /* Muted Teal */
@@ -46,12 +46,12 @@ body {
     /* Sidebar - kept relatively neutral to not clash with main sea blue background */
     --sidebar-background: 0 0% 97%; /* Very Light Gray #F7F7F7 */
     --sidebar-foreground: 0 5% 20%; /* Dark Gray */
-    --sidebar-primary: 18 94% 54%; /* Orange for active sidebar items */
+    --sidebar-primary: 18 94% 58%; /* Orange #f86f2d for active sidebar items */
     --sidebar-primary-foreground: 0 0% 100%; /* White text on Orange */
     --sidebar-accent: 188 70% 90%; /* Lighter Sea Blue for hover */
-    --sidebar-accent-foreground: 18 94% 54%; /* Orange text on sea blue hover */
+    --sidebar-accent-foreground: 18 94% 58%; /* Orange #f86f2d text on sea blue hover */
     --sidebar-border: 0 0% 88%; /* Light Gray Border */
-    --sidebar-ring: 18 94% 54%; /* Orange for focus rings */
+    --sidebar-ring: 18 94% 58%; /* Orange #f86f2d for focus rings */
   }
 
   .dark {
@@ -64,7 +64,7 @@ body {
     --popover: 200 10% 18%;
     --popover-foreground: 180 5% 90%;
 
-    --primary: 18 94% 54%; /* Orange #f86f2d */
+    --primary: 18 94% 58%; /* Orange #f86f2d */
     --primary-foreground: 0 0% 100%; /* White */
 
     --secondary: 200 10% 24%; /* Slightly lighter dark panel color */
@@ -73,16 +73,16 @@ body {
     --muted: 200 10% 24%;
     --muted-foreground: 180 5% 60%;
 
-    --accent: 18 94% 54%; /* Orange */
+    --accent: 18 94% 58%; /* Orange #f86f2d */
     --accent-foreground: 0 0% 100%; /* White */
     
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
     --border: 200 10% 28%;
     --input: 200 10% 28%;
-    --ring: 18 94% 54%; /* Orange */
+    --ring: 18 94% 58%; /* Orange #f86f2d */
 
-    --chart-1: 18 94% 54%; /* Orange */
+    --chart-1: 18 94% 58%; /* Orange #f86f2d */
     --chart-2: 188 70% 70%; /* Lighter Sea Blue for dark mode */
     --chart-3: 35 80% 55%;
     --chart-4: 190 30% 40%;
@@ -90,12 +90,12 @@ body {
 
     --sidebar-background: 200 10% 8%; /* Even darker for sidebar */
     --sidebar-foreground: 180 5% 90%;
-    --sidebar-primary: 18 94% 54%; /* Orange for active sidebar items */
+    --sidebar-primary: 18 94% 58%; /* Orange #f86f2d for active sidebar items */
     --sidebar-primary-foreground: 0 0% 100%; 
     --sidebar-accent: 200 10% 15%;
-    --sidebar-accent-foreground: 18 94% 54%; /* Orange text on hover */
+    --sidebar-accent-foreground: 18 94% 58%; /* Orange #f86f2d text on hover */
     --sidebar-border: 200 10% 15%;
-    --sidebar-ring: 18 94% 54%; /* Orange for focus rings */
+    --sidebar-ring: 18 94% 58%; /* Orange #f86f2d for focus rings */
   }
 }
 
