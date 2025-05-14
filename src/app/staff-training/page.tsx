@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea"; // Added import
 import { mockStaffTrainingData, allMockStaffNames, allTrainingTypes, allTrainingStatuses, allMockRoles } from '@/lib/mock-data';
 import type { StaffTrainingRecord, TrainingType, TrainingStatus, Role } from '@/types';
 import { UsersRound, Filter, Search, ExternalLink, CalendarIcon, Edit2, PlusCircle, Save, X } from 'lucide-react';
