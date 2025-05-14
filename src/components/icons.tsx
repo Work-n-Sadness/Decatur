@@ -66,7 +66,7 @@ import {
   Users2, // Case Management Agencies
   Presentation, // Council Meetings
   UserPlus, // Recruitment (HR)
-  ClipboardUser, // Onboarding (HR)
+  ClipboardPen, // Onboarding (HR) - Replaced ClipboardUser
   // UserMinus, // Exit Logs (HR) - already there
   Award, // Performance Reviews (HR)
   GraduationCap, // Training & Certs (HR)
@@ -85,8 +85,8 @@ import {
   ScrollText, // Policies (Governance)
   ClipboardSignature, // House Rules (Governance)
   Settings, // Admin Settings (different from Settings2)
-  UsersCog, // User Management (Admin)
-  DatabaseZap, // System Logs (Admin)
+  UserCog, // User Management (Admin) - Was UsersCog
+  DatabaseZap, // SystemLogs (Admin)
   Network, // API Integrations (Admin)
   Users, // Staff Matrix / Visitor Restrictions (Security)
 } from 'lucide-react';
@@ -178,11 +178,11 @@ export const SidebarIcons = {
 
   // Human Resources
   Recruitment: UserPlus,
-  Onboarding: ClipboardUser,
+  Onboarding: ClipboardPen, 
   ExitLogs: UserMinus,
   PerformanceReviews: Award,
   StaffMatrix: Users, 
-  TrainingCerts: UsersRound, // Was StaffTraining
+  TrainingCerts: UsersRound, 
   ContractorsConsultants: HardHat,
 
   // Finance
@@ -204,7 +204,7 @@ export const SidebarIcons = {
 
   // Admin
   Settings: Settings,
-  UserManagement: UsersCog,
+  UserManagement: UserCog, // Was UsersCog
   SystemLogs: DatabaseZap,
   ApiIntegrations: Network,
 };
@@ -221,3 +221,4 @@ export const getResolutionStatusIcon = (status: ResolutionStatus): JSX.Element =
 export const getTaskFrequencyIcon = (frequency: TaskFrequency): LucideIcon => {
   return TaskFrequencyIcons[frequency] || Repeat;
 };
+
