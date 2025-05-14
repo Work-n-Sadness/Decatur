@@ -1,23 +1,23 @@
 
 import {
-  HeartPulse, // Existing, can be reused or remapped
-  UtensilsCrossed, // Existing
-  Flame, // Existing
-  Briefcase, // Existing
-  FileText, // Existing
-  Users, // Existing
-  ClipboardList, // Existing
-  Sparkles, // Existing
-  ListChecks, // Existing
+  HeartPulse,
+  UtensilsCrossed,
+  Flame,
+  Briefcase,
+  FileText,
+  Users,
+  ClipboardList,
+  Sparkles,
+  ListChecks,
   CircleDot, // Pending
-  Loader2, // Could be 'In Progress' if that status returns
+  Loader2, 
   CheckCircle2, // Resolved
   AlertTriangle, // Escalated
-  ShieldX, // Blocked (if status returns)
+  ShieldX, 
   type LucideIcon,
   GanttChartSquare, // Dashboard
   FilePieChart, // Reports
-  Settings2, // AuditTool (if page remains)
+  Settings2, 
   Repeat, // Frequency
   CalendarClock, // Frequency
   Pill, // Medication Management
@@ -26,6 +26,7 @@ import {
   Wind, // Environment / Smoking
   ClipboardCheck, // Compliance Summary
   UsersRound, // Staff Training
+  Clock, // Used for ClockWarning replacement
 } from 'lucide-react';
 import type { TaskCategory, ResolutionStatus, TaskFrequency } from '@/types';
 
@@ -47,10 +48,10 @@ export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
   Weekly: CalendarClock, 
   Monthly: CalendarClock,
   Quarterly: CalendarClock,
-  'Mid Yearly': CalendarClock, // Keep if this frequency is used
+  'Mid Yearly': CalendarClock,
   Annually: CalendarClock,
-  'Bi-annually': CalendarClock, // Keep if this frequency is used
-  'As Needed': Repeat,
+  'Bi-annually': CalendarClock,
+  'As Needed': Sparkles, // Changed 'As Needed' icon
 };
 
 
@@ -69,8 +70,6 @@ export const getTaskCategoryIcon = (category: TaskCategory): LucideIcon => {
 
 export const getResolutionStatusIcon = (status: ResolutionStatus): JSX.Element => {
   const Icon = ResolutionStatusIcons[status] || CircleDot; // Fallback icon
-  // Add animation if needed, e.g. for a hypothetical "In Progress" like state
-  // const className = status === 'In Progress' ? 'animate-spin' : ''; 
   return <Icon />;
 };
 

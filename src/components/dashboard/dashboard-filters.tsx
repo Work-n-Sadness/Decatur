@@ -4,7 +4,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText, Package } from "lucide-react";
+import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText, Package, Users } from "lucide-react";
 import type { TaskCategory, ResolutionStatus, Role, TaskFrequency } from "@/types";
 
 interface DashboardFiltersProps {
@@ -41,7 +41,7 @@ export default function DashboardFilters({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search tasks..."
+            placeholder="Search tasks by name..."
             className="pl-10"
             onChange={(e) => onSearch(e.target.value)}
           />
@@ -71,7 +71,7 @@ export default function DashboardFilters({
 
         <Select onValueChange={(value) => onFilterChange({ role: value === 'all' ? undefined : value as Role })}>
           <SelectTrigger>
-             <FilterIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+             <Users className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue placeholder="Filter by Responsible Role" />
           </SelectTrigger>
           <SelectContent>

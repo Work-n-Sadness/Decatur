@@ -7,8 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getTaskCategoryIcon, getResolutionStatusIcon, getTaskFrequencyIcon } from '@/components/icons';
-import { CalendarDays, User, Users, CheckSquare, Tag, Paperclip, ExternalLink, Repeat, BookOpen, Milestone } from 'lucide-react';
-import { format } from 'date-fns';
+import { CalendarDays, User, Users, CheckSquare, Tag, Paperclip, ExternalLink, BookOpen, Milestone } from 'lucide-react';
+import { format, differenceInDays, addDays } from 'date-fns';
 
 interface TaskCardProps {
   task: Task;
@@ -21,29 +21,61 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
   const StatusIconWithClass = getResolutionStatusIcon(task.status);
   const FrequencyIcon = getTaskFrequencyIcon(task.frequency);
   
-  const getStatusColorClass = (status: Task['status']) => {
-    switch (status) {
-      case 'Resolved': return 'bg-green-500/20 text-green-700 border-green-500/50 dark:text-green-400 dark:bg-green-500/10 dark:border-green-500/30';
-      case 'Pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/50 dark:text-yellow-400 dark:bg-yellow-500/10 dark:border-yellow-500/30';
-      case 'Escalated': return 'bg-red-500/20 text-red-700 border-red-500/50 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30';
-      default: return 'bg-gray-500/20 text-gray-700 border-gray-500/50 dark:text-gray-400 dark:bg-gray-500/10 dark:border-gray-500/30';
+  const getStatusColorClass = (status: Task['status'], endDate: Date | null) => {
+    if (status === 'Resolved') {
+      return 'bg-green-500/20 text-green-700 border-green-500/50 dark:text-green-400 dark:bg-green-500/10 dark:border-green-500/30';
     }
+    if (status === 'Escalated') {
+      return 'bg-red-500/20 text-red-700 border-red-500/50 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30';
+    }
+    if (endDate) {
+      const today = new Date();
+      const daysLeft = differenceInDays(endDate, today);
+      if (daysLeft < 0) {
+        return 'bg-red-500/20 text-red-700 border-red-500/50 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30'; // Overdue
+      } else if (daysLeft <= 3 && task.frequency === 'Daily') {
+        return 'bg-orange-500/20 text-orange-700 border-orange-500/50 dark:text-orange-400 dark:bg-orange-500/10 dark:border-orange-500/30'; // Due soon for daily
+      } else if (daysLeft <= 7 && (task.frequency === 'Weekly' || task.frequency === 'Monthly')) {
+         return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/50 dark:text-yellow-400 dark:bg-yellow-500/10 dark:border-yellow-500/30'; // Due soon for weekly/monthly
+      }
+    }
+    // Default for Pending or other non-critical states
+    return 'bg-blue-500/20 text-blue-700 border-blue-500/50 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30';
+  };
+  
+  const displayResponsibleRole = (role: Role | Role[] | undefined) => {
+    if (!role) return 'N/A';
+    if (Array.isArray(role)) return role.join(' & ');
+    return role;
   };
 
-  const displayResponsibleRole = (role: Role | Role[]) => {
-    if (Array.isArray(role)) return role.join(', ');
-    return role;
+  const getOverdueRiskBadge = (task: Task) => {
+    if (task.status === 'Resolved') return null;
+    if (task.status === 'Escalated') return <Badge variant="destructive" className="text-xs">Escalated</Badge>;
+    if (task.endDate) {
+      const today = new Date();
+      const daysLeft = differenceInDays(task.endDate, today);
+      if (daysLeft < 0) return <Badge variant="destructive" className="text-xs">🔴 Overdue</Badge>;
+      if (task.frequency === 'Daily' && daysLeft <=1) return <Badge variant="secondary" className="text-xs">🟠 Due Soon</Badge>;
+      if (task.frequency === 'Weekly' && daysLeft <=2) return <Badge variant="secondary" className="text-xs">🟠 Due Soon</Badge>;
+      if (task.frequency === 'Monthly' && daysLeft <=7) return <Badge variant="secondary" className="text-xs">🟡 Due Soon</Badge>;
+    }
+    return null;
   }
+
 
   return (
     <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start mb-2">
           <CategoryIcon className="h-7 w-7 text-accent" />
-          <Badge variant="outline" className={`flex items-center gap-1.5 text-xs px-2 py-1 ${getStatusColorClass(task.status)}`}>
-            {StatusIconWithClass}
-            {task.status}
-          </Badge>
+          <div className="flex flex-col items-end space-y-1">
+            <Badge variant="outline" className={`flex items-center gap-1.5 text-xs px-2 py-1 ${getStatusColorClass(task.status, task.endDate)}`}>
+              {StatusIconWithClass}
+              {task.status}
+            </Badge>
+            {getOverdueRiskBadge(task)}
+          </div>
         </div>
         <CardTitle className="text-base leading-tight font-semibold">{task.name}</CardTitle>
         <CardDescription className="text-xs text-muted-foreground">

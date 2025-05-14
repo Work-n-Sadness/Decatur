@@ -1,5 +1,5 @@
 
-export type ResolutionStatus = 'Pending' | 'Resolved' | 'Escalated'; // New status type
+export type ResolutionStatus = 'Pending' | 'Resolved' | 'Escalated';
 
 export type TaskCategory = 
   | 'Medication Management & ECP Audits'
@@ -7,7 +7,8 @@ export type TaskCategory =
   | 'Compliance & Survey Prep Tasks'
   | 'Smoking, Behavior, and Environment';
 
-export type TaskFrequency = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'As Needed' | 'Annually' | 'Bi-annually'; // Bi-annually added for consistency
+export type TaskFrequency = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'As Needed' | 'Annually' | 'Bi-annually' | 'Mid Yearly'; // Added Mid Yearly from filters
+
 export type Role = 
   | 'Nurse' 
   | 'Caregiver' 
@@ -16,7 +17,8 @@ export type Role =
   | 'Director' 
   | 'Wellness Nurse' 
   | 'Housekeeping Supervisor' 
-  | 'QMAP Supervisor';
+  | 'QMAP Supervisor'
+  | 'Housekeeping / Aide'; // Added from prompt
 
 export interface ActivityLog {
   timestamp: Date;
@@ -27,25 +29,25 @@ export interface ActivityLog {
 
 export interface Task {
   id: string;
-  name: string; // Was taskActivity in user prompt, mapped to name
+  name: string; 
   category: TaskCategory;
   frequency: TaskFrequency;
-  responsibleRole: Role | Role[]; // Can be a single role or multiple
-  status: ResolutionStatus; // Changed from TaskStatus to ResolutionStatus
-  progress: number; // 0-100, may be less relevant with new statuses, but keeping for now
-  assignedStaff: string; // Specific staff member(s) assigned
-  validator: Role | string | null; // Secondary reviewer role or name
-  startDate: Date; // When the task cycle begins or was initiated
-  endDate: Date | null; // Due date for the current cycle
-  time: string | null; // e.g., "10:00 AM"
-  deliverables: string; // Expected evidence or file
-  notes: string; // General notes
+  responsibleRole: Role | Role[]; 
+  status: ResolutionStatus; 
+  progress: number; 
+  assignedStaff: string; 
+  validator: Role | string | null; 
+  startDate: Date; 
+  endDate: Date | null; 
+  time: string | null; 
+  deliverables: string; 
+  notes: string; 
   activities: ActivityLog[];
-  evidenceLink?: string; // Google Drive or local file URL
+  evidenceLink?: string; 
   lastCompletedOn?: Date | null;
-  completedBy?: string | null; // Staff name who completed it
-  validatorApproval?: string | null; // Name/ID of staff who approved, or approval notes
-  complianceChapterTag?: string; // e.g., "Ch. 14.31"
+  completedBy?: string | null; 
+  validatorApproval?: string | null; 
+  complianceChapterTag?: string; 
 }
 
 // AuditItem and AuditCategory might be deprecated if /audit-tool page is removed.

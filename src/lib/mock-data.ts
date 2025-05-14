@@ -8,44 +8,68 @@ const getRandomDate = (start: Date, end: Date): Date => {
   return date;
 };
 
-const newCategories: TaskCategory[] = [
+export const allTaskCategories: TaskCategory[] = [
   'Medication Management & ECP Audits',
   'Resident Documentation & Clinical Care',
   'Compliance & Survey Prep Tasks',
   'Smoking, Behavior, and Environment',
 ];
 
-const newFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'As Needed', 'Annually'];
-const newStatuses: ResolutionStatus[] = ['Pending', 'Resolved', 'Escalated'];
-const newRoles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director', 'Wellness Nurse', 'Housekeeping Supervisor', 'QMAP Supervisor'];
-const staffNames = ['Alice Smith (Wellness Nurse)', 'Bob Johnson (QMAP Sup.)', 'Carol Williams (Admin)', 'David Brown (Director)', 'Eve Davis (Nurse)', 'Frank Wilson (Caregiver)', 'Grace Lee (Housekeeping Sup.)', 'Henry Miller (Maintenance)'];
+export const allTaskFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'As Needed', 'Annually', 'Bi-annually', 'Mid Yearly'];
+export const allResolutionStatuses: ResolutionStatus[] = ['Pending', 'Resolved', 'Escalated'];
+export const allMockRoles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director', 'Wellness Nurse', 'Housekeeping Supervisor', 'QMAP Supervisor', 'Housekeeping / Aide'];
 
-const complianceChapterTagsPool = ["Ch. 2.15", "Ch. 7.03", "Ch. 14.31", "Ch. 9.11", "Ch. 22.01", "Ch. 14.3", "Ch. 24.1", "Ch. 12.4", "Ch. 24.3", null];
+// Expanded list based on roles mentioned in task assignments
+const staffNamesByRole: Record<Role, string[]> = {
+    'Wellness Nurse': ['Alice Smith (Wellness Nurse)', 'Olivia Chen (Wellness Nurse)'],
+    'QMAP Supervisor': ['Bob Johnson (QMAP Sup.)', 'Noah Martinez (QMAP Sup.)'],
+    'Admin': ['Carol Williams (Admin)', 'Sophia Rodriguez (Admin)'],
+    'Director': ['David Brown (Director)', 'Isabella Wilson (Director)'],
+    'Nurse': ['Eve Davis (Nurse)', 'Grace Lee (Nurse)'], // Assuming Grace can also be a Nurse
+    'Caregiver': ['Frank Wilson (Caregiver)', 'Michael Brown (Caregiver)'],
+    'Housekeeping Supervisor': ['Grace Lee (Housekeeping Sup.)', 'Ava Davis (Housekeeping Sup.)'],
+    'Maintenance': ['Henry Miller (Maintenance)', 'Ethan Miller (Maintenance)'],
+    'Housekeeping / Aide': ['Zoe Clark (Aide)', 'Mia Lewis (Aide)'],
+};
+
+const allStaffNames: string[] = Object.values(staffNamesByRole).flat();
+
+const complianceChapterTagsPool = ["Ch. 2.15", "Ch. 7.03", "Ch. 14.31", "Ch. 9.11", "Ch. 22.01", "Ch. 14.3", "Ch. 24.1", "Ch. 12.4", "Ch. 24.3", "Ch. 12.6", null];
 
 
-const specificTasksSeed: Omit<Task, 'id' | 'startDate' | 'endDate' | 'time' | 'progress' | 'notes' | 'activities' | 'assignedStaff' | 'lastCompletedOn' | 'completedBy' | 'validatorApproval' | 'evidenceLink' | 'status'>[] = [
+interface SeedTask {
+  name: string;
+  category: TaskCategory;
+  responsibleRole: Role | Role[];
+  frequency: TaskFrequency;
+  deliverables: string;
+  validator?: Role | null;
+  complianceChapterTag?: string | null;
+}
+
+const specificTasksSeed: SeedTask[] = [
   // Category: Medication Management & ECP Audits
   { name: "Review and reconcile all new Med Orders in ECP", category: 'Medication Management & ECP Audits', responsibleRole: 'Wellness Nurse', frequency: 'Daily', deliverables: "Verified MAR entries and scanned orders", validator: 'Director', complianceChapterTag: "Ch. 7.03" },
   { name: "Flag and resolve discontinued meds in ECP", category: 'Medication Management & ECP Audits', responsibleRole: 'QMAP Supervisor', frequency: 'Daily', deliverables: "Discontinued log and removal confirmation", validator: 'Wellness Nurse', complianceChapterTag: "Ch. 7.03" },
-  { name: "Audit low stock / restock medication logs", category: 'Medication Management & ECP Audits', responsibleRole: 'Admin', frequency: 'Weekly', deliverables: "Reorder requests and stock checklists", validator: 'Nurse', complianceChapterTag: "Ch. 7.03" }, // Admin + Nurse -> simplified to Admin, Nurse as validator
+  { name: "Audit low stock / restock medication logs", category: 'Medication Management & ECP Audits', responsibleRole: ['Admin', 'Nurse'], frequency: 'Weekly', deliverables: "Reorder requests and stock checklists", validator: 'Director', complianceChapterTag: "Ch. 7.03" },
   { name: "Perform ECP chart review audit for MAR accuracy and cross-check", category: 'Medication Management & ECP Audits', responsibleRole: 'Director', frequency: 'Weekly', deliverables: "Audit checklist + notes", validator: null, complianceChapterTag: "Ch. 7.03" },
   { name: "Investigate and log medication errors", category: 'Medication Management & ECP Audits', responsibleRole: 'QMAP Supervisor', frequency: 'As Needed', deliverables: "Error investigation form", validator: 'Director', complianceChapterTag: "Ch. 7.03" },
-  { name: "Perform 2-person narcotics destruction & documentation", category: 'Medication Management & ECP Audits', responsibleRole: 'Director', frequency: 'As Needed', deliverables: "Signed destruction sheet", validator: 'Nurse', complianceChapterTag: "Ch. 7.03" }, // Director + Nurse -> Director, Nurse as validator
+  { name: "Perform 2-person narcotics destruction & documentation", category: 'Medication Management & ECP Audits', responsibleRole: ['Director', 'Nurse'], frequency: 'As Needed', deliverables: "Signed destruction sheet", validator: 'Admin', complianceChapterTag: "Ch. 7.03" },
   { name: "Maintain updated current med order list", category: 'Medication Management & ECP Audits', responsibleRole: 'Wellness Nurse', frequency: 'Weekly', deliverables: "Clean list per resident", validator: 'QMAP Supervisor', complianceChapterTag: "Ch. 7.03" },
   { name: "Conduct MAR audit (all residents)", category: 'Medication Management & ECP Audits', responsibleRole: 'Nurse', frequency: 'Weekly', deliverables: "Compliance sheet, notes, resolution tracking", validator: 'Director', complianceChapterTag: "Ch. 7.03" },
 
   // Category: Resident Documentation & Clinical Care
-  { name: "Update and store Resident Progress Reports", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'Weekly', deliverables: "Weekly chart note", validator: 'Nurse' },
+  { name: "Update and store Resident Progress Reports", category: 'Resident Documentation & Clinical Care', responsibleRole: ['Caregiver', 'Nurse'], frequency: 'Weekly', deliverables: "Weekly chart note", validator: 'Wellness Nurse' },
   { name: "Maintain updated Face Sheets", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Admin', frequency: 'Monthly', deliverables: "Printed or digital version", validator: 'Director' },
   { name: "Record Treatment History: Past and ongoing", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Nurse', frequency: 'Monthly', deliverables: "Chronological summary", validator: 'Wellness Nurse' },
   { name: "Document and log fall incidents", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Fall log and corrective action", validator: 'Nurse' },
-  { name: "Record lift assist events", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Housekeeping Supervisor', frequency: 'As Needed', deliverables: "Lift assist log", validator: 'Caregiver' }, // Housekeeping / Aide -> Housekeeping Supervisor
-  { name: "Update Care Plan Reviews & Assessments", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Nurse', frequency: 'Quarterly', deliverables: "Updated digital care plan", validator: 'Director' },
+  { name: "Record lift assist events", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Housekeeping / Aide', frequency: 'As Needed', deliverables: "Lift assist log", validator: 'Caregiver' },
+  { name: "Update Care Plan Reviews & Assessments", category: 'Resident Documentation & Clinical Care', responsibleRole: ['Nurse', 'Director'], frequency: 'Quarterly', deliverables: "Updated digital care plan", validator: null },
 
   // Category: Compliance & Survey Prep Tasks
-  { name: "Conduct ECP error resolution review", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Admin', frequency: 'Quarterly', deliverables: "List of resolved audit flags", validator: 'Director', complianceChapterTag: "Ch. 2.15" },
+  { name: "Conduct ECP error resolution review", category: 'Compliance & Survey Prep Tasks', responsibleRole: ['Admin', 'Director'], frequency: 'Quarterly', deliverables: "List of resolved audit flags", validator: null, complianceChapterTag: "Ch. 2.15" },
   { name: "Perform QMAP passing rate audit", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'QMAP Supervisor', frequency: 'Monthly', deliverables: "Score sheet", validator: 'Director', complianceChapterTag: "Ch. 9.11" },
-  { name: "Audit medication disposal logs", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Nurse', frequency: 'Monthly', deliverables: "Disposal documentation", validator: 'Maintenance', complianceChapterTag: "Ch. 7.03" },
+  { name: "Audit medication disposal logs", category: 'Compliance & Survey Prep Tasks', responsibleRole: ['Nurse', 'Maintenance'], frequency: 'Monthly', deliverables: "Disposal documentation", validator: 'Admin', complianceChapterTag: "Ch. 7.03" },
   { name: "Post & verify Resident Rights, House Rules, Emergency Plan", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Admin', frequency: 'Monthly', deliverables: "Photos & checklist", validator: 'Director', complianceChapterTag: "Ch. 24.1" },
   { name: "Prepare Survey Readiness Packet", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Admin', frequency: 'Quarterly', deliverables: "Binder or PDF", validator: 'Director' },
   { name: "Track policy & procedure manual reviews", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Director', frequency: 'Annually', deliverables: "Signed review sheet", validator: null },
@@ -53,23 +77,34 @@ const specificTasksSeed: Omit<Task, 'id' | 'startDate' | 'endDate' | 'time' | 'p
   // Category: Smoking, Behavior, and Environment
   { name: "Log all resident smoking activity", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Housekeeping Supervisor', frequency: 'Daily', deliverables: "Time-stamped log", validator: 'Admin' },
   { name: "Audit compliance with smoking safety", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Admin', frequency: 'Weekly', deliverables: "Violation log", validator: 'Director' },
-  { name: "Observe and document behavioral incidents", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Incident form", validator: 'Nurse' },
+  { name: "Observe and document behavioral incidents", category: 'Smoking, Behavior, and Environment', responsibleRole: ['Caregiver', 'Nurse'], frequency: 'As Needed', deliverables: "Incident form", validator: 'Wellness Nurse' },
 ];
 
 export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
   const startDate = getRandomDate(new Date(2023, 0, 1), new Date(2024, 11, 31));
-  const endDate = seed.frequency !== 'As Needed' 
-    ? new Date(startDate.getTime() + ( (seed.frequency === 'Daily' ? 1 : seed.frequency === 'Weekly' ? 7 : seed.frequency === 'Monthly' ? 30 : seed.frequency === 'Quarterly' ? 90 : 365) * 24 * 60 * 60 * 1000)) 
-    : null;
+  const freqCycleDays = {
+    'Daily': 1, 'Weekly': 7, 'Monthly': 30, 'Quarterly': 90, 'Mid Yearly': 182, 'Annually': 365, 'Bi-annually': 730, 'As Needed': 0
+  };
+  const cycleDays = freqCycleDays[seed.frequency] || 0;
+  const endDate = cycleDays > 0 ? new Date(startDate.getTime() + (cycleDays * 24 * 60 * 60 * 1000)) : null;
   
-  const status = getRandomElement(newStatuses);
-  const assignedStaffMember = getRandomElement(staffNames);
+  const status = getRandomElement(allResolutionStatuses);
+  
+  let assignedStaffMember: string;
+  if (Array.isArray(seed.responsibleRole)) {
+    // If multiple roles, pick a staff member from the first role in the array for assignment
+    assignedStaffMember = getRandomElement(staffNamesByRole[seed.responsibleRole[0]] || allStaffNames);
+  } else {
+    assignedStaffMember = getRandomElement(staffNamesByRole[seed.responsibleRole] || allStaffNames);
+  }
 
   let lastCompletedOn: Date | null = null;
   let completedBy: string | null = null;
 
   if (status === 'Resolved') {
-    lastCompletedOn = getRandomDate(new Date(startDate.getTime() - 30 * 24 * 60 * 60 * 1000), startDate); // Completed some time before start of new cycle
+    lastCompletedOn = cycleDays > 0 
+        ? getRandomDate(new Date(startDate.getTime() - cycleDays * 24 * 60 * 60 * 1000), startDate) 
+        : getRandomDate(new Date(new Date().getTime() - 30 * 24*60*60*1000), new Date()); // For 'As Needed' tasks
     completedBy = assignedStaffMember;
   }
   
@@ -77,7 +112,12 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
 
   return {
     id: `task_${i + 1}`,
-    ...seed,
+    name: seed.name,
+    category: seed.category,
+    frequency: seed.frequency,
+    responsibleRole: seed.responsibleRole,
+    deliverables: seed.deliverables,
+    validator: seed.validator || null,
     assignedStaff: assignedStaffMember,
     status,
     startDate,
@@ -93,15 +133,14 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
     evidenceLink: Math.random() > 0.6 ? `https://docs.google.com/document/d/example_evidence_${i+1}` : undefined,
     lastCompletedOn,
     completedBy,
-    validatorApproval: status === 'Resolved' && seed.validator && Math.random() > 0.4 ? `Approved by ${getRandomElement(staffNames.filter(s => s !== completedBy))}` : null,
+    validatorApproval: status === 'Resolved' && seed.validator && Math.random() > 0.4 ? `Approved by ${getRandomElement(allStaffNames.filter(s => s !== completedBy))}` : null,
     complianceChapterTag: seed.complianceChapterTag || getRandomElement(complianceChapterTagsPool.filter(Boolean) as string[]) || undefined,
   };
 });
 
 
-// Keeping existing mock data structures for other pages, they might need adjustments if they rely on old TaskCategory or TaskStatus types.
-// For now, focus is on the main dashboard.
-const originalCategories: (TaskCategory | string)[] = [ // Use string to allow original + new
+// Keeping existing mock data structures for other pages
+const originalCategoriesForAudit: string[] = [
   'Health Protocols / Medications',
   'Food Safety',
   'Fire Safety',
@@ -109,12 +148,12 @@ const originalCategories: (TaskCategory | string)[] = [ // Use string to allow o
   'Documentation & Compliance',
   'Personnel File & Staff Training',
   'Postings & Required Notices',
-  'Environmental & Sanitation Safety', // Renamed from Environmental & Sanitation Checks
+  'Environmental & Sanitation Safety', 
   'Additional ALR-Required Tasks'
 ];
-export const mockAuditCategories: AuditCategory[] = originalCategories.map((catName, index) => ({
+export const mockAuditCategories: AuditCategory[] = originalCategoriesForAudit.map((catName, index) => ({
   id: `auditcat_${index + 1}`,
-  name: catName as TaskCategory, // Assuming these will align or be filtered out if not in new TaskCategory
+  name: catName as TaskCategory | string, 
   items: Array.from({ length: Math.floor(Math.random() * 5) + 3 }, (_, j) => ({
     id: `audititem_${index + 1}_${j + 1}`,
     description: `${getRandomElement(['Verify', 'Ensure', 'Check for', 'Confirm'])} ${getRandomElement(['item A', 'procedure B', 'log C', 'documentation D'])} for ${catName}.`,
@@ -124,18 +163,18 @@ export const mockAuditCategories: AuditCategory[] = originalCategories.map((catN
   })),
 }));
 
-export const mockStaffResponsibilityMatrix = newRoles.map(role => ({
+export const mockStaffResponsibilityMatrix = allMockRoles.map(role => ({
   role,
-  responsibilities: mockTasks // Use new mockTasks
+  responsibilities: mockTasks
     .filter(task => task.responsibleRole === role || (Array.isArray(task.responsibleRole) && task.responsibleRole.includes(role)))
-    .slice(0, Math.floor(Math.random() * 3) + 1) 
+    .slice(0, Math.floor(Math.random() * 3) + 2) 
     .map(task => ({ taskName: task.name, deliverables: task.deliverables, category: task.category })),
 }));
 
 
 // Mock Data for Staff Training Dashboard
-const trainingTypesList: TrainingType[] = ['QMAP Training', 'TB Test', 'CPR Certification', 'Orientation'];
-const trainingStatusesList: TrainingStatus[] = ['Compliant', 'Expiring Soon', 'Overdue', 'Pending Documentation'];
+export const allTrainingTypes: TrainingType[] = ['QMAP Training', 'TB Test', 'CPR Certification', 'Orientation'];
+export const allTrainingStatuses: TrainingStatus[] = ['Compliant', 'Expiring Soon', 'Overdue', 'Pending Documentation'];
 
 const generateTrainingDates = (): { completionDate?: Date | null, expiryDate?: Date | null, status: TrainingStatus } => {
   const today = new Date();
@@ -146,7 +185,7 @@ const generateTrainingDates = (): { completionDate?: Date | null, expiryDate?: D
   if (!completionDate) {
     status = 'Pending Documentation';
   } else {
-    const hasExpiry = Math.random() > 0.3; // Some trainings might not expire (e.g. Orientation)
+    const hasExpiry = Math.random() > 0.3; 
     if (hasExpiry) {
       expiryDate = new Date(completionDate.getFullYear() + getRandomElement([1, 2]), completionDate.getMonth(), completionDate.getDate());
       const daysUntilExpiry = (expiryDate.getTime() - today.getTime()) / (1000 * 3600 * 24);
@@ -158,22 +197,25 @@ const generateTrainingDates = (): { completionDate?: Date | null, expiryDate?: D
         status = 'Compliant';
       }
     } else { 
-      status = 'Compliant'; // No expiry, so compliant if completed
+      status = 'Compliant'; 
     }
   }
   return { completionDate, expiryDate, status };
 };
 
-const staffForTraining = ['Olivia Chen (Nurse)', 'Michael Brown (Caregiver)', 'Sophia Rodriguez (Admin)', 'Ethan Miller (Maintenance)', 'Isabella Wilson (Director)', 'Liam Garcia (Wellness Nurse)', 'Ava Davis (Housekeeping Sup.)', 'Noah Martinez (QMAP Sup.)'];
+const staffForTrainingRawNames = ['Olivia Chen', 'Michael Brown', 'Sophia Rodriguez', 'Ethan Miller', 'Isabella Wilson', 'Liam Garcia', 'Ava Davis', 'Noah Martinez'];
 
-export const mockStaffTrainingData: StaffTrainingRecord[] = staffForTraining.flatMap((staffName, staffIndex) => 
-  trainingTypesList.map((trainingType, trainingTypeIndex) => {
+
+export const mockStaffTrainingData: StaffTrainingRecord[] = staffForTrainingRawNames.flatMap((staffName, staffIndex) => 
+  allTrainingTypes.map((trainingType, trainingTypeIndex) => {
     const { completionDate, expiryDate, status } = generateTrainingDates();
-    const staffRole = newRoles[staffIndex % newRoles.length]; // Assign roles cyclically
+    const assignedRole = allMockRoles[staffIndex % allMockRoles.length]; // Assign roles cyclically from the main list
+    const staffMemberFullName = `${staffName} (${assignedRole})`; // Use full name with role for display if needed elsewhere
+    
     return {
       id: `training_${staffIndex + 1}_${trainingTypeIndex + 1}`,
-      staffMemberName: staffName,
-      staffRole,
+      staffMemberName: staffMemberFullName, // Store with role for consistency with other staff name usage
+      staffRole: assignedRole,
       trainingType,
       completionDate,
       expiryDate,
@@ -183,12 +225,5 @@ export const mockStaffTrainingData: StaffTrainingRecord[] = staffForTraining.fla
     };
   })
 );
-
-export const allMockRoles = newRoles;
-export const allTaskCategories = newCategories;
-export const allTaskFrequencies = newFrequencies;
-export const allResolutionStatuses = newStatuses; // Renamed from allTaskStatuses
+export const allMockStaffNames = allStaffNames; // Use the comprehensive list
 export const allMockComplianceChapters = Array.from(new Set(mockTasks.map(t => t.complianceChapterTag).filter(Boolean).concat(complianceChapterTagsPool.filter(Boolean) as string[]))) as string[];
-export const allMockStaffNames = staffNames; // staffNames includes roles for clarity in dropdowns if needed elsewhere
-export const allTrainingTypes = trainingTypesList;
-export const allTrainingStatuses = trainingStatusesList;

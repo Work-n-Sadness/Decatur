@@ -12,29 +12,28 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { getTaskCategoryIcon, getResolutionStatusIcon } from '@/components/icons';
-import { CalendarIcon, User, Users, Briefcase, Edit3, Save, X, ListChecks, Percent, Clock, Repeat, CheckSquare, Paperclip, ExternalLink, LinkIcon, BookOpen, UserCheck, Milestone } from 'lucide-react';
+import { getTaskCategoryIcon, getResolutionStatusIcon, getTaskFrequencyIcon } from '@/components/icons';
+import { CalendarIcon, User, Users, Briefcase, Edit3, Save, X, ListChecks, Percent, Clock, CheckSquare, Paperclip, ExternalLink, LinkIcon, BookOpen, UserCheck, Milestone } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import React, { useEffect, useState } from 'react';
-import { allResolutionStatuses, allMockRoles } from '@/lib/mock-data'; // Import new statuses and roles
+import { allResolutionStatuses, allMockRoles, allTaskFrequencies, allTaskCategories, allMockStaffNames } from '@/lib/mock-data'; 
 
 const taskSchema = z.object({
   name: z.string().min(1, "Task name is required"),
-  notes: z.string().optional(),
+  category: z.string().min(1, "Category is required"), // Assuming TaskCategory will be string from select
+  frequency: z.string().min(1, "Frequency is required"), // Assuming TaskFrequency will be string from select
+  responsibleRole: z.union([z.string().min(1, "Responsible role is required"), z.array(z.string().min(1,"Each responsible role is required")).min(1, "At least one responsible role is required")]),
   assignedStaff: z.string().min(1, "Assigned staff is required"),
-  status: z.enum(['Pending', 'Resolved', 'Escalated']), // Updated to ResolutionStatus
-  progress: z.number().min(0).max(100),
+  validator: z.string().nullable().optional(),
+  status: z.enum(allResolutionStatuses as [ResolutionStatus, ...ResolutionStatus[]]),
+  progress: z.number().min(0).max(100).int(),
   startDate: z.date(),
   endDate: z.date().nullable(),
   deliverables: z.string().optional(),
-  responsibleRole: z.union([z.string(), z.array(z.string())]).refine(value => { // Allow string or array of strings
-    if (Array.isArray(value)) return value.every(item => typeof item === 'string' && item.length > 0);
-    return typeof value === 'string' && value.length > 0;
-  }, "Responsible role is required"),
-  validator: z.string().nullable().optional(),
+  notes: z.string().optional(),
   evidenceLink: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   complianceChapterTag: z.string().optional(),
   validatorApproval: z.string().optional(),
@@ -64,15 +63,17 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
     if (task) {
       form.reset({
         name: task.name,
-        notes: task.notes || '',
+        category: task.category,
+        frequency: task.frequency,
+        responsibleRole: task.responsibleRole, // Can be string or array
         assignedStaff: task.assignedStaff,
+        validator: task.validator || null,
         status: task.status,
         progress: task.progress,
         startDate: task.startDate && isValid(new Date(task.startDate)) ? (typeof task.startDate === 'string' ? parseISO(task.startDate) : new Date(task.startDate)) : new Date(),
         endDate: task.endDate && isValid(new Date(task.endDate)) ? (typeof task.endDate === 'string' ? parseISO(task.endDate) : new Date(task.endDate)) : null,
         deliverables: task.deliverables || '',
-        responsibleRole: task.responsibleRole,
-        validator: task.validator || null,
+        notes: task.notes || '',
         evidenceLink: task.evidenceLink || '',
         complianceChapterTag: task.complianceChapterTag || '',
         validatorApproval: task.validatorApproval || '',
@@ -81,55 +82,63 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
       });
     }
     if (!isOpen) {
-      setIsEditing(false); // Reset editing state when dialog closes
+      setIsEditing(false); 
     }
   }, [task, form, isOpen]);
 
   if (!task) return null;
 
   const CategoryIcon = getTaskCategoryIcon(task.category);
-  const StatusIconWithClass = getResolutionStatusIcon(task.status);
+  const StatusIcon = getResolutionStatusIcon(task.status); // JSX Element
+  const FrequencyIcon = getTaskFrequencyIcon(task.frequency);
+
 
   const handleSubmit = (data: TaskFormData) => {
     const updatedTask: Task = {
       ...task,
       ...data,
-      startDate: data.startDate, // Ensure dates are correctly formatted if needed
-      endDate: data.endDate,
-      responsibleRole: data.responsibleRole as Role | Role[], // Cast to Role or Role[]
+      category: data.category as TaskCategory,
+      frequency: data.frequency as TaskFrequency,
+      responsibleRole: data.responsibleRole as Role | Role[],
       validator: data.validator || null,
       evidenceLink: data.evidenceLink || undefined,
       complianceChapterTag: data.complianceChapterTag || undefined,
       validatorApproval: data.validatorApproval || undefined,
       lastCompletedOn: data.lastCompletedOn || null,
       completedBy: data.completedBy || null,
-      activities: task.activities || [], // Preserve existing activities
+      activities: task.activities || [], 
     };
 
-    if (data.status === 'Resolved' && task.status !== 'Resolved') {
+    const originalStatus = task.status;
+    const newStatus = data.status;
+
+    if (newStatus === 'Resolved' && originalStatus !== 'Resolved') {
       updatedTask.lastCompletedOn = new Date();
-      updatedTask.completedBy = data.assignedStaff;
+      updatedTask.completedBy = data.assignedStaff; // Or a dedicated 'resolvedBy' field if different
       updatedTask.progress = 100;
-       updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: 'Task Resolved', details: 'Task marked as resolved.' });
-    } else if (data.status !== 'Resolved' && task.status === 'Resolved') {
-      // If moved from resolved to something else, clear resolution fields
+      updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: 'Task Resolved', details: 'Task marked as resolved.' });
+    } else if (newStatus !== 'Resolved' && originalStatus === 'Resolved') {
       updatedTask.lastCompletedOn = null;
       updatedTask.completedBy = null;
-       updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: 'Task Un-Resolved', details: 'Task status changed from resolved.' });
+      // Optionally reset progress or leave as is
+      updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: 'Task Un-Resolved', details: `Task status changed from Resolved to ${newStatus}.` });
+    } else if (newStatus !== originalStatus) {
+        updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: `Status Change: ${originalStatus} -> ${newStatus}`, details: `Task status updated to ${newStatus}.`});
     }
     
     if (data.status === 'Resolved' && data.progress !== 100) {
         updatedTask.progress = 100;
-        form.setValue('progress', 100); 
+        form.setValue('progress', 100); // Also update form state if still editing
     }
+
 
     onSave(updatedTask); 
     setIsEditing(false);
   };
 
-  const DetailItem: React.FC<{icon: React.ElementType, label: string, value: React.ReactNode, action?: React.ReactNode}> = ({ icon: Icon, label, value, action }) => (
-    <div className="flex items-start space-x-3">
-      <Icon className="h-5 w-5 text-muted-foreground mt-1 shrink-0" />
+  const DetailItem: React.FC<{icon: React.ElementType, label: string, value: React.ReactNode, action?: React.ReactNode, className?: string}> = ({ icon: Icon, label, value, action, className }) => (
+    <div className={cn("flex items-start space-x-3", className)}>
+      <Icon className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
       <div className="flex-grow">
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
         <div className="text-sm text-foreground flex items-center gap-2">
@@ -142,7 +151,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
   
   const displayResponsibleRole = (role: Role | Role[] | undefined) => {
     if (!role) return 'N/A';
-    if (Array.isArray(role)) return role.join(', ');
+    if (Array.isArray(role)) return role.join(' & ');
     return role;
   }
 
@@ -155,10 +164,12 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
             <CategoryIcon className="h-7 w-7 text-accent" />
             <DialogTitle className="text-2xl">{isEditing ? 'Edit Task' : task.name}</DialogTitle>
           </div>
-          <DialogDescription className="flex items-center gap-2 pt-1">
-            {StatusIconWithClass} {task.status}
+          <DialogDescription className="flex items-center gap-2 pt-1 text-sm">
+            {StatusIcon} {task.status}
             <span className="mx-1 text-muted-foreground">&bull;</span>
             Category: {task.category}
+             <span className="mx-1 text-muted-foreground">&bull;</span>
+            <FrequencyIcon className="h-4 w-4 text-muted-foreground inline-block mr-1" /> {task.frequency}
           </DialogDescription>
         </DialogHeader>
 
@@ -173,14 +184,52 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                     {form.formState.errors.name && <p className="text-sm text-destructive mt-1">{form.formState.errors.name.message}</p>}
                   </div>
                    <div>
-                    <Label htmlFor="responsibleRole">Responsible Role</Label>
+                      <Label htmlFor="category">Category</Label>
+                      <Controller
+                        name="category"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allTaskCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {form.formState.errors.category && <p className="text-sm text-destructive mt-1">{form.formState.errors.category.message}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="frequency">Frequency</Label>
+                      <Controller
+                        name="frequency"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allTaskFrequencies.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {form.formState.errors.frequency && <p className="text-sm text-destructive mt-1">{form.formState.errors.frequency.message}</p>}
+                    </div>
+                   <div>
+                    <Label htmlFor="responsibleRole">Responsible Role(s)</Label>
                      <Controller
                         name="responsibleRole"
                         control={form.control}
                         render={({ field }) => (
+                          // For simplicity, this assumes single role selection. Multi-select would need a different component.
+                          // If field.value is an array, we take the first element for the Select.
                           <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={Array.isArray(field.value) ? field.value[0] : field.value} // Handle single/array
+                            onValueChange={(value) => field.onChange(value)} // Can also make it field.onChange([value]) for array
+                            value={Array.isArray(field.value) ? field.value[0] : field.value}
                           >
                             <SelectTrigger className="mt-1">
                                 <SelectValue placeholder="Select responsible role" />
@@ -191,11 +240,25 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                           </Select>
                         )}
                     />
+                    <small className="text-xs text-muted-foreground">For multiple roles, separate by comma in mock data or use a dedicated multi-select component.</small>
                     {form.formState.errors.responsibleRole && <p className="text-sm text-destructive mt-1">{form.formState.errors.responsibleRole.message}</p>}
                   </div>
                   <div>
                     <Label htmlFor="assignedStaff">Assigned Staff</Label>
-                    <Input id="assignedStaff" {...form.register("assignedStaff")} className="mt-1" />
+                     <Controller
+                        name="assignedStaff"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger className="mt-1">
+                                <SelectValue placeholder="Select assigned staff" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        )}
+                    />
                      {form.formState.errors.assignedStaff && <p className="text-sm text-destructive mt-1">{form.formState.errors.assignedStaff.message}</p>}
                   </div>
                    <div>
@@ -211,7 +274,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                             <SelectContent>
                                 <SelectItem value="">None</SelectItem>
                                 {allMockRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                                {/* Add option for specific staff names if needed */}
+                                {allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         )}
@@ -223,7 +286,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                       name="status"
                       control={form.control}
                       render={({ field }) => (
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="Select status" />
                           </SelectTrigger>
@@ -241,9 +304,9 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                         control={form.control}
                         render={({ field }) => (
                            <Input id="progress" type="number" {...field} 
-                           onChange={e => field.onChange(parseInt(e.target.value))} 
+                           onChange={e => field.onChange(parseInt(e.target.value) || 0)} 
                            className="mt-1" 
-                           readOnly={form.getValues("status") === "Resolved"}
+                           readOnly={form.watch("status") === "Resolved"} // Watch status field
                            />
                         )}
                     />
@@ -297,7 +360,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                     <Label htmlFor="validatorApproval">Validator Approval Notes</Label>
                     <Input id="validatorApproval" {...form.register("validatorApproval")} className="mt-1" placeholder="e.g., Approved by Jane D. on..." />
                   </div>
-                  <div className="md:col-span-2">
+                   <div className="md:col-span-2">
                     <Label htmlFor="evidenceLink">Evidence Link (URL)</Label>
                     <Input id="evidenceLink" {...form.register("evidenceLink")} className="mt-1" placeholder="https://example.com/evidence.pdf"/>
                     {form.formState.errors.evidenceLink && <p className="text-sm text-destructive mt-1">{form.formState.errors.evidenceLink.message}</p>}
@@ -311,6 +374,47 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                     <Label htmlFor="notes">Notes/Remarks</Label>
                     <Textarea id="notes" {...form.register("notes")} className="mt-1 min-h-[100px]" />
                 </div>
+                 {form.watch("status") === 'Resolved' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-green-500/50 rounded-md bg-green-500/10">
+                        <div>
+                            <Label htmlFor="lastCompletedOn">Resolved On</Label>
+                            <Controller
+                                name="lastCompletedOn"
+                                control={form.control}
+                                render={({ field }) => (
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                        <Button variant={"outline"} className="w-full justify-start text-left font-normal mt-1 bg-background">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {field.value && isValid(new Date(field.value)) ? format(new Date(field.value), "PPP") : <span>Pick resolution date</span>}
+                                        </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0">
+                                        <Calendar mode="single" selected={field.value && isValid(new Date(field.value)) ? new Date(field.value) : undefined} onSelect={field.onChange} initialFocus />
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="completedBy">Resolved By</Label>
+                             <Controller
+                                name="completedBy"
+                                control={form.control}
+                                render={({ field }) => (
+                                  <Select onValueChange={field.onChange} value={field.value || undefined}>
+                                    <SelectTrigger className="mt-1 bg-background">
+                                        <SelectValue placeholder="Select staff" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                            />
+                        </div>
+                    </div>
+                 )}
               </>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -319,7 +423,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                 <DetailItem icon={Users} label="Responsible Role(s)" value={displayResponsibleRole(task.responsibleRole)} />
                 <DetailItem icon={User} label="Assigned Staff" value={task.assignedStaff} />
                 <DetailItem icon={CheckSquare} label="Validator" value={task.validator} />
-                <DetailItem icon={Repeat} label="Frequency" value={task.frequency} />
+                <DetailItem icon={FrequencyIcon} label="Frequency" value={task.frequency} />
                 <DetailItem icon={Percent} label="Progress" value={`${task.progress}%`} />
                 <DetailItem icon={Milestone} label="Last Resolved On" value={task.lastCompletedOn && isValid(new Date(task.lastCompletedOn)) ? format(new Date(task.lastCompletedOn), 'PPP p') : 'N/A'} />
                 <DetailItem icon={UserCheck} label="Resolved By" value={task.completedBy} />
@@ -358,7 +462,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
               {task.activities && task.activities.length > 0 ? (
                 <ScrollArea className="h-[150px] border rounded-md p-3 bg-muted/50">
                   <ul className="space-y-3">
-                    {task.activities.slice().reverse().map((activity, index) => ( // Display newest first
+                    {task.activities.slice().reverse().map((activity, index) => ( 
                       <li key={index} className="text-xs">
                         <p className="font-medium">
                           {activity.user} - {activity.action}

@@ -17,6 +17,7 @@ import type { StaffTrainingRecord, TrainingType, TrainingStatus, Role } from '@/
 import { UsersRound, Filter, Search, ExternalLink, CalendarIcon, Edit2, PlusCircle, Save, X } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function StaffTrainingPage() {
   const [trainingData, setTrainingData] = useState<StaffTrainingRecord[]>([]);
@@ -33,13 +34,22 @@ export default function StaffTrainingPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    setTrainingData(mockStaffTrainingData);
+    // Ensure dates are Date objects
+    const processedData = mockStaffTrainingData.map(record => ({
+      ...record,
+      completionDate: record.completionDate && typeof record.completionDate === 'string' ? parseISO(record.completionDate) : record.completionDate,
+      expiryDate: record.expiryDate && typeof record.expiryDate === 'string' ? parseISO(record.expiryDate) : record.expiryDate,
+    }));
+    setTrainingData(processedData);
   }, []);
 
   useEffect(() => {
     let data = trainingData;
     if (searchTerm) {
-      data = data.filter(record => record.staffMemberName.toLowerCase().includes(searchTerm.toLowerCase()));
+      data = data.filter(record => 
+        record.staffMemberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.staffRole.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     if (selectedStaff !== 'all') {
       data = data.filter(record => record.staffMemberName === selectedStaff);
@@ -55,17 +65,21 @@ export default function StaffTrainingPage() {
 
   const getStatusBadgeVariant = (status: TrainingStatus) => {
     switch (status) {
-      case 'Compliant': return 'default'; // Greenish in theme
-      case 'Expiring Soon': return 'secondary'; // yellowish
-      case 'Overdue': return 'destructive'; // Reddish
-      case 'Pending Documentation': return 'outline'; // Greyish
+      case 'Compliant': return 'default'; 
+      case 'Expiring Soon': return 'secondary'; 
+      case 'Overdue': return 'destructive'; 
+      case 'Pending Documentation': return 'outline'; 
       default: return 'outline';
     }
   };
   
   const handleOpenForm = (record?: StaffTrainingRecord) => {
     setEditingRecord(record || null);
-    setCurrentFormData(record ? { ...record } : { staffMemberName: '', trainingType: allTrainingTypes[0], status: allTrainingStatuses[0] });
+    setCurrentFormData(record ? { 
+      ...record,
+      completionDate: record.completionDate ? new Date(record.completionDate) : null,
+      expiryDate: record.expiryDate ? new Date(record.expiryDate) : null,
+     } : { staffMemberName: '', trainingType: allTrainingTypes[0], status: allTrainingStatuses[0], staffRole: allMockRoles[0] });
     setIsFormOpen(true);
   };
 
@@ -84,15 +98,15 @@ export default function StaffTrainingPage() {
   };
 
   const handleSaveRecord = () => {
-    if (!currentFormData.staffMemberName || !currentFormData.trainingType) {
-        toast({ title: "Error", description: "Staff name and training type are required.", variant: "destructive"});
+    if (!currentFormData.staffMemberName || !currentFormData.trainingType || !currentFormData.staffRole || !currentFormData.status) {
+        toast({ title: "Error", description: "Staff name, role, training type, and status are required.", variant: "destructive"});
         return;
     }
 
-    const recordToSave: StaffTrainingRecord = {
+    let recordToSave: StaffTrainingRecord = {
         id: editingRecord?.id || `training_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
         staffMemberName: currentFormData.staffMemberName!,
-        staffRole: currentFormData.staffRole || allMockRoles[0], // Default if not set
+        staffRole: currentFormData.staffRole!,
         trainingType: currentFormData.trainingType!,
         completionDate: currentFormData.completionDate ? new Date(currentFormData.completionDate) : null,
         expiryDate: currentFormData.expiryDate ? new Date(currentFormData.expiryDate) : null,
@@ -101,12 +115,13 @@ export default function StaffTrainingPage() {
         notes: currentFormData.notes,
     };
     
-    // Basic status update based on dates if not manually set (or re-evaluate)
-    if (recordToSave.expiryDate && new Date(recordToSave.expiryDate) < new Date()) {
+    // Auto-update status based on dates if manually set status seems inconsistent
+    if (recordToSave.expiryDate && new Date(recordToSave.expiryDate) < new Date() && recordToSave.status !== 'Overdue') {
         recordToSave.status = 'Overdue';
-    } else if (recordToSave.completionDate && !recordToSave.expiryDate) {
-        recordToSave.status = 'Compliant'; // e.g. Orientation
-    } else if (!recordToSave.completionDate) {
+    } else if (recordToSave.completionDate && !recordToSave.expiryDate && recordToSave.status !== 'Compliant') {
+        // For trainings like Orientation that don't expire, if completed, it's compliant
+        if (recordToSave.trainingType === 'Orientation') recordToSave.status = 'Compliant';
+    } else if (!recordToSave.completionDate && recordToSave.status !== 'Pending Documentation') {
         recordToSave.status = 'Pending Documentation';
     }
 
@@ -140,7 +155,7 @@ export default function StaffTrainingPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search by staff name..."
+                  placeholder="Search by staff name or role..."
                   className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -152,8 +167,10 @@ export default function StaffTrainingPage() {
                   <SelectValue placeholder="Filter by Staff" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Staff</SelectItem>
-                  {allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                  <ScrollArea className="h-[200px]">
+                    <SelectItem value="all">All Staff</SelectItem>
+                    {allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                  </ScrollArea>
                 </SelectContent>
               </Select>
               <Select value={selectedTrainingType} onValueChange={(value) => setSelectedTrainingType(value as TrainingType | 'all')}>
@@ -185,60 +202,62 @@ export default function StaffTrainingPage() {
           </div>
 
           <div className="rounded-lg border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead>Staff Member</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Training Type</TableHead>
-                  <TableHead>Completion Date</TableHead>
-                  <TableHead>Expiry Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Documentation</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.length > 0 ? filteredData.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.staffMemberName}</TableCell>
-                    <TableCell>{record.staffRole}</TableCell>
-                    <TableCell>{record.trainingType}</TableCell>
-                    <TableCell>
-                      {record.completionDate && isValid(new Date(record.completionDate)) ? format(new Date(record.completionDate), 'PP') : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      {record.expiryDate && isValid(new Date(record.expiryDate)) ? format(new Date(record.expiryDate), 'PP') : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {record.documentationLink ? (
-                        <Button variant="link" size="sm" asChild className="p-0 h-auto">
-                          <a href={record.documentationLink} target="_blank" rel="noopener noreferrer" className="text-accent">
-                            View Doc <ExternalLink className="ml-1 h-3 w-3" />
-                          </a>
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">None</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenForm(record)}>
-                            <Edit2 className="h-4 w-4" />
-                        </Button>
-                    </TableCell>
-                  </TableRow>
-                )) : (
+            <ScrollArea className="h-[600px]">
+              <Table>
+                <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm z-10">
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      No training records found matching your criteria.
-                    </TableCell>
+                    <TableHead>Staff Member</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Training Type</TableHead>
+                    <TableHead>Completion Date</TableHead>
+                    <TableHead>Expiry Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Documentation</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.length > 0 ? filteredData.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell className="font-medium">{record.staffMemberName}</TableCell>
+                      <TableCell>{record.staffRole}</TableCell>
+                      <TableCell>{record.trainingType}</TableCell>
+                      <TableCell>
+                        {record.completionDate && isValid(new Date(record.completionDate)) ? format(new Date(record.completionDate), 'PP') : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        {record.expiryDate && isValid(new Date(record.expiryDate)) ? format(new Date(record.expiryDate), 'PP') : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {record.documentationLink ? (
+                          <Button variant="link" size="sm" asChild className="p-0 h-auto">
+                            <a href={record.documentationLink} target="_blank" rel="noopener noreferrer" className="text-accent">
+                              View Doc <ExternalLink className="ml-1 h-3 w-3" />
+                            </a>
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">None</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                          <Button variant="ghost" size="sm" onClick={() => handleOpenForm(record)}>
+                              <Edit2 className="h-4 w-4" />
+                          </Button>
+                      </TableCell>
+                    </TableRow>
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        No training records found matching your criteria.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
           </div>
         </CardContent>
       </Card>
@@ -248,7 +267,8 @@ export default function StaffTrainingPage() {
             <DialogHeader>
                 <DialogTitle>{editingRecord ? 'Edit Training Record' : 'Add New Training Record'}</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <ScrollArea className="max-h-[70vh] p-1">
+            <div className="grid gap-4 py-4 pr-4">
                 <div>
                     <Label htmlFor="staffMemberName">Staff Member</Label>
                      <Select 
@@ -259,9 +279,12 @@ export default function StaffTrainingPage() {
                             <SelectValue placeholder="Select staff member" />
                         </SelectTrigger>
                         <SelectContent>
-                            {allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                             <ScrollArea className="h-[200px]">
+                                {allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                             </ScrollArea>
                         </SelectContent>
                     </Select>
+                    {!currentFormData.staffMemberName && <p className="text-destructive text-xs mt-1">Staff name is required.</p>}
                 </div>
                  <div>
                     <Label htmlFor="staffRole">Staff Role</Label>
@@ -276,6 +299,7 @@ export default function StaffTrainingPage() {
                             {allMockRoles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
                         </SelectContent>
                     </Select>
+                     {!currentFormData.staffRole && <p className="text-destructive text-xs mt-1">Staff role is required.</p>}
                 </div>
                 <div>
                     <Label htmlFor="trainingType">Training Type</Label>
@@ -290,6 +314,7 @@ export default function StaffTrainingPage() {
                             {allTrainingTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                         </SelectContent>
                     </Select>
+                     {!currentFormData.trainingType && <p className="text-destructive text-xs mt-1">Training type is required.</p>}
                 </div>
                  <div>
                     <Label htmlFor="status">Status</Label>
@@ -304,6 +329,7 @@ export default function StaffTrainingPage() {
                             {allTrainingStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                         </SelectContent>
                     </Select>
+                     {!currentFormData.status && <p className="text-destructive text-xs mt-1">Status is required.</p>}
                 </div>
                 <div>
                     <Label htmlFor="completionDate">Completion Date</Label>
@@ -339,10 +365,11 @@ export default function StaffTrainingPage() {
                 </div>
                 <div className="col-span-full">
                     <Label htmlFor="notes">Notes</Label>
-                    <Input id="notes" value={currentFormData.notes || ''} onChange={(e) => handleFormChange('notes', e.target.value)} className="mt-1" placeholder="Optional notes..." />
+                    <Textarea id="notes" value={currentFormData.notes || ''} onChange={(e) => handleFormChange('notes', e.target.value)} className="mt-1" placeholder="Optional notes..." />
                 </div>
             </div>
-            <DialogFooter>
+            </ScrollArea>
+            <DialogFooter className="border-t pt-4">
                 <Button variant="outline" onClick={handleCloseForm}><X className="mr-2 h-4 w-4" />Cancel</Button>
                 <Button onClick={handleSaveRecord}><Save className="mr-2 h-4 w-4" />Save Record</Button>
             </DialogFooter>

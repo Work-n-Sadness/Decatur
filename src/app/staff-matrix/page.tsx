@@ -20,14 +20,17 @@ interface StaffResponsibility {
   }[];
 }
 
-// const allRoles: Role[] = ['Nurse', 'Caregiver', 'Admin', 'Maintenance', 'Director', 'Wellness Nurse', 'Housekeeping Supervisor', 'QMAP Supervisor']; // Using from mock-data
 
 export default function StaffMatrixPage() {
   const [matrixData, setMatrixData] = useState<StaffResponsibility[]>([]);
   const [selectedRole, setSelectedRole] = useState<Role | 'all'>('all');
 
   useEffect(() => {
-    setMatrixData(mockStaffResponsibilityMatrix);
+    // Filter out roles from matrixData that are not in allMockRoles to prevent errors
+    const validMatrixData = mockStaffResponsibilityMatrix.filter(item => 
+        allMockRoles.includes(item.role) && item.responsibilities.length > 0
+    );
+    setMatrixData(validMatrixData);
   }, []);
 
   const filteredMatrixData = selectedRole === 'all' 
@@ -39,7 +42,7 @@ export default function StaffMatrixPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <User className="h-6 w-6 text-accent" /> Staff Responsibility Matrix
+            <Users className="h-6 w-6 text-accent" /> Staff Responsibility Matrix
           </CardTitle>
           <CardDescription>
             Overview of roles and their assigned compliance tasks and deliverables.
@@ -77,7 +80,7 @@ export default function StaffMatrixPage() {
               <TableBody>
                 {filteredMatrixData.length > 0 ? filteredMatrixData.map((item, index) => (
                   <TableRow key={index} className={index % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
-                    <TableCell className="font-semibold text-primary-foreground align-top pt-4">
+                    <TableCell className="font-semibold align-top pt-4">
                       <Badge variant="secondary" className="text-md px-3 py-1">{item.role}</Badge>
                     </TableCell>
                     <TableCell className="align-top pt-4">
@@ -108,7 +111,7 @@ export default function StaffMatrixPage() {
                 )) : (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                      No responsibilities found for the selected role.
+                      No responsibilities found for the selected role, or the role is not currently in the active roles list.
                     </TableCell>
                   </TableRow>
                 )}
