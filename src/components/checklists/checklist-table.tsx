@@ -3,13 +3,13 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, doc, updateDoc, Timestamp, query, orderBy, where, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, Timestamp, query, orderBy, where, getDocs, writeBatch, limit } from 'firebase/firestore';
 import type { ChecklistItem, ResolutionStatus } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -147,12 +147,8 @@ export default function ChecklistTable() {
     }
   };
   
-  // Example for manually triggering the function logic (for testing/demo in UI)
-  // This is NOT how the cloud function is triggered in production.
   const handleManualGenerate = async () => {
     toast({ title: "Manual Trigger", description: "Simulating task generation. Check Firestore and console."});
-    // This is just a placeholder. The actual generation is done by the deployed Cloud Function.
-    // You could potentially call an HTTPS callable function here if you wanted a manual trigger.
     console.log("Manual trigger button clicked. In a real scenario, this might call an HTTPS Firebase Function.");
      try {
       const recurringTasksSnapshot = await getDocs(query(collection(db, 'recurringTasks'), where('autoGenerateChecklist', '==', true)));
@@ -183,7 +179,7 @@ export default function ChecklistTable() {
            const checklistQuery = await getDocs(query(collection(db, 'checklists'),
             where('taskId', '==', taskId),
             where('dueDate', '==', todayDateString),
-            orderBy('createdAt', 'desc'), // Ensure we check the latest if multiple by mistake
+            orderBy('createdAt', 'desc'), 
             limit(1)
           ));
 
