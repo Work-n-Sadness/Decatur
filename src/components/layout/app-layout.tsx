@@ -65,7 +65,7 @@ const navGroups: NavGroup[] = [
       { href: '/resident-records/progress-notes', label: 'Progress Notes', icon: SidebarIcons.ProgressNotes },
       { href: '/resident-records/check-in-out', label: 'Check-in/Exit', icon: SidebarIcons.CheckInOutLogs },
       { href: '/resident-records/case-management', label: 'Case Management', icon: SidebarIcons.CaseManagement },
-      { href: '/resident-records/council-meetings', label: 'Council Meetings', icon: SidebarIcons.CouncilMeetings },
+      { href: '/resident-records/resident-management-forum', label: 'Resident-Management Forum', icon: SidebarIcons.CouncilMeetings },
     ],
   },
   {
@@ -176,7 +176,7 @@ const navGroups: NavGroup[] = [
       { href: '/human-resources/recruitment', label: 'Recruitment', icon: SidebarIcons.Recruitment },
       { href: '/human-resources/onboarding', label: 'Onboarding', icon: SidebarIcons.Onboarding },
       { href: '/human-resources/staff-matrix', label: 'Staff Matrix', icon: SidebarIcons.StaffMatrix },
-      { href: '/human-resources/training-certs', label: 'Training & Certs', icon: SidebarIcons.TrainingCerts },
+      { href: '/human-resources/training-certs', label: 'Training & Certs', icon: SidebarIcons.TrainingCerts }, 
       { href: '/human-resources/performance-reviews', label: 'Performance Reviews', icon: SidebarIcons.PerformanceReviews },
       { href: '/human-resources/exit-logs', label: 'Exit Logs', icon: SidebarIcons.ExitLogs },
       { href: '/human-resources/contractors-consultants', label: 'Contractors & Consultants', icon: SidebarIcons.ContractorsConsultants },
@@ -326,3 +326,4 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
