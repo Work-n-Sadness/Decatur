@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -12,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea"; // Added import
+import { Textarea } from "@/components/ui/textarea";
 import { mockStaffTrainingData, allMockStaffNames, allTrainingTypes, allTrainingStatuses, allMockRoles } from '@/lib/mock-data';
 import type { StaffTrainingRecord, TrainingType, TrainingStatus, Role } from '@/types';
 import { UsersRound, Filter, Search, ExternalLink, CalendarIcon, Edit2, PlusCircle, Save, X } from 'lucide-react';
@@ -20,7 +19,7 @@ import { format, parseISO, isValid } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export default function StaffTrainingPage() {
+export default function StaffTrainingCertsPage() {
   const [trainingData, setTrainingData] = useState<StaffTrainingRecord[]>([]);
   const [filteredData, setFilteredData] = useState<StaffTrainingRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -143,7 +142,7 @@ export default function StaffTrainingPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <UsersRound className="h-6 w-6 text-accent" /> Staff Training Dashboard
+            <UsersRound className="h-6 w-6 text-accent" /> Staff Training &amp; Certifications
           </CardTitle>
           <CardDescription>
             Track deadlines and compliance for QMAP training, TB tests, CPR, and orientation.

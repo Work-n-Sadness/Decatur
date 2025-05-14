@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -7,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { mockStaffResponsibilityMatrix, allMockRoles } from '@/lib/mock-data';
 import type { Role, TaskCategory } from '@/types';
-import { User, Briefcase, ListChecks, Filter, Users } from 'lucide-react'; // Added Users import
+import { User, Briefcase, ListChecks, Filter, Users } from 'lucide-react'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getTaskCategoryIcon } from '@/components/icons';
 
@@ -123,4 +122,3 @@ export default function StaffMatrixPage() {
     </div>
   );
 }
-
