@@ -17,12 +17,12 @@ export default function WelcomeBanner() {
         </div>
         <div className="flex items-center shrink-0">
           <Image 
-            src="https://placehold.co/150x60.png?text=Decatur+West&font=roboto" 
+            src="https://placehold.co/120x120.png?text=DW+Logo&font=roboto" 
             alt="Decatur West Logo" 
-            width={150}
-            height={60}
-            className="h-16 w-auto rounded" 
-            data-ai-hint="facility logo orange blue"
+            width={120}
+            height={120}
+            className="rounded" 
+            data-ai-hint="facility logo text"
           />
         </div>
       </div>
