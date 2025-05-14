@@ -100,7 +100,7 @@ const navGroups: NavGroup[] = [
       { href: '/fire-emergency/911-log', label: '911 Log', icon: SidebarIcons.NineOneOneLog },
     ],
   },
-    {
+  {
     label: 'FACILITY OPERATIONS & SERVICES',
     items: [
       { href: '/facility-operations/procurement/grocery-food-purchases', label: 'Grocery & Food Purchases', icon: SidebarIcons.GroceryFoodPurchases },
@@ -126,7 +126,7 @@ const navGroups: NavGroup[] = [
       { href: '/environmental/pest-control', label: 'Pest Control', icon: SidebarIcons.PestControl },
       { href: '/environmental/oxygen-handling', label: 'Oxygen Handling', icon: SidebarIcons.OxygenHandling },
       { href: '/environmental/ppe-audit', label: 'PPE Audits', icon: SidebarIcons.PPEAudits },
-      { href: '/environmental/maintenance-requests', label: 'Maintenance Requests', icon: SidebarIcons.MaintenanceRequests }, // Note: Duplicate of facility-operations maintenance log, consider consolidating
+      { href: '/environmental/maintenance-requests', label: 'Maintenance Requests', icon: SidebarIcons.MaintenanceRequests },
       { href: '/environmental/hazard-checks', label: 'Hazard Checks', icon: SidebarIcons.HazardChecks },
     ],
   },
@@ -192,7 +192,6 @@ const navGroups: NavGroup[] = [
   {
     label: 'INSIGHTS & SYSTEMS',
     items: [
-      // Reports is already in OPERATIONS
       { href: '/admin/system-logs', label: 'System Logs', icon: SidebarIcons.SystemLogs },
       { href: '/admin/api-integrations', label: 'API Integrations', icon: SidebarIcons.ApiIntegrations },
       { href: '/admin/user-management', label: 'User Management', icon: SidebarIcons.UserManagement },
@@ -292,14 +291,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
             <h2 className="text-lg font-semibold">
-              {mounted ? currentTopLevelLabel : 'Loading...'}
+              {mounted ? currentTopLevelLabel : 'Dashboard'}
             </h2>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="user avatar" />
+                  <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="facility sign" />
                   <AvatarFallback>
                     <UserCircle className="h-6 w-6" />
                   </AvatarFallback>
