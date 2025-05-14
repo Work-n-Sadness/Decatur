@@ -1,5 +1,5 @@
 
-import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, Role, AuditCategory, AuditItem, StaffTrainingRecord, TrainingType, TrainingStatus, RecurrenceConfig, FacilityCertification, CertificationStatus, FacilityInstallation, InstallationStatus, InstallationFrequency } from '@/types';
+import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, Role, AuditCategory, AuditItem, StaffTrainingRecord, TrainingType, TrainingStatus, RecurrenceConfig, FacilityCertification, CertificationStatus, FacilityInstallation, InstallationStatus, InstallationFrequency, ResidentCareFlag } from '@/types';
 import { addDays, startOfDay, getDay, getDate, subDays, subMonths, addMonths, endOfMonth } from 'date-fns';
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
@@ -36,6 +36,32 @@ const staffNamesByRole: Record<Role, string[]> = {
 const allStaffNames: string[] = Object.values(staffNamesByRole).flat();
 
 const complianceChapterTagsPool = ["Ch. 2.15", "Ch. 7.03", "Ch. 14.31", "Ch. 9.11", "Ch. 22.01", "Ch. 14.3", "Ch. 24.1", "Ch. 12.4", "Ch. 24.3", "Ch. 12.6", null];
+
+export const allCareFlags: ResidentCareFlag[] = [
+  'wheelchair', 'walker', 'controlled_meds', 'hypertension', 'diabetes', 'dementia',
+  'fall_risk_low', 'fall_risk_medium', 'fall_risk_high', 'elopement_risk_yes', 'elopement_risk_no'
+];
+
+const getRandomCareFlags = (): ResidentCareFlag[] => {
+  const flags: ResidentCareFlag[] = [];
+  if (Math.random() < 0.2) flags.push('wheelchair');
+  else if (Math.random() < 0.2) flags.push('walker');
+
+  if (Math.random() < 0.15) flags.push('controlled_meds');
+  if (Math.random() < 0.3) flags.push('hypertension');
+  if (Math.random() < 0.25) flags.push('diabetes');
+  if (Math.random() < 0.2) flags.push('dementia');
+
+  const fallRiskRoll = Math.random();
+  if (fallRiskRoll < 0.1) flags.push('fall_risk_high');
+  else if (fallRiskRoll < 0.25) flags.push('fall_risk_medium');
+  else flags.push('fall_risk_low'); // Everyone has some level of fall risk assessment
+
+  if (Math.random() < 0.1) flags.push('elopement_risk_yes');
+  else flags.push('elopement_risk_no');
+
+  return Array.from(new Set(flags)); // Ensure unique flags
+};
 
 
 interface SeedTask {
@@ -134,6 +160,9 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
     recurrenceConfig.recurrenceDayOfMonth = getDate(instanceStartDate); // Assume it recurs on the same day of the month
   }
 
+  const careFlags = getRandomCareFlags();
+  const hasHipaaNotes = Math.random() < 0.1;
+
 
   return {
     id: `task_${i + 1}`,
@@ -161,6 +190,9 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
     validatorApproval: status === 'Resolved' && seed.validator && Math.random() > 0.4 ? `Approved by ${getRandomElement(allStaffNames.filter(s => s !== completedBy))}` : null,
     complianceChapterTag: seed.complianceChapterTag || getRandomElement(complianceChapterTagsPool.filter(Boolean) as string[]) || undefined,
     recurrenceConfig: recurrenceConfig,
+    residentCareFlags: careFlags,
+    conditionNotes: Math.random() < 0.3 ? `Resident has noted conditions related to ${careFlags.join(', ')}.` : undefined,
+    hipaaProtectedNotes: hasHipaaNotes ? `[HIPAA Protected] Detailed clinical notes for ${assignedStaffMember}.` : undefined,
   };
 });
 
@@ -302,3 +334,4 @@ export const mockInstallations: FacilityInstallation[] = [
   { id: 'inst8', installationName: 'Kitchen Gas Range', category: 'Gas Systems', location: 'Kitchen', lastInspectionDate: new Date(2023, 9, 15), nextInspectionDue: new Date(2024, 9, 15), inspectionFrequency: 'Annually', serviceVendor: 'GasSafe Co.', status: 'Operational', createdAt: subMonths(now, 11), updatedAt: subMonths(now, 4)},
   { id: 'inst9', installationName: 'Air Purifier Unit - Common Area', category: 'Air Quality', location: 'Main Common Area', lastInspectionDate: new Date(2024, 4, 10), nextInspectionDue: addMonths(new Date(2024, 4, 10), 3), inspectionFrequency: 'Quarterly', serviceVendor: 'In-house Maintenance', status: 'Operational', createdAt: subMonths(now, 4), updatedAt: subMonths(now, 0)},
 ];
+

@@ -43,6 +43,20 @@ export interface RecurrenceConfig {
   interval?: number;
 }
 
+export type ResidentCareFlag =
+  | 'wheelchair'
+  | 'walker'
+  | 'controlled_meds'
+  | 'hypertension'
+  | 'diabetes'
+  | 'dementia'
+  | 'fall_risk_low'
+  | 'fall_risk_medium'
+  | 'fall_risk_high'
+  | 'elopement_risk_yes'
+  | 'elopement_risk_no';
+
+
 export interface Task {
   id: string;
   name: string;
@@ -65,6 +79,10 @@ export interface Task {
   validatorApproval?: string | null;
   complianceChapterTag?: string;
   recurrenceConfig?: RecurrenceConfig;
+  // New fields for resident medical needs and special care tags
+  residentCareFlags?: ResidentCareFlag[];
+  conditionNotes?: string;
+  hipaaProtectedNotes?: string; // Note: Actual HIPAA compliance requires backend controls
 }
 
 export interface AuditCategory {
@@ -116,7 +134,7 @@ export interface ChecklistItem {
   taskName: string;
   assignedStaff: string;
   validator?: string | null;
-  dueDate: firebase.firestore.Timestamp | Date; // Will be Timestamp from Firestore, Date on client
+  dueDate: firebase.firestore.Timestamp | Date; // Stored as Timestamp, used as Date on client
   status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>;
   createdAt: firebase.firestore.Timestamp | Date; // Will be Timestamp from Firestore, Date on client
   statusUpdatedAt?: firebase.firestore.Timestamp | Date | null; // Will be Timestamp from Firestore, Date on client
@@ -148,11 +166,11 @@ export interface FacilityCertification {
   issueDate: Date;
   expirationDate: Date;
   status: CertificationStatus;
-  certificateUpload?: string; // URL to the uploaded certificate (renamed)
+  certificateUpload?: string; // URL to the uploaded certificate
   lastReviewedBy?: string;
   notes?: string;
-  createdAt: Date; // Added
-  updatedAt: Date; // Added
+  createdAt: Date; 
+  updatedAt: Date; 
 }
 
 export interface FacilityInstallation {
@@ -162,11 +180,11 @@ export interface FacilityInstallation {
   location?: string;
   lastInspectionDate?: Date | null;
   nextInspectionDue?: Date | null;
-  inspectionFrequency?: InstallationFrequency; // Updated to specific union type
+  inspectionFrequency?: InstallationFrequency; 
   serviceVendor?: string;
   status: InstallationStatus;
-  uploadInspectionLog?: string; // URL to the uploaded inspection log (renamed)
+  uploadInspectionLog?: string; // URL to the uploaded inspection log
   notes?: string;
-  createdAt: Date; // Added
-  updatedAt: Date; // Added
+  createdAt: Date; 
+  updatedAt: Date; 
 }

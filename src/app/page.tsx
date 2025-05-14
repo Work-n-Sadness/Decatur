@@ -7,23 +7,30 @@ import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
 import AttachEvidenceDialog from '@/components/dashboard/attach-evidence-dialog';
 import DashboardFilters from '@/components/dashboard/dashboard-filters';
 import WelcomeBanner from '@/components/dashboard/welcome-banner';
-import { mockTasks, allMockRoles, allMockComplianceChapters, allTaskCategories, allResolutionStatuses, allTaskFrequencies, allMockStaffNames } from '@/lib/mock-data';
-import type { Task, TaskCategory, ResolutionStatus, Role, TaskFrequency, ActivityLog } from '@/types';
+import { mockTasks, allMockRoles, allMockComplianceChapters, allTaskCategories, allResolutionStatuses, allTaskFrequencies, allMockStaffNames, allCareFlags } from '@/lib/mock-data';
+import type { Task, TaskCategory, ResolutionStatus, Role, TaskFrequency, ActivityLog, ResidentCareFlag } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Added CardHeader, CardTitle
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getTaskCategoryIcon } from '@/components/icons';
-import { Info, Image as ImageIcon } from "lucide-react"; // Added ImageIcon
+import { Info, Image as ImageIcon } from "lucide-react"; 
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from 'date-fns';
-import Image from 'next/image'; // Added next/image import
+import Image from 'next/image'; 
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState<Partial<{ category: TaskCategory; status: ResolutionStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>>({});
+  const [filters, setFilters] = useState<Partial<{ 
+    category: TaskCategory; 
+    status: ResolutionStatus; 
+    role: Role; 
+    frequency: TaskFrequency; 
+    complianceChapterTag: string;
+    careFlag: ResidentCareFlag; // Added careFlag to filters
+  }>>({});
   const [sortBy, setSortBy] = useState<string>('dueDate_asc');
   
   const [isAttachEvidenceDialogOpen, setIsAttachEvidenceDialogOpen] = useState(false);
@@ -42,7 +49,14 @@ export default function DashboardPage() {
   }, []);
 
   const handleSearch = (term: string) => setSearchTerm(term.toLowerCase());
-  const handleFilterChange = (newFilters: Partial<{ category: TaskCategory; status: ResolutionStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>) => {
+  const handleFilterChange = (newFilters: Partial<{ 
+    category: TaskCategory; 
+    status: ResolutionStatus; 
+    role: Role; 
+    frequency: TaskFrequency; 
+    complianceChapterTag: string;
+    careFlag: ResidentCareFlag;
+   }>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
   const handleSortChange = (newSortBy: string) => setSortBy(newSortBy);
@@ -174,7 +188,7 @@ export default function DashboardPage() {
   };
 
   const handleExportReport = () => {
-    const headers = ["ID", "Name", "Category", "Frequency", "Responsible Role(s)", "Status", "Progress (%)", "Assigned Staff", "Validator", "Start Date", "End Date", "Due Time", "Deliverables", "Notes", "Evidence Link", "Last Resolved On", "Resolved By", "Validator Approval", "Compliance Chapter"];
+    const headers = ["ID", "Name", "Category", "Frequency", "Responsible Role(s)", "Status", "Progress (%)", "Assigned Staff", "Validator", "Start Date", "End Date", "Due Time", "Deliverables", "Notes", "Evidence Link", "Last Resolved On", "Resolved By", "Validator Approval", "Compliance Chapter", "Care Flags"];
     const rows = filteredAndSortedTasks.map(task => [
       task.id,
       task.name,
@@ -195,6 +209,7 @@ export default function DashboardPage() {
       task.completedBy || '',
       task.validatorApproval || '',
       task.complianceChapterTag || '',
+      task.residentCareFlags ? task.residentCareFlags.join('; ') : '',
     ].map(escapeCsvField).join(','));
     
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
@@ -212,7 +227,7 @@ export default function DashboardPage() {
     const headers = [
       "Task ID", "Task Name", "Category", "Frequency", "Responsible Role(s)", "Assigned Staff", 
       "Validator Role", "Initial Start Date", "Initial End Date", "Current Status", "Progress (%)", 
-      "Last Resolved On", "Resolved By", "Validator Approval", "Compliance Chapter", 
+      "Last Resolved On", "Resolved By", "Validator Approval", "Compliance Chapter", "Care Flags",
       "Activity Timestamp", "Activity User", "Activity Action", "Activity Details"
     ];
     
@@ -230,13 +245,14 @@ export default function DashboardPage() {
         task.lastCompletedOn ? format(new Date(task.lastCompletedOn), 'yyyy-MM-dd HH:mm') : '',
         task.completedBy || '', 
         task.validatorApproval || '',
-        task.complianceChapterTag || ''
+        task.complianceChapterTag || '',
+        task.residentCareFlags ? task.residentCareFlags.join('; ') : '',
       ];
 
       if (task.activities && task.activities.length > 0) {
         task.activities.forEach(activity => {
           const activityData = [
-            activity.timestamp ? format(new Date(activity.timestamp), 'yyyy-MM-dd HH:mm:ss') : '', // Added seconds
+            activity.timestamp ? format(new Date(activity.timestamp), 'yyyy-MM-dd HH:mm:ss') : '', 
             activity.user,
             activity.action,
             activity.details
@@ -265,7 +281,7 @@ export default function DashboardPage() {
       "Task ID", "Task Name", "Category", "Frequency", "Responsible Role(s)", "Assigned Staff", 
       "Validator", "Status", "Progress (%)", "Start Date", "End Date", "Due Time",
       "Deliverables", "Notes", "Evidence Link", "Last Resolved On", "Resolved By", 
-      "Validator Approval", "Compliance Chapter", "Activities Log (JSON)"
+      "Validator Approval", "Compliance Chapter", "Care Flags", "Activities Log (JSON)"
     ];
     const rows = filteredAndSortedTasks.map(task => [
       task.id,
@@ -287,6 +303,7 @@ export default function DashboardPage() {
       task.completedBy || '',
       task.validatorApproval || '',
       task.complianceChapterTag || '',
+      task.residentCareFlags ? task.residentCareFlags.join('; ') : '',
       JSON.stringify(task.activities?.map(act => ({ ...act, timestamp: act.timestamp ? format(new Date(act.timestamp), 'yyyy-MM-dd HH:mm:ss') : ''})) || [])
     ].map(escapeCsvField).join(','));
     
@@ -309,7 +326,9 @@ export default function DashboardPage() {
       .filter(task => !filters.status || filters.status === 'all' || task.status === filters.status)
       .filter(task => !filters.role || filters.role === 'all' || (Array.isArray(task.responsibleRole) ? task.responsibleRole.includes(filters.role as Role) : task.responsibleRole === filters.role))
       .filter(task => !filters.frequency || filters.frequency === 'all' || task.frequency === filters.frequency)
-      .filter(task => !filters.complianceChapterTag || filters.complianceChapterTag === 'all' || task.complianceChapterTag === filters.complianceChapterTag);
+      .filter(task => !filters.complianceChapterTag || filters.complianceChapterTag === 'all' || task.complianceChapterTag === filters.complianceChapterTag)
+      .filter(task => !filters.careFlag || filters.careFlag === 'all' || (task.residentCareFlags && task.residentCareFlags.includes(filters.careFlag)));
+
 
     switch (sortBy) {
       case 'name_asc':
@@ -450,4 +469,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

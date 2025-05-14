@@ -43,12 +43,13 @@ interface NavItem {
 interface NavGroup {
   label: string;
   items: NavItem[];
-  icon?: LucideIcon; // Optional icon for the group itself
+  icon?: LucideIcon; 
 }
 
 const navGroups: NavGroup[] = [
   {
     label: 'OPERATIONS',
+    icon: SidebarIcons.Dashboard,
     items: [
       { href: '/', label: 'Dashboard', icon: SidebarIcons.Dashboard },
       { href: '/core-operations/audit-tool', label: 'Audit Tool', icon: SidebarIcons.AuditTool },
@@ -60,17 +61,26 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'RESIDENTS',
+    icon: SidebarIcons.ProfilesFaceSheets,
     items: [
       { href: '/resident-records/face-sheets', label: 'Face Sheets', icon: SidebarIcons.ProfilesFaceSheets },
       { href: '/resident-records/care-plans', label: 'Care Plans', icon: SidebarIcons.CarePlans },
       { href: '/resident-records/progress-notes', label: 'Progress Notes', icon: SidebarIcons.ProgressNotes },
-      { href: '/resident-records/check-in-out', label: 'Check-in/Exit', icon: SidebarIcons.CheckInOutLogs },
+      { href: '/resident-records/moving-in-out', label: 'Residents Moving-in & Moving-out', icon: SidebarIcons.ResidentsMovingInOut },
       { href: '/resident-records/case-management', label: 'Case Management', icon: SidebarIcons.CaseManagement },
-      { href: '/resident-records/resident-management-forum', label: 'Resident-Management Forum', icon: SidebarIcons.CouncilMeetings },
+      { href: '/resident-records/resident-management-forum', label: 'Resident-Management Forum', icon: SidebarIcons.ResidentManagementForum },
+    ],
+  },
+  {
+    label: 'MEDICAL NEEDS & CARE TAGS',
+    icon: SidebarIcons.MedicalNeedsCareTagsGroup,
+    items: [
+        { href: '/medical-needs/special-care-tags', label: 'Special Care Tags', icon: SidebarIcons.SpecialCareTags },
     ],
   },
   {
     label: 'MEDICATION & ECP',
+    icon: SidebarIcons.MedOrders,
     items: [
       { href: '/medication-clinical/medication-orders', label: 'Medication Orders', icon: SidebarIcons.MedOrders },
       { href: '/medication-clinical/mar-logs', label: 'MAR Logs', icon: SidebarIcons.MARLogs },
@@ -83,6 +93,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'ECP CHARTING',
+    icon: SidebarIcons.FlaggedECPActions,
     items: [
         { href: '/ecp-charting/flagged-actions', label: 'Flagged ECP Actions', icon: SidebarIcons.FlaggedECPActions },
         { href: '/ecp-charting/mar-corrections', label: 'MAR Corrections Log', icon: SidebarIcons.MARCorrections },
@@ -91,6 +102,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'EMERGENCY READINESS',
+    icon: SidebarIcons.FireDrills,
     items: [
       { href: '/fire-emergency/fire-drills', label: 'Fire Drills', icon: SidebarIcons.FireDrills },
       { href: '/fire-emergency/extinguisher-checks', label: 'Extinguisher Checks', icon: SidebarIcons.ExtinguisherChecks },
@@ -103,6 +115,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'FACILITY OPERATIONS & SERVICES',
+    icon: SidebarIcons.FacilityOpsServicesGroup,
     items: [
       { href: '/facility-operations/procurement/grocery-food-purchases', label: 'Grocery & Food Purchases', icon: SidebarIcons.GroceryFoodPurchases },
       { href: '/facility-operations/procurement/cleaning-supplies-orders', label: 'Cleaning Supplies Orders', icon: SidebarIcons.CleaningSuppliesOrders },
@@ -123,6 +136,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'ENVIRONMENTAL SAFETY',
+    icon: SidebarIcons.EnvironmentalSafetyGroup,
     items: [
       { href: '/environmental/pest-control', label: 'Pest Control', icon: SidebarIcons.PestControl },
       { href: '/environmental/oxygen-handling', label: 'Oxygen Handling', icon: SidebarIcons.OxygenHandling },
@@ -133,25 +147,28 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'FOOD & NUTRITION',
+    icon: SidebarIcons.FoodNutritionGroup,
     items: [
       { href: '/food-nutrition/food-temp-logs', label: 'Temperature Logs', icon: SidebarIcons.TempLogs },
       { href: '/food-nutrition/dishwasher-logs', label: 'Dishwasher Logs', icon: SidebarIcons.DishwasherLogs },
       { href: '/food-nutrition/weekly-menu', label: 'Weekly Menu', icon: SidebarIcons.WeeklyMenu },
-      { href: '/food-nutrition/grocery-inventory', label: 'Grocery Inventory', icon: SidebarIcons.GroceryInventory },
+      { href: '/food-nutrition/grocery-inventory', label: 'Grocery Inventory', icon: SidebarIcons.ShoppingCart }, // Uses ShoppingCart, consistent with Facility Ops
       { href: '/food-nutrition/food-safety-audit', label: 'Food Safety Audits', icon: SidebarIcons.FoodSafetyAudits },
     ],
   },
   {
     label: 'SECURITY & BEHAVIOR',
+    icon: SidebarIcons.SecurityBehaviorGroup,
     items: [
       { href: '/security-behavior/entry-exit-logs', label: 'Entry/Exit Logs', icon: SidebarIcons.EntryExitLogs },
       { href: '/security-behavior/smoking-compliance', label: 'Smoking Compliance', icon: SidebarIcons.SmokingCompliance },
       { href: '/security-behavior/behavior-reports', label: 'Behavior Reports', icon: SidebarIcons.BehaviorReports },
-      { href: '/security-behavior/visitor-restrictions', label: 'Visitor Restrictions', icon: SidebarIcons.VisitorRestrictions },
+      { href: '/security-behavior/visitor-log-notifications', label: 'Visitor Log & Notifications', icon: SidebarIcons.VisitorLogNotifications },
     ],
   },
   {
     label: 'REGULATORY OVERSIGHT',
+    icon: SidebarIcons.RegulatoryOversightGroup,
     items: [
       { href: '/governance-regulatory/fire-dept-visits', label: 'Fire Dept Visits', icon: SidebarIcons.FireDeptVisits },
       { href: '/governance-regulatory/state-survey-visits', label: 'State Survey Visits', icon: SidebarIcons.StateSurveyVisits },
@@ -170,6 +187,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'FINANCE',
+    icon: SidebarIcons.FinanceGroup,
     items: [
       { href: '/finance/purchase-requests', label: 'Purchase Requests', icon: SidebarIcons.PurchaseRequests },
       { href: '/finance/facility-expenses', label: 'Facility Expenses', icon: SidebarIcons.FacilityExpenses },
@@ -181,6 +199,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'HUMAN RESOURCES',
+    icon: SidebarIcons.HumanResourcesGroup,
     items: [
       { href: '/human-resources/recruitment', label: 'Recruitment', icon: SidebarIcons.Recruitment },
       { href: '/human-resources/onboarding', label: 'Onboarding', icon: SidebarIcons.Onboarding },
@@ -193,6 +212,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'POLICY & COMPLIANCE',
+    icon: SidebarIcons.PolicyComplianceGroup,
     items: [
       { href: '/governance-regulatory/policies', label: 'Policies & Procedures', icon: SidebarIcons.PoliciesProcedures },
       { href: '/governance-regulatory/house-rules', label: 'House Rules', icon: SidebarIcons.HouseRules },
@@ -200,11 +220,12 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'INSIGHTS & SYSTEMS',
+    icon: SidebarIcons.InsightsSystemsGroup,
     items: [
       { href: '/admin/system-logs', label: 'System Logs', icon: SidebarIcons.SystemLogs },
       { href: '/admin/api-integrations', label: 'API Integrations', icon: SidebarIcons.ApiIntegrations },
       { href: '/admin/user-management', label: 'User Management', icon: SidebarIcons.UserManagement },
-      { href: '/admin/settings', label: 'Settings', icon: SidebarIcons.Settings },
+      { href: '/admin/settings', label: 'Settings', icon: SidebarIcons.Settings }, // Using general settings icon for the item
     ],
   },
 ];
@@ -216,7 +237,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     setMounted(true);
-
     const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (storedTheme) {
       setTheme(storedTheme);
@@ -228,21 +248,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const currentTopLevelLabel = React.useMemo(() => {
-    if (!mounted) { // Prevents SSR mismatch for dynamic header titles based on path
+    if (!mounted) { 
       const defaultItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
       return defaultItem ? defaultItem.label : 'Dashboard';
     }
-
     for (const group of navGroups) {
       for (const item of group.items) {
-        // Exact match or top-level match for nested routes
         if (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length ))) {
           return item.label;
         }
       }
     }
-
-    // Fallback if no specific match (e.g. for the root path if it's not explicitly in navGroups)
     const rootItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
     return rootItem ? rootItem.label : 'Dashboard';
   }, [pathname, mounted]);
@@ -254,6 +270,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
+
+  if (!mounted) {
+    return null; // Or a loading spinner, to prevent hydration mismatch for theme-dependent rendering
+  }
 
   return (
     <SidebarProvider defaultOpen>
@@ -303,7 +323,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
             <h2 className="text-lg font-semibold">
-              {mounted ? currentTopLevelLabel : 'Dashboard'}
+              {currentTopLevelLabel}
             </h2>
           </div>
           <DropdownMenu>

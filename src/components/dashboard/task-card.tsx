@@ -1,13 +1,13 @@
 
 "use client";
 
-import type { Task, Role } from '@/types';
+import type { Task, Role, ResidentCareFlag } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getTaskCategoryIcon, getResolutionStatusIcon, getTaskFrequencyIcon } from '@/components/icons';
-import { CalendarDays, User, Users, CheckSquare, Tag, Paperclip, ExternalLink, BookOpen, Milestone } from 'lucide-react';
+import { getTaskCategoryIcon, getResolutionStatusIcon, getTaskFrequencyIcon, getCareFlagIcon } from '@/components/icons';
+import { CalendarDays, User, Users, CheckSquare, Tag, Paperclip, ExternalLink, BookOpen, Milestone, FileLock, AlertTriangle, Wheelchair, Brain, Pill, HeartPulse, Droplets } from 'lucide-react';
 import { format, differenceInDays, addDays } from 'date-fns';
 
 interface TaskCardProps {
@@ -15,6 +15,22 @@ interface TaskCardProps {
   onOpenDetails: (task: Task) => void;
   onOpenAttachEvidence: (task: Task) => void;
 }
+
+const CareFlagDisplay: React.FC<{ flag: ResidentCareFlag }> = ({ flag }) => {
+  const Icon = getCareFlagIcon(flag);
+  if (!Icon) return null; // Or some default text/badge
+
+  let title = flag.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); // Simple title case
+  if (flag === 'fall_risk_high') title = 'High Fall Risk';
+  if (flag === 'controlled_meds') title = 'Controlled Meds';
+
+
+  return (
+    <Badge variant="outline" className="p-1" title={title}>
+      <Icon className="h-3.5 w-3.5" />
+    </Badge>
+  );
+};
 
 export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: TaskCardProps) {
   const CategoryIcon = getTaskCategoryIcon(task.category);
@@ -49,16 +65,16 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
     return role;
   };
 
-  const getOverdueRiskBadge = (task: Task) => {
-    if (task.status === 'Resolved') return null;
-    if (task.status === 'Escalated') return <Badge variant="destructive" className="text-xs">Escalated</Badge>;
-    if (task.endDate) {
+  const getOverdueRiskBadge = (currentTask: Task) => {
+    if (currentTask.status === 'Resolved') return null;
+    if (currentTask.status === 'Escalated') return <Badge variant="destructive" className="text-xs">Escalated</Badge>;
+    if (currentTask.endDate) {
       const today = new Date();
-      const daysLeft = differenceInDays(task.endDate, today);
+      const daysLeft = differenceInDays(currentTask.endDate, today);
       if (daysLeft < 0) return <Badge variant="destructive" className="text-xs">🔴 Overdue</Badge>;
-      if (task.frequency === 'Daily' && daysLeft <=1) return <Badge variant="secondary" className="text-xs">🟠 Due Soon</Badge>;
-      if (task.frequency === 'Weekly' && daysLeft <=2) return <Badge variant="secondary" className="text-xs">🟠 Due Soon</Badge>;
-      if (task.frequency === 'Monthly' && daysLeft <=7) return <Badge variant="secondary" className="text-xs">🟡 Due Soon</Badge>;
+      if (currentTask.frequency === 'Daily' && daysLeft <=1) return <Badge variant="secondary" className="text-xs">🟠 Due Soon</Badge>;
+      if (currentTask.frequency === 'Weekly' && daysLeft <=2) return <Badge variant="secondary" className="text-xs">🟠 Due Soon</Badge>;
+      if (currentTask.frequency === 'Monthly' && daysLeft <=7) return <Badge variant="secondary" className="text-xs">🟡 Due Soon</Badge>;
     }
     return null;
   }
@@ -88,6 +104,16 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
           <CardDescription className="text-xs text-muted-foreground pt-1 flex items-center">
             <BookOpen className="inline-block h-3 w-3 mr-1.5" /> Compliance: {task.complianceChapterTag}
           </CardDescription>
+        )}
+        {task.residentCareFlags && task.residentCareFlags.length > 0 && (
+          <div className="pt-2 flex flex-wrap gap-1">
+            {task.residentCareFlags.map(flag => <CareFlagDisplay key={flag} flag={flag} />)}
+            {task.hipaaProtectedNotes && (
+              <Badge variant="outline" className="p-1" title="HIPAA Protected Notes Available">
+                <FileLock className="h-3.5 w-3.5 text-blue-600" />
+              </Badge>
+            )}
+          </div>
         )}
       </CardHeader>
       <CardContent className="flex-grow space-y-2.5 text-xs">

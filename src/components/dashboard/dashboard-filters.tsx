@@ -4,12 +4,20 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText, Package, Users } from "lucide-react";
-import type { TaskCategory, ResolutionStatus, Role, TaskFrequency } from "@/types";
+import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText, Package, Users, Brain, Droplets, HeartPulse, AlertTriangle, Accessibility } from "lucide-react";
+import type { TaskCategory, ResolutionStatus, Role, TaskFrequency, ResidentCareFlag } from "@/types";
+import { allCareFlags } from "@/lib/mock-data"; // Import allCareFlags
 
 interface DashboardFiltersProps {
   onSearch: (term: string) => void;
-  onFilterChange: (filters: Partial<{ category: TaskCategory; status: ResolutionStatus; role: Role; frequency: TaskFrequency; complianceChapterTag: string }>) => void;
+  onFilterChange: (filters: Partial<{ 
+    category: TaskCategory; 
+    status: ResolutionStatus; 
+    role: Role; 
+    frequency: TaskFrequency; 
+    complianceChapterTag: string;
+    careFlag: ResidentCareFlag; // New filter for care flags
+   }>) => void;
   onSortChange: (sortBy: string) => void;
   onExportReport: () => void;
   onExportAuditLog: () => void;
@@ -34,9 +42,23 @@ export default function DashboardFilters({
   frequencies,
   complianceChapterTags
 }: DashboardFiltersProps) {
+
+  const careFlagOptions = [
+    { value: 'all', label: 'All Care Needs', icon: Accessibility },
+    { value: 'wheelchair', label: 'Wheelchair Use', icon: Accessibility }, // Changed from Wheelchair
+    { value: 'walker', label: 'Walker Use', icon: Accessibility }, // Using generic Accessibility icon for walker
+    { value: 'controlled_meds', label: 'Controlled Meds', icon: FileText }, // Placeholder, Pill icon not directly usable in Select
+    { value: 'hypertension', label: 'Hypertension', icon: HeartPulse },
+    { value: 'diabetes', label: 'Diabetes', icon: Droplets },
+    { value: 'dementia', label: 'Dementia/Alzheimer’s', icon: Brain },
+    { value: 'fall_risk_high', label: 'High Fall Risk', icon: AlertTriangle },
+    { value: 'elopement_risk_yes', label: 'Elopement Risk', icon: AlertTriangle },
+  ];
+
+
   return (
     <div className="mb-6 p-4 bg-card rounded-lg shadow-lg space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 items-end">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -99,6 +121,20 @@ export default function DashboardFilters({
           <SelectContent>
             <SelectItem value="all">All Compliance Chapters</SelectItem>
             {complianceChapterTags.map(tag => <SelectItem key={tag} value={tag}>{tag}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        <Select onValueChange={(value) => onFilterChange({ careFlag: value === 'all' ? undefined : value as ResidentCareFlag })}>
+          <SelectTrigger>
+            <Accessibility className="mr-2 h-4 w-4 text-muted-foreground" />
+            <SelectValue placeholder="Filter by Care Need/Tag" />
+          </SelectTrigger>
+          <SelectContent>
+            {careFlagOptions.map(option => (
+              <SelectItem key={option.value} value={option.value}>
+                <option.icon className="mr-2 h-4 w-4 inline-block" /> {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

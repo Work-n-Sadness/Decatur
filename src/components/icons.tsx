@@ -1,6 +1,6 @@
 
 import {
-  HeartPulse,
+  HeartPulse, // Used for Hypertension
   UtensilsCrossed,
   ClipboardList,
   Sparkles,
@@ -8,7 +8,7 @@ import {
   CircleDot,
   Loader2,
   CheckCircle2,
-  AlertTriangle,
+  AlertTriangle, // Used for High Fall Risk
   ShieldX,
   type LucideIcon,
   GanttChartSquare,
@@ -16,7 +16,7 @@ import {
   Settings2,
   Repeat,
   CalendarClock,
-  Pill,
+  Pill, // Used for Controlled Meds
   FileHeart,
   ShieldCheck,
   Wind,
@@ -55,15 +55,15 @@ import {
   Contact,
   FileText,
   TrendingUp,
-  UserCheck,
-  UserMinus,
+  UserCheck, // Used for Residents Moving-in
+  UserMinus, // Used for Residents Moving-out
   Users2,
   Presentation,
   UserPlus,
-  ClipboardPen, // Replaced ClipboardUser
+  ClipboardPen, 
   Award,
   GraduationCap,
-  HardHat, // For Contractors & Consultants and Facility Installations
+  HardHat, 
   ShoppingBag,
   CreditCard,
   Landmark,
@@ -71,6 +71,7 @@ import {
   FileDigit,
   LineChart,
   Building,
+  Building2, // Added for FacilityCertsInstallationsGroup
   BadgeCheck,
   BookCopy,
   Gavel,
@@ -78,7 +79,7 @@ import {
   ScrollText,
   ClipboardSignature,
   Settings,
-  UserCog, // Replaced UsersCog with UserCog
+  UserCog, 
   DatabaseZap,
   Network,
   Users,
@@ -90,12 +91,18 @@ import {
   Salad,
   Tag,
   ShieldAlert,
-  ListTodo, // Added for Checklists
-  Building2 as FacilityIcon, // Facility Certs & Installations group icon
-  Shield as ShieldIcon, // Certifications sub-item icon (alternative to ShieldCheck if needed for distinction)
-  Cpu as CpuIcon, // Installations & Infrastructure (alternative to Wrench/HardHat)
+  ListTodo, 
+  Shield as ShieldIcon, 
+  Cpu as CpuIcon, 
+  HeartHandshake, // For Medical Needs & Care Tags group
+  Tags, // For Special Care Tags item
+  // Wheelchair, // For Wheelchair care flag - Removed as it causes build issues
+  Brain, // For Dementia care flag
+  Droplets, // For Diabetes care flag
+  FileLock, // For HIPAA Note Available care flag
+  Accessibility // Added for DashboardFilters and TaskCard, and as fallback for Wheelchair
 } from 'lucide-react';
-import type { TaskCategory, ResolutionStatus, TaskFrequency, FacilityInstallation } from '@/types';
+import type { TaskCategory, ResolutionStatus, TaskFrequency, FacilityInstallation, ResidentCareFlag } from '@/types';
 
 export const TaskCategoryIcons: Record<TaskCategory, LucideIcon> = {
   'Medication Management & ECP Audits': Pill,
@@ -109,8 +116,8 @@ export const ResolutionStatusIcons: Record<ResolutionStatus, LucideIcon> = {
   Pending: CircleDot,
   Resolved: CheckCircle2,
   Escalated: AlertTriangle,
-  Complete: CheckCircle2, // Added
-  Flagged: AlertTriangle, // Added
+  Complete: CheckCircle2, 
+  Flagged: AlertTriangle, 
 };
 
 export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
@@ -138,9 +145,13 @@ export const SidebarIcons = {
   ProfilesFaceSheets: Contact,
   CarePlans: FileText,
   ProgressNotes: TrendingUp,
-  CheckInOutLogs: UserCheck,
+  ResidentsMovingInOut: UserCheck, 
   CaseManagement: Users2,
-  CouncilMeetings: Presentation, // Will be renamed to ResidentManagementForum but icon remains
+  ResidentManagementForum: Presentation, 
+
+  // MEDICAL NEEDS & CARE TAGS
+  MedicalNeedsCareTagsGroup: HeartHandshake,
+  SpecialCareTags: Tags,
 
   // MEDICATION & ECP
   MedOrders: Pill,
@@ -155,7 +166,6 @@ export const SidebarIcons = {
   MARCorrections: FileEdit,
   MissedDoses: History,
 
-
   // EMERGENCY READINESS
   FireDrills: Flame,
   ExtinguisherChecks: FlameKindling,
@@ -166,10 +176,11 @@ export const SidebarIcons = {
   NineOneOneLog: PhoneCall,
 
   // FACILITY OPERATIONS & SERVICES
+  FacilityOpsServicesGroup: LayoutGrid,
   GroceryFoodPurchases: ShoppingCart,
   CleaningSuppliesOrders: SprayCan,
-  FoodDryGoodsInventory: Boxes, // Changed from Archive to Boxes
-  CleaningSuppliesInventory: Archive, // Using Archive here
+  FoodDryGoodsInventory: Boxes, 
+  CleaningSuppliesInventory: Archive, 
   MaintenanceRequestLog: Wrench,
   FacilityRepairHistory: History,
   PreventiveMaintenanceSchedule: CalendarCheck,
@@ -183,38 +194,43 @@ export const SidebarIcons = {
   ScaldRiskAudit: ShieldAlert,
 
   // ENVIRONMENTAL SAFETY
+  EnvironmentalSafetyGroup: Wind,
   PestControl: Bug,
   OxygenHandling: Wind,
   PPEAudits: Shirt,
-  MaintenanceRequests: Wrench, // Note: Duplicate icon, consider if pages are distinct enough
+  MaintenanceRequests: Wrench, 
   HazardChecks: SearchCheck,
 
   // FOOD & NUTRITION
+  FoodNutritionGroup: ChefHat,
   TempLogs: Thermometer,
   DishwasherLogs: WashingMachine,
   WeeklyMenu: Utensils,
-  GroceryInventory: Archive,
+  // GroceryInventory: Archive, // Already under Facility Ops
   FoodSafetyAudits: ChefHat,
 
   // SECURITY & BEHAVIOR
+  SecurityBehaviorGroup: ShieldCheck, 
   EntryExitLogs: DoorOpen,
   SmokingCompliance: Cigarette,
   BehaviorReports: SmilePlus,
-  VisitorRestrictions: Ban,
+  VisitorLogNotifications: Users, 
 
   // REGULATORY OVERSIGHT
+  RegulatoryOversightGroup: Gavel,
   FireDeptVisits: Building,
   StateSurveyVisits: BadgeCheck,
   RegulatoryVisitLogs: BookCopy,
   OmbudsmanReports: Gavel,
   IncidentGrievanceLogs: AlertOctagon,
 
-  // FACILITY CERTIFICATIONS & INSTALLATIONS (NEW SECTION)
-  FacilityCertsInstallationsGroup: FacilityIcon, // Group Icon
-  Certifications: ShieldIcon, // Using Shield for Certifications
-  InstallationsInfrastructure: CpuIcon, // Using Cpu for Installations & Infra
+  // FACILITY CERTIFICATIONS & INSTALLATIONS 
+  FacilityCertsInstallationsGroup: Building2, 
+  Certifications: ShieldIcon, 
+  InstallationsInfrastructure: CpuIcon, 
 
   // FINANCE
+  FinanceGroup: DollarSign,
   PurchaseRequests: ShoppingBag,
   FacilityExpenses: CreditCard,
   RentPayments: Landmark,
@@ -223,6 +239,7 @@ export const SidebarIcons = {
   InflowOutflowReports: LineChart,
 
   // HUMAN RESOURCES
+  HumanResourcesGroup: Users,
   Recruitment: UserPlus,
   Onboarding: ClipboardPen,
   StaffMatrix: Users,
@@ -232,14 +249,16 @@ export const SidebarIcons = {
   ContractorsConsultants: HardHat,
 
   // POLICY & COMPLIANCE
+  PolicyComplianceGroup: ScrollText,
   PoliciesProcedures: ScrollText,
   HouseRules: ClipboardSignature,
 
   // INSIGHTS & SYSTEMS
+  InsightsSystemsGroup: Settings,
   SystemLogs: DatabaseZap,
   ApiIntegrations: Network,
   UserManagement: UserCog,
-  Settings: Settings,
+  // Settings: Settings, // Settings is already group icon
 };
 
 export const getTaskCategoryIcon = (category: TaskCategory): LucideIcon => {
@@ -265,15 +284,30 @@ export const getTaskFrequencyIcon = (frequency: TaskFrequency): LucideIcon => {
 export const getInstallationCategoryIcon = (category: FacilityInstallation['category']): LucideIcon => {
   const map: Record<FacilityInstallation['category'], LucideIcon> = {
     'Fire Safety': Flame,
-    'HVAC': Wind, // Using Wind as a generic for air systems
-    'Water Systems': WashingMachine, // Generic water related
-    'Electrical': Lightbulb, // Using Lightbulb as generic for electrical
-    'Accessibility': Users, // Generic for accessibility
+    'HVAC': Wind, 
+    'Water Systems': WashingMachine, 
+    'Electrical': Lightbulb, 
+    'Accessibility': Users, 
     'Sanitation': SprayCan,
-    'Gas Systems': FlameKindling, // Re-using, could be more specific
+    'Gas Systems': FlameKindling, 
     'Air Quality': Wind,
     'General Safety': ShieldCheck,
   };
-  return map[category] || HardHat; // Default icon
+  return map[category] || HardHat; 
+};
+
+export const getCareFlagIcon = (flag: ResidentCareFlag): LucideIcon | null => {
+  switch (flag) {
+    case 'wheelchair': return Accessibility; // Using Accessibility as fallback
+    case 'dementia': return Brain;
+    case 'controlled_meds': return Pill;
+    case 'hypertension': return HeartPulse;
+    case 'diabetes': return Droplets;
+    case 'fall_risk_high': return AlertTriangle;
+    // For 'walker', 'fall_risk_medium', 'fall_risk_low', 'elopement_risk_yes', 'elopement_risk_no'
+    // you might want specific icons or handle them differently (e.g., text badges or combined icons)
+    // For now, returning null for flags without direct icon mapping for card display
+    default: return Accessibility; // Fallback icon for other care flags
+  }
 };
 
