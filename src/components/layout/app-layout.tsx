@@ -152,7 +152,7 @@ const navGroups: NavGroup[] = [
       { href: '/food-nutrition/food-temp-logs', label: 'Temperature Logs', icon: SidebarIcons.TempLogs },
       { href: '/food-nutrition/dishwasher-logs', label: 'Dishwasher Logs', icon: SidebarIcons.DishwasherLogs },
       { href: '/food-nutrition/weekly-menu', label: 'Weekly Menu', icon: SidebarIcons.WeeklyMenu },
-      { href: '/food-nutrition/grocery-inventory', label: 'Grocery Inventory', icon: SidebarIcons.ShoppingCart },
+      { href: '/food-nutrition/grocery-inventory', label: 'Grocery Inventory', icon: SidebarIcons.GroceryInventory },
       { href: '/food-nutrition/food-safety-audit', label: 'Food Safety Audits', icon: SidebarIcons.FoodSafetyAudits },
     ],
   },
@@ -249,13 +249,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const currentTopLevelLabel = React.useMemo(() => {
     if (!mounted) {
-      // Default value before client-side hydration
       const defaultItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
       return defaultItem ? defaultItem.label : 'Dashboard';
     }
     for (const group of navGroups) {
       for (const item of group.items) {
-        if (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length ))) {
+        // More robust check for active path, especially for nested routes
+        if (item.href === '/' && pathname === '/') {
+            return item.label;
+        }
+        if (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length)) {
           return item.label;
         }
       }
@@ -272,7 +275,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
-  // Prevent rendering until mounted to avoid hydration mismatch related to currentTopLevelLabel or theme
   if (!mounted) {
     return null;
   }
@@ -299,7 +301,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <SidebarMenuItem key={item.href}>
                       <Link href={item.href} passHref legacyBehavior>
                         <SidebarMenuButton
-                          isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
+                          isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length))}
                           tooltip={item.label}
                         >
                           <item.icon className="h-5 w-5" />

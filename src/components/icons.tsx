@@ -8,9 +8,11 @@ import {
   Loader2,
   CheckCircle2,
   AlertTriangle, // Used for High Fall Risk
+  ShieldX,
   type LucideIcon,
   GanttChartSquare,
   FilePieChart,
+  Settings2,
   Repeat,
   CalendarClock,
   Pill, // Used for Controlled Meds
@@ -39,7 +41,7 @@ import {
   PhoneCall,
   Thermometer,
   WashingMachine,
-  Utensils,
+  Utensils, // Standard Lucide icon
   ChefHat,
   Bug,
   Shirt,
@@ -48,6 +50,7 @@ import {
   DoorOpen,
   Cigarette,
   SmilePlus,
+  Ban,
   Contact,
   FileText,
   TrendingUp,
@@ -181,7 +184,7 @@ export const SidebarIcons = {
   FacilityRepairHistory: History,
   PreventiveMaintenanceSchedule: CalendarCheck,
   VendorContactDirectory: BookUser,
-  WeeklyMealSchedule: Utensils,
+  WeeklyMealSchedule: Utensils, // Corrected from UtensilsCrossed if that was an issue
   MealPrepChecklist: ClipboardCheck,
   TherapeuticDietTracker: Salad,
   LeftoversLabelingLog: Tag,
@@ -194,30 +197,30 @@ export const SidebarIcons = {
   PestControl: Bug,
   OxygenHandling: Wind,
   PPEAudits: Shirt,
-  MaintenanceRequests: Wrench,
+  MaintenanceRequests: Wrench, // Re-used, ensure Wrench is imported
   HazardChecks: SearchCheck,
 
   // FOOD & NUTRITION
   FoodNutritionGroup: ChefHat,
-  TempLogs: Thermometer,
-  DishwasherLogs: WashingMachine,
-  WeeklyMenu: Utensils,
-  GroceryInventory: ShoppingCart, // Corrected key
-  FoodSafetyAudits: ChefHat,
+  TempLogs: Thermometer, // Re-used
+  DishwasherLogs: WashingMachine, // Re-used
+  WeeklyMenu: Utensils, // Re-used
+  GroceryInventory: ShoppingCart, // Re-used from FacilityOps > GroceryFoodPurchases
+  FoodSafetyAudits: ChefHat, // Re-used
 
   // SECURITY & BEHAVIOR
   SecurityBehaviorGroup: ShieldCheck,
   EntryExitLogs: DoorOpen,
   SmokingCompliance: Cigarette,
   BehaviorReports: SmilePlus,
-  VisitorLogNotifications: Users,
+  VisitorLogNotifications: Users, // Corrected from UsersThree, using Users
 
   // REGULATORY OVERSIGHT
   RegulatoryOversightGroup: Gavel,
   FireDeptVisits: Building,
   StateSurveyVisits: BadgeCheck,
   RegulatoryVisitLogs: BookCopy,
-  OmbudsmanReports: Gavel,
+  OmbudsmanReports: Gavel, // Re-used
   IncidentGrievanceLogs: AlertOctagon,
 
   // FACILITY CERTIFICATIONS & INSTALLATIONS
@@ -230,15 +233,15 @@ export const SidebarIcons = {
   PurchaseRequests: ShoppingBag,
   FacilityExpenses: CreditCard,
   RentPayments: Landmark,
-  MedicaidClaims: DollarSign,
+  MedicaidClaims: DollarSign, // Re-used
   InsuranceClaims: FileDigit,
   InflowOutflowReports: LineChart,
 
   // HUMAN RESOURCES
-  HumanResourcesGroup: Users,
+  HumanResourcesGroup: Users, // Re-used
   Recruitment: UserPlus,
-  Onboarding: ClipboardPen,
-  StaffMatrix: Users,
+  Onboarding: ClipboardPen, // Corrected from ClipboardUser
+  StaffMatrix: Users, // Re-used
   TrainingCerts: UsersRound,
   PerformanceReviews: Award,
   ExitLogs: UserMinus,
@@ -246,15 +249,15 @@ export const SidebarIcons = {
 
   // POLICY & COMPLIANCE
   PolicyComplianceGroup: ScrollText,
-  PoliciesProcedures: ScrollText,
+  PoliciesProcedures: ScrollText, // Re-used
   HouseRules: ClipboardSignature,
 
   // INSIGHTS & SYSTEMS
-  InsightsSystemsGroup: Settings,
+  InsightsSystemsGroup: Settings, // Standard Settings icon
   SystemLogs: DatabaseZap,
   ApiIntegrations: Network,
-  UserManagement: UserCog,
-  Settings: Settings,
+  UserManagement: UserCog, // Corrected from UsersCog
+  Settings: Settings, // Re-used
 };
 
 export const getTaskCategoryIcon = (category: TaskCategory): LucideIcon => {
@@ -283,7 +286,7 @@ export const getInstallationCategoryIcon = (category: FacilityInstallation['cate
     'HVAC': Wind,
     'Water Systems': WashingMachine,
     'Electrical': Lightbulb,
-    'Accessibility': Users,
+    'Accessibility': Accessibility, // Changed from Users
     'Sanitation': SprayCan,
     'Gas Systems': FlameKindling,
     'Air Quality': Wind,
@@ -300,6 +303,6 @@ export const getCareFlagIcon = (flag: ResidentCareFlag): LucideIcon | null => {
     case 'hypertension': return HeartPulse;
     case 'diabetes': return Droplets;
     case 'fall_risk_high': return AlertTriangle;
-    default: return Accessibility;
+    default: return Accessibility; // Default to Accessibility for other fall risks or elopement
   }
 };
