@@ -1,0 +1,38 @@
+
+[
+  {
+    "taskName": "Weekly Refrigerator Temp Check",
+    "frequency": "weekly",
+    "recurrenceDays": ["Monday"],
+    "assignedStaff": "kitchen_supervisor_id",
+    "validator": "admin_id",
+    "autoGenerateChecklist": true,
+    "category": "Food Safety"
+  },
+  {
+    "taskName": "Daily Medication Administration Audit",
+    "frequency": "daily",
+    "assignedStaff": "nurse_id",
+    "validator": "clinical_director_id",
+    "autoGenerateChecklist": true,
+    "category": "Medication Management"
+  },
+  {
+    "taskName": "Weekly Shower Water Temp Monitoring",
+    "frequency": "weekly",
+    "recurrenceDays": ["Wednesday"],
+    "assignedStaff": "housekeeping_lead_id",
+    "validator": "safety_officer_id",
+    "autoGenerateChecklist": true,
+    "category": "Environmental Safety"
+  },
+  {
+    "taskName": "Monthly Fire Extinguisher Check",
+    "frequency": "monthly", 
+    "recurrenceDayOfMonth": 1, // Example: Run on the 1st of every month
+    "assignedStaff": "maintenance_id",
+    "validator": "safety_officer_id",
+    "autoGenerateChecklist": true,
+    "category": "Fire Safety"
+  }
+]

@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, { useState, useEffect, useMemo } from 'react'; // Added useState, useEffect
+import React, { useState, useEffect, useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   SidebarProvider,
@@ -54,6 +54,7 @@ const navGroups: NavGroup[] = [
       { href: '/compliance-summary', label: 'Compliance Summary', icon: SidebarIcons.ComplianceSummary },
       { href: '/reports', label: 'Reports', icon: SidebarIcons.Reports },
       { href: '/core-operations/survey-readiness', label: 'Survey Readiness', icon: SidebarIcons.SurveyReadiness },
+      { href: '/checklists', label: 'Checklists', icon: SidebarIcons.Checklists },
     ],
   },
   {
@@ -99,13 +100,33 @@ const navGroups: NavGroup[] = [
       { href: '/fire-emergency/911-log', label: '911 Log', icon: SidebarIcons.NineOneOneLog },
     ],
   },
+    {
+    label: 'FACILITY OPERATIONS & SERVICES',
+    items: [
+      { href: '/facility-operations/procurement/grocery-food-purchases', label: 'Grocery & Food Purchases', icon: SidebarIcons.GroceryFoodPurchases },
+      { href: '/facility-operations/procurement/cleaning-supplies-orders', label: 'Cleaning Supplies Orders', icon: SidebarIcons.CleaningSuppliesOrders },
+      { href: '/facility-operations/procurement/food-dry-goods-inventory', label: 'Food & Dry Goods Inventory', icon: SidebarIcons.FoodDryGoodsInventory },
+      { href: '/facility-operations/procurement/cleaning-supplies-inventory', label: 'Cleaning Supplies Inventory', icon: SidebarIcons.CleaningSuppliesInventory },
+      { href: '/facility-operations/maintenance/request-log', label: 'Maintenance Request Log', icon: SidebarIcons.MaintenanceRequestLog },
+      { href: '/facility-operations/maintenance/repair-history', label: 'Facility Repair History', icon: SidebarIcons.FacilityRepairHistory },
+      { href: '/facility-operations/maintenance/preventive-schedule', label: 'Preventive Maintenance', icon: SidebarIcons.PreventiveMaintenanceSchedule },
+      { href: '/facility-operations/maintenance/vendor-directory', label: 'Vendor Directory', icon: SidebarIcons.VendorContactDirectory },
+      { href: '/facility-operations/meal-ops/weekly-schedule', label: 'Weekly Meal Schedule', icon: SidebarIcons.WeeklyMealSchedule },
+      { href: '/facility-operations/meal-ops/meal-prep-checklist', label: 'Meal Prep Checklist', icon: SidebarIcons.MealPrepChecklist },
+      { href: '/facility-operations/meal-ops/therapeutic-diet-tracker', label: 'Therapeutic Diet Tracker', icon: SidebarIcons.TherapeuticDietTracker },
+      { href: '/facility-operations/meal-ops/leftovers-log', label: 'Leftovers & Labeling Log', icon: SidebarIcons.LeftoversLabelingLog },
+      { href: '/facility-operations/water-safety/shower-sink-temp-logs', label: 'Shower & Sink Temp Logs', icon: SidebarIcons.WeeklyShowerSinkTempLogs },
+      { href: '/facility-operations/water-safety/dishwasher-temp-record', label: 'Dishwasher Temp Record', icon: SidebarIcons.DishwasherCycleTempRecord },
+      { href: '/facility-operations/water-safety/scald-risk-audit', label: 'Scald Risk Audit', icon: SidebarIcons.ScaldRiskAudit },
+    ],
+  },
   {
     label: 'ENVIRONMENTAL SAFETY',
     items: [
       { href: '/environmental/pest-control', label: 'Pest Control', icon: SidebarIcons.PestControl },
       { href: '/environmental/oxygen-handling', label: 'Oxygen Handling', icon: SidebarIcons.OxygenHandling },
       { href: '/environmental/ppe-audit', label: 'PPE Audits', icon: SidebarIcons.PPEAudits },
-      { href: '/environmental/maintenance-requests', label: 'Maintenance Requests', icon: SidebarIcons.MaintenanceRequests },
+      { href: '/environmental/maintenance-requests', label: 'Maintenance Requests', icon: SidebarIcons.MaintenanceRequests }, // Note: Duplicate of facility-operations maintenance log, consider consolidating
       { href: '/environmental/hazard-checks', label: 'Hazard Checks', icon: SidebarIcons.HazardChecks },
     ],
   },
@@ -136,30 +157,6 @@ const navGroups: NavGroup[] = [
       { href: '/governance-regulatory/regulatory-visit-logs', label: 'Regulatory Visit Logs', icon: SidebarIcons.RegulatoryVisitLogs },
       { href: '/governance-regulatory/ombudsman-reports', label: 'Ombudsman Reports', icon: SidebarIcons.OmbudsmanReports },
       { href: '/governance-regulatory/incident-grievance-logs', label: 'Incident & Grievance Logs', icon: SidebarIcons.IncidentGrievanceLogs },
-    ],
-  },
-  {
-    label: 'FACILITY OPERATIONS & SERVICES',
-    items: [
-      // Procurement & Inventory
-      { href: '/facility-operations/procurement/grocery-food-purchases', label: 'Grocery & Food Purchases', icon: SidebarIcons.GroceryFoodPurchases },
-      { href: '/facility-operations/procurement/cleaning-supplies-orders', label: 'Cleaning Supplies Orders', icon: SidebarIcons.CleaningSuppliesOrders },
-      { href: '/facility-operations/procurement/food-dry-goods-inventory', label: 'Food & Dry Goods Inventory', icon: SidebarIcons.FoodDryGoodsInventory },
-      { href: '/facility-operations/procurement/cleaning-supplies-inventory', label: 'Cleaning Supplies Inventory', icon: SidebarIcons.CleaningSuppliesInventory },
-      // Maintenance & Repairs
-      { href: '/facility-operations/maintenance/request-log', label: 'Maintenance Request Log', icon: SidebarIcons.MaintenanceRequestLog },
-      { href: '/facility-operations/maintenance/repair-history', label: 'Facility Repair History', icon: SidebarIcons.FacilityRepairHistory },
-      { href: '/facility-operations/maintenance/preventive-schedule', label: 'Preventive Maintenance', icon: SidebarIcons.PreventiveMaintenanceSchedule },
-      { href: '/facility-operations/maintenance/vendor-directory', label: 'Vendor Directory', icon: SidebarIcons.VendorContactDirectory },
-      // Meal Operations
-      { href: '/facility-operations/meal-ops/weekly-schedule', label: 'Weekly Meal Schedule', icon: SidebarIcons.WeeklyMealSchedule },
-      { href: '/facility-operations/meal-ops/meal-prep-checklist', label: 'Meal Prep Checklist', icon: SidebarIcons.MealPrepChecklist },
-      { href: '/facility-operations/meal-ops/therapeutic-diet-tracker', label: 'Therapeutic Diet Tracker', icon: SidebarIcons.TherapeuticDietTracker },
-      { href: '/facility-operations/meal-ops/leftovers-log', label: 'Leftovers & Labeling Log', icon: SidebarIcons.LeftoversLabelingLog },
-      // Water Temperature & Safety
-      { href: '/facility-operations/water-safety/shower-sink-temp-logs', label: 'Shower & Sink Temp Logs', icon: SidebarIcons.WeeklyShowerSinkTempLogs },
-      { href: '/facility-operations/water-safety/dishwasher-temp-record', label: 'Dishwasher Temp Record', icon: SidebarIcons.DishwasherCycleTempRecord },
-      { href: '/facility-operations/water-safety/scald-risk-audit', label: 'Scald Risk Audit', icon: SidebarIcons.ScaldRiskAudit },
     ],
   },
   {
@@ -195,7 +192,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'INSIGHTS & SYSTEMS',
     items: [
-      // { href: '/reports', label: 'Reports', icon: SidebarIcons.Reports }, // Already in OPERATIONS
+      // Reports is already in OPERATIONS
       { href: '/admin/system-logs', label: 'System Logs', icon: SidebarIcons.SystemLogs },
       { href: '/admin/api-integrations', label: 'API Integrations', icon: SidebarIcons.ApiIntegrations },
       { href: '/admin/user-management', label: 'User Management', icon: SidebarIcons.UserManagement },
@@ -223,20 +220,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
   
   const currentTopLevelLabel = React.useMemo(() => {
-    if (!mounted) {
+    if (!mounted) { // Prevents SSR mismatch for dynamic header titles based on path
       const defaultItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
       return defaultItem ? defaultItem.label : 'Dashboard';
     }
 
     for (const group of navGroups) {
       for (const item of group.items) {
-        if (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))) {
+        // Exact match or top-level match for nested routes
+        if (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length ))) {
           return item.label;
         }
       }
     }
     
-    return 'Dashboard'; // Default
+    // Fallback if no specific match (e.g. for the root path if it's not explicitly in navGroups)
+    const rootItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
+    return rootItem ? rootItem.label : 'Dashboard';
   }, [pathname, mounted]);
 
 
@@ -292,7 +292,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
             <h2 className="text-lg font-semibold">
-              {currentTopLevelLabel}
+              {mounted ? currentTopLevelLabel : 'Loading...'}
             </h2>
           </div>
           <DropdownMenu>
@@ -327,5 +327,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    

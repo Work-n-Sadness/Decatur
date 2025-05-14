@@ -1,12 +1,13 @@
 
-export type ResolutionStatus = 'Pending' | 'Resolved' | 'Escalated';
+
+export type ResolutionStatus = 'Pending' | 'Resolved' | 'Escalated' | 'Complete' | 'Flagged'; // Added Complete, Flagged
 
 export type TaskCategory = 
   | 'Medication Management & ECP Audits'
   | 'Resident Documentation & Clinical Care'
   | 'Compliance & Survey Prep Tasks'
   | 'Smoking, Behavior, and Environment'
-  | 'Facility Operations & Services'; // Added from sidebar update
+  | 'Facility Operations & Services';
 
 export type TaskFrequency = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'As Needed' | 'Annually' | 'Bi-annually' | 'Mid Yearly';
 
@@ -19,7 +20,13 @@ export type Role =
   | 'Wellness Nurse' 
   | 'Housekeeping Supervisor' 
   | 'QMAP Supervisor'
-  | 'Housekeeping / Aide';
+  | 'Housekeeping / Aide'
+  | 'kitchen_supervisor_id' // From seed
+  | 'clinical_director_id' // From seed
+  | 'housekeeping_lead_id' // From seed
+  | 'safety_officer_id' // From seed
+  | 'maintenance_id'; // From seed
+
 
 export interface ActivityLog {
   timestamp: Date;
@@ -30,15 +37,10 @@ export interface ActivityLog {
 
 export interface RecurrenceConfig {
   frequency: TaskFrequency;
-  // For weekly recurrence, specify days. E.g., [1, 3, 5] for Mon, Wed, Fri (0=Sun, 6=Sat)
   recurrenceDaysOfWeek?: number[]; 
-  // For monthly recurrence, specify day of month or rule
   recurrenceDayOfMonth?: number | 'first' | 'last' | 'firstWeekday' | 'lastWeekday';
-  // The date from which this recurrence pattern starts.
   patternStartDate: Date;
-  // Optional: if the recurrence has a specific end date
   patternEndDate?: Date | null;
-  // Interval for frequency, e.g., every 2 weeks (frequency: 'Weekly', interval: 2)
   interval?: number; 
 }
 
@@ -52,18 +54,18 @@ export interface Task {
   progress: number; 
   assignedStaff: string; 
   validator: Role | string | null; 
-  startDate: Date; // Represents the start of the due window for THIS instance
-  endDate: Date | null; // Represents the end of the due window (due date) for THIS instance
+  startDate: Date; 
+  endDate: Date | null; 
   time: string | null; 
   deliverables: string; 
   notes: string; 
   activities: ActivityLog[];
   evidenceLink?: string; 
-  lastCompletedOn?: Date | null; // Last completion date for THIS instance/cycle
+  lastCompletedOn?: Date | null; 
   completedBy?: string | null; 
   validatorApproval?: string | null; 
   complianceChapterTag?: string;
-  recurrenceConfig?: RecurrenceConfig; // Configuration for how this task recurs
+  recurrenceConfig?: RecurrenceConfig;
 }
 
 export interface AuditCategory {
@@ -95,3 +97,34 @@ export interface StaffTrainingRecord {
   notes?: string;
 }
 
+// For Firebase Cloud Function and Checklist UI
+export interface RecurringTask {
+  id: string; // Firestore document ID
+  taskName: string;
+  frequency: 'daily' | 'weekly' | 'monthly'; // monthly added based on seed
+  recurrenceDays?: string[]; // For weekly, e.g., ["Monday", "Friday"]
+  recurrenceDayOfMonth?: number; // For monthly
+  assignedStaff: string; // Could be a user ID or name
+  validator?: string; // Could be a user ID or name
+  autoGenerateChecklist: boolean;
+  category?: string; // Optional category from seed
+}
+
+export interface ChecklistItem {
+  id: string; // Firestore document ID
+  taskName: string;
+  assignedStaff: string;
+  validator?: string | null;
+  dueDate: string; // Stored as YYYY-MM-DD string, or could be Firestore Timestamp
+  status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>; // Subset of ResolutionStatus
+  createdAt: firebase.firestore.Timestamp | Date; // Firestore Timestamp or Date object on client
+  taskId: string; // ID of the parent RecurringTask
+  notes?: string;
+  evidenceLink?: string;
+  lastCompletedOn?: firebase.firestore.Timestamp | Date | null;
+  completedBy?: string | null;
+}
+
+// Firebase namespace for Timestamp if needed elsewhere
+import type firebase from 'firebase/compat/app'; // For Timestamp type if using compat
+// Or import { Timestamp } from "firebase/firestore"; for modular SDK
