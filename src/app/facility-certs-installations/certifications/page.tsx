@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase'; // Uses shared instance
 import { collection, onSnapshot, query, orderBy, type Timestamp } from 'firebase/firestore';
 import type { FacilityCertification, CertificationStatus } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,17 +17,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const getCertificationStatusBadgeVariant = (status: CertificationStatus): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case 'Active':
-      return 'default'; // Green or primary
+      return 'default';
     case 'Due Soon':
-      return 'secondary'; // Yellow or orange
+      return 'secondary';
     case 'Expired':
-      return 'destructive'; // Red
+      return 'destructive';
     default:
       return 'outline';
   }
 };
 
-export default function CertificationsPage() {
+// Define FacilityCertificationsTable component
+function FacilityCertificationsTable() {
   const [certifications, setCertifications] = useState<FacilityCertification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +60,79 @@ export default function CertificationsPage() {
     return () => unsubscribe();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2">Loading certifications...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-destructive p-4 border border-destructive bg-destructive/10 rounded-md flex items-center">
+        <AlertCircle className="h-5 w-5 mr-2"/> {error}
+      </div>
+    );
+  }
+
+  if (!loading && !error && certifications.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground py-8">
+        No certifications found. Add a new certification to get started.
+      </div>
+    );
+  }
+
+  return (
+    <ScrollArea className="h-[600px] rounded-md border">
+      <Table>
+        <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm z-10">
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Certifying Agency</TableHead>
+            <TableHead>Issue Date</TableHead>
+            <TableHead>Expiration Date</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Reviewed By</TableHead>
+            <TableHead>Certificate</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {certifications.map(cert => (
+            <TableRow key={cert.id}>
+              <TableCell className="font-medium">{cert.certificationName}</TableCell>
+              <TableCell>{cert.certifyingAgency}</TableCell>
+              <TableCell>{isValid(cert.issueDate) ? format(cert.issueDate, 'PP') : 'N/A'}</TableCell>
+              <TableCell>{isValid(cert.expirationDate) ? format(cert.expirationDate, 'PP') : 'N/A'}</TableCell>
+              <TableCell>
+                <Badge variant={getCertificationStatusBadgeVariant(cert.status)}>
+                  {cert.status}
+                </Badge>
+              </TableCell>
+              <TableCell>{cert.lastReviewedBy || 'N/A'}</TableCell>
+              <TableCell>
+                {cert.certificateUpload ? (
+                  <Button variant="link" size="sm" asChild className="p-0 h-auto">
+                    <a href={cert.certificateUpload} target="_blank" rel="noopener noreferrer" className="text-accent">
+                      View Document
+                    </a>
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">None</span>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </ScrollArea>
+  );
+}
+
+// Default export for the page
+export default function CertificationsPage() {
   const pageTitle = "Facility Certifications";
   const descriptionText = "Track and monitor facility-level certifications. Ensure compliance with all regulatory requirements by keeping certifications up to date.";
   
@@ -76,67 +150,11 @@ export default function CertificationsPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {loading && (
-          <div className="flex justify-center items-center h-32">
-            <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-            <span className="ml-2">Loading certifications...</span>
-          </div>
-        )}
-        {error && (
-          <div className="text-destructive p-4 border border-destructive bg-destructive/10 rounded-md flex items-center">
-            <AlertCircle className="h-5 w-5 mr-2"/> {error}
-          </div>
-        )}
-        {!loading && !error && certifications.length === 0 && (
-          <div className="text-center text-muted-foreground py-8">
-            No certifications found. Add a new certification to get started.
-          </div>
-        )}
-        {!loading && !error && certifications.length > 0 && (
-          <ScrollArea className="h-[600px] rounded-md border">
-            <Table>
-              <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm z-10">
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Certifying Agency</TableHead>
-                  <TableHead>Issue Date</TableHead>
-                  <TableHead>Expiration Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Reviewed By</TableHead>
-                  <TableHead>Certificate</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {certifications.map(cert => (
-                  <TableRow key={cert.id}>
-                    <TableCell className="font-medium">{cert.certificationName}</TableCell>
-                    <TableCell>{cert.certifyingAgency}</TableCell>
-                    <TableCell>{isValid(cert.issueDate) ? format(cert.issueDate, 'PP') : 'N/A'}</TableCell>
-                    <TableCell>{isValid(cert.expirationDate) ? format(cert.expirationDate, 'PP') : 'N/A'}</TableCell>
-                    <TableCell>
-                      <Badge variant={getCertificationStatusBadgeVariant(cert.status)}>
-                        {cert.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{cert.lastReviewedBy || 'N/A'}</TableCell>
-                    <TableCell>
-                      {cert.certificateUpload ? (
-                        <Button variant="link" size="sm" asChild className="p-0 h-auto">
-                          <a href={cert.certificateUpload} target="_blank" rel="noopener noreferrer" className="text-accent">
-                            View Document
-                          </a>
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">None</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-        )}
+        <FacilityCertificationsTable /> {/* Use the extracted component */}
       </CardContent>
     </Card>
   );
 }
+
+// User's requested named export
+export { FacilityCertificationsTable };
