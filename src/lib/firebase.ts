@@ -5,37 +5,53 @@ import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
 import { getStorage, connectStorageEmulator, type FirebaseStorage } from 'firebase/storage';
 
 // =======================================================================================
-// !! IMPORTANT: TROUBLESHOOTING "FirebaseError: auth/invalid-api-key" ERRORS !!
+// !! CRITICAL: TROUBLESHOOTING "FirebaseError: auth/invalid-api-key" ERRORS !!
 //
-// This error means the API key Firebase is trying to use is incorrect or not recognized
-// by your Firebase project. The code below is correctly trying to USE these keys from
-// your environment variables. The problem is almost certainly in YOUR `.env.local` file
-// or your Firebase project's settings.
+// This error is very common and almost ALWAYS means there's an issue with how your
+// Firebase project credentials are configured in your local `.env.local` file, or
+// an issue with the API key settings in your Firebase project console.
 //
-// TO FIX THIS - YOU MUST DO THESE STEPS:
+// THE CODE IN THIS FILE IS CORRECTLY TRYING TO USE THE ENVIRONMENT VARIABLES.
+// THE PROBLEM IS LIKELY THE *VALUES* OF THOSE VARIABLES OR YOUR PROJECT SETUP.
 //
-// 1. CHECK YOUR `.env.local` FILE:
+// PLEASE FOLLOW THESE STEPS METICULOUSLY:
+//
+// 1. CHECK YOUR `.env.local` FILE (PROJECT ROOT DIRECTORY):
+//    - It MUST be named EXACTLY `.env.local`.
 //    - It MUST be in your project's ROOT directory (same level as `package.json`).
-//    - Ensure it contains:
+//    - Ensure it contains ALL the following variables with `NEXT_PUBLIC_` prefix:
 //        NEXT_PUBLIC_FIREBASE_API_KEY=YourActualApiKeyFromFirebaseConsole
 //        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
 //        NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
 //        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 //        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 //        NEXT_PUBLIC_FIREBASE_APP_ID=1:your-sender-id:web:your-app-id-hash
-//    - **TRIPLE-CHECK** that `YourActualApiKeyFromFirebaseConsole` is COPIED EXACTLY from
-//      your Firebase project settings (see step 2). NO TYPOS.
+//        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX (Optional, for Analytics)
 //
-// 2. CHECK YOUR FIREBASE CONSOLE:
-//    - Go to https://console.firebase.google.com/ -> Your Project
-//    - Project Settings (Gear icon) -> General tab.
+//    - **MOST IMPORTANT**: The value for `NEXT_PUBLIC_FIREBASE_API_KEY` must be
+//      COPIED *EXACTLY* from your Firebase project's Web App configuration.
+//      NO TYPOS. NO EXTRA SPACES. NO QUOTES (unless they are part of the key).
+//
+// 2. VERIFY FIREBASE CONSOLE CONFIGURATION:
+//    - Go to https://console.firebase.google.com/ -> Your Project.
+//    - Click the Gear icon (Project settings) -> General tab.
 //    - Scroll to "Your apps". Select your web app.
 //    - Under "SDK setup and configuration", choose "Config".
-//    - The `apiKey` value shown there MUST MATCH what's in your `.env.local`.
+//    - COMPARE EVERY VALUE (apiKey, authDomain, projectId, etc.) with your
+//      `.env.local` file. They MUST match exactly.
+//    - Check "API Key Restrictions": In Google Cloud Console (APIs & Services > Credentials),
+//      ensure the API key has no restrictions preventing its use (e.g., HTTP referrers).
 //
-// 3. RESTART YOUR NEXT.JS DEVELOPMENT SERVER:
-//    - After creating or changing `.env.local`, YOU MUST STOP AND RESTART your server
-//      (e.g., `npm run dev`). Next.js only loads these variables on startup.
+// 3. **!!! RESTART YOUR NEXT.JS DEVELOPMENT SERVER !!!**
+//    - After creating or modifying `.env.local`, YOU *MUST* STOP AND RESTART
+//      your Next.js development server (e.g., `npm run dev`). Next.js only loads
+//      environment variables on startup. THIS IS A VERY COMMON OVERSIGHT.
+//
+// 4. ENSURE FIREBASE AUTHENTICATION IS ENABLED:
+//    - In the Firebase Console, go to the "Authentication" section.
+//    - If it's your first time, click "Get started".
+//    - Ensure desired sign-in methods are enabled.
+//    - Under "Settings" > "Authorized domains", ensure `localhost` is listed for development.
 // =======================================================================================
 
 const firebaseConfig = {
@@ -67,13 +83,15 @@ storage = getStorage(app);
 const USE_EMULATOR = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true';
 
 if (USE_EMULATOR) {
+  // Check if window is defined (i.e., we are on the client side)
+  // and if emulators haven't been connected yet to avoid multiple connections.
   if (typeof window !== 'undefined' && !(window as any).__FIREBASE_EMULATOR_CONNECTED) {
     console.log('Connecting to Firebase Emulators...');
     try {
       connectFirestoreEmulator(db, 'localhost', 8080);
-      connectAuthEmulator(auth, 'http://localhost:9099');
+      connectAuthEmulator(auth, 'http://localhost:9099'); // Ensure URL scheme is http for emulator
       connectStorageEmulator(storage, 'localhost', 9199);
-      (window as any).__FIREBASE_EMULATOR_CONNECTED = true;
+      (window as any).__FIREBASE_EMULATOR_CONNECTED = true; // Flag to prevent reconnecting
       console.log('Successfully connected to Firebase Emulators.');
     } catch (error) {
       console.error('Error connecting to Firebase Emulators:', error);
@@ -87,16 +105,16 @@ if (USE_EMULATOR) {
 export { app, auth, db, storage };
 
 /*
-Create a .env.local file in your project root with your Firebase config:
+EXAMPLE .env.local file (MUST BE IN YOUR PROJECT ROOT):
 
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id // Optional
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyYourActualApiKeyFromFirebaseConsole
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id-number
+NEXT_PUBLIC_FIREBASE_APP_ID=1:your-sender-id-number:web:your-app-id-hash
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX (Optional, for Analytics)
 
-# Optional: To use Firebase Emulators
-NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true # or false
+# Optional: To use Firebase Emulators for local development
+# NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true
 */
