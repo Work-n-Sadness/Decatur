@@ -4,10 +4,27 @@ import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase
 import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
 import { getStorage, connectStorageEmulator, type FirebaseStorage } from 'firebase/storage';
 
-// IMPORTANT: For "auth/invalid-api-key" errors,
-// double-check that all NEXT_PUBLIC_FIREBASE_... variables in your .env.local file
-// are correct and match your Firebase project's web app configuration.
-// Ensure you restart your Next.js development server after any changes to .env.local.
+// =======================================================================================
+// !! IMPORTANT: TROUBLESHOOTING "auth/invalid-api-key" ERRORS !!
+//
+// This error means the API key Firebase is trying to use is incorrect or not recognized.
+//
+// TO FIX THIS:
+// 1. CHECK YOUR `.env.local` FILE:
+//    - Ensure it's in your project's root directory.
+//    - Verify `NEXT_PUBLIC_FIREBASE_API_KEY` is present and has the CORRECT value
+//      from your Firebase project's web app configuration.
+//    - Ensure all other `NEXT_PUBLIC_FIREBASE_...` variables are also correct.
+//
+// 2. CHECK FIREBASE CONSOLE:
+//    - Go to Project Settings > Your Web App.
+//    - Confirm the `apiKey`, `authDomain`, `projectId`, etc., EXACTLY match your `.env.local`.
+//
+// 3. RESTART YOUR NEXT.JS DEVELOPMENT SERVER:
+//    - Next.js only loads `.env.local` variables on startup. You MUST restart your server
+//      (e.g., stop `npm run dev` and run it again) after any changes to `.env.local`.
+// =======================================================================================
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
