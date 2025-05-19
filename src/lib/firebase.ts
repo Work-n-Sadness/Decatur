@@ -4,6 +4,10 @@ import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase
 import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
 import { getStorage, connectStorageEmulator, type FirebaseStorage } from 'firebase/storage';
 
+// IMPORTANT: For "auth/invalid-api-key" errors,
+// double-check that all NEXT_PUBLIC_FIREBASE_... variables in your .env.local file
+// are correct and match your Firebase project's web app configuration.
+// Ensure you restart your Next.js development server after any changes to .env.local.
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
