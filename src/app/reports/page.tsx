@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BarChart3, CalendarIcon, Download, Filter, FileText, Repeat, History } from "lucide-react";
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, subWeeks, subQuarters, subYears, type Duration, addDays, subDays } from "date-fns";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, subWeeks, subQuarters, subYears, type Duration, addDays, subDays, isValid } from "date-fns"; // Added isValid
 import { allTaskCategories, allResolutionStatuses, allMockRoles, allTaskFrequencies, mockTasks } from '@/lib/mock-data'; 
 import type { TaskCategory, ResolutionStatus, Role, TaskFrequency, Task } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -22,7 +22,25 @@ type PredefinedDateRangeKey =
   | 'last_7_days' | 'last_30_days' | 'last_90_days' | 'last_6_months' | 'this_year_so_far'
   | 'custom';
 
+interface PredefinedDateRange {
+  key: PredefinedDateRangeKey;
+  label: string;
+  getRange?: () => { from: Date; to: Date };
+}
+
 const nowStatic = new Date(2025, 4, 13); // May 13, 2025 for consistent "today"
+
+// Helper to ensure dates are consistently at start/end of day for range comparisons
+const startOfDay = (date: Date) => {
+  const newDate = new Date(date);
+  newDate.setHours(0, 0, 0, 0);
+  return newDate;
+};
+const endOfDay = (date: Date) => {
+  const newDate = new Date(date);
+  newDate.setHours(23, 59, 59, 999);
+  return newDate;
+};
 
 const predefinedDateRanges: PredefinedDateRange[] = [
   { key: 'today', label: `Today (${format(nowStatic, 'MMM dd, yyyy')})`, getRange: () => ({ from: startOfDay(nowStatic), to: endOfDay(nowStatic) }) },
@@ -42,18 +60,6 @@ const predefinedDateRanges: PredefinedDateRange[] = [
   { key: 'this_year_so_far', label: 'This Year (2025) So Far', getRange: () => ({ from: startOfYear(nowStatic), to: nowStatic }) },
   { key: 'custom', label: 'Custom Range' },
 ];
-
-// Helper to ensure dates are consistently at start/end of day for range comparisons
-const startOfDay = (date: Date) => {
-  const newDate = new Date(date);
-  newDate.setHours(0, 0, 0, 0);
-  return newDate;
-};
-const endOfDay = (date: Date) => {
-  const newDate = new Date(date);
-  newDate.setHours(23, 59, 59, 999);
-  return newDate;
-};
 
 
 export default function ReportsPage() {
@@ -120,11 +126,11 @@ export default function ReportsPage() {
     const filteredReportTasks = mockTasks.filter(task => {
         let taskDateToCompare: Date | null = null;
         // Prioritize completion, then due, then start date for filtering
-        if (task.lastCompletedOn && isValidDate(new Date(task.lastCompletedOn))) {
+        if (task.lastCompletedOn && isValid(new Date(task.lastCompletedOn))) { // Changed isValidDate to isValid
             taskDateToCompare = new Date(task.lastCompletedOn);
-        } else if (task.endDate && isValidDate(new Date(task.endDate))) {
+        } else if (task.endDate && isValid(new Date(task.endDate))) { // Changed isValidDate to isValid
             taskDateToCompare = new Date(task.endDate);
-        } else if (task.startDate && isValidDate(new Date(task.startDate))) {
+        } else if (task.startDate && isValid(new Date(task.startDate))) { // Changed isValidDate to isValid
             taskDateToCompare = new Date(task.startDate);
         }
         
@@ -241,8 +247,8 @@ export default function ReportsPage() {
                     disabled={selectedPresetDateRangeKey !== 'custom'}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {customDateRange.from && isValidDate(customDateRange.from) ? (
-                      customDateRange.to && isValidDate(customDateRange.to) ? (
+                    {customDateRange.from && isValid(customDateRange.from) ? ( // Changed isValidDate to isValid
+                      customDateRange.to && isValid(customDateRange.to) ? ( // Changed isValidDate to isValid
                         <>
                           {format(customDateRange.from, "LLL dd, y")} -{" "}
                           {format(customDateRange.to, "LLL dd, y")}
@@ -341,3 +347,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
