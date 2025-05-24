@@ -1,6 +1,6 @@
 
 import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, AppRole, AuditToolCategory, AuditRecord, AuditStatus, StaffTrainingRecord, TrainingType, TrainingStatus, RecurrenceConfig, FacilityCertification, CertificationStatus, FacilityInstallation, InstallationStatus, InstallationFrequency, ResidentCareFlag, ChecklistItem, StaffResponsibilityMatrixEntry, RecurringTaskSeed } from '@/types';
-import { addDays, startOfDay, getDay, getDate, subDays, subMonths, addMonths, endOfMonth, subYears } from 'date-fns';
+import { addDays, startOfDay, getDay, getDate, subDays, subMonths, addMonths, endOfMonth, subYears, addYears, parseISO, isValid } from 'date-fns';
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -20,19 +20,27 @@ export const allTaskCategories: TaskCategory[] = [
 export const allTaskFrequencies: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'As Needed', 'Annually', 'Bi-annually', 'Mid Yearly'];
 export const allResolutionStatuses: ResolutionStatus[] = ['Pending', 'Resolved', 'Escalated', 'Complete', 'Flagged'];
 
+// Updated to reflect more specific roles from the operational model
 export const allAppRoles: AppRole[] = [
   'Director (Owner)',
   'Assistant Director',
   'Administrator Designee',
   'Admin Assistant',
-  'Caregiver',
+  'Caregiver', // Handles QMAP, Housekeeping, ADLs, Meals
   'RN (External)',
   'Doctor (Consultant)',
-  'Nurse', // Generic internal nurse if needed
+  // Keeping some original broader roles for flexibility or if they map to specific tasks
+  'Nurse', // Could be an internal LPN/RN not the external one
   'Maintenance',
   'Wellness Nurse',
   'Housekeeping Supervisor',
   'QMAP Supervisor',
+  // Keep seed roles for backward compatibility or specific mapping
+  'kitchen_supervisor_id',
+  'clinical_director_id',
+  'housekeeping_lead_id',
+  'safety_officer_id',
+  'maintenance_id'
 ];
 
 
@@ -44,7 +52,7 @@ const staffNamesByRole: Record<AppRole, string[]> = {
     'Caregiver': [
         'Evan Wright (Caregiver/QMAP)',
         'Fiona Green (Caregiver/QMAP)',
-        'George Hill (Caregiver/QMAP)',
+        'George Hill (Caregiver/QMAP)', // Also can be kitchen_supervisor_id
         'Hannah Scott (Caregiver/QMAP)',
         'Ian King (Caregiver/QMAP)',
     ],
@@ -52,12 +60,12 @@ const staffNamesByRole: Record<AppRole, string[]> = {
     'Doctor (Consultant)': ['Dr. Who (MD Consultant)'],
     // Broader roles for tasks not assigned to the core 9
     'Nurse': ['General Nurse (Pool)'],
-    'Maintenance': ['Maintenance Mike (Contractor)'],
+    'Maintenance': ['Maintenance Mike (Contractor)'], // Also maintenance_id
     'Wellness Nurse': ['Wendy Bloom (Wellness Coord.)'], // Could be one of the specific roles or another person
-    'Housekeeping Supervisor': ['Harry Clean (Housekeeping Lead)'], // Might be Admin Designee or a lead Caregiver
+    'Housekeeping Supervisor': ['Harry Clean (Housekeeping Lead)'], // Also housekeeping_lead_id
     'QMAP Supervisor': ['Carlos Ray (Admin Designee)'], // Often overlaps with Admin Designee or Director
-    // Seed roles - map them to new roles or keep if used by old data
-    'kitchen_supervisor_id': ['George Hill (Caregiver/QMAP)'], // Example mapping
+    // Explicit mapping for seed roles if they don't directly match new roles
+    'kitchen_supervisor_id': ['George Hill (Caregiver/QMAP)'],
     'clinical_director_id': ['Alex Johnson (Director)'],
     'housekeeping_lead_id': ['Harry Clean (Housekeeping Lead)'],
     'safety_officer_id': ['Carlos Ray (Admin Designee)'],
@@ -119,7 +127,7 @@ const specificTasksSeed: SeedTask[] = [
   { name: "Maintain updated Face Sheets", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Admin Assistant', frequency: 'Monthly', deliverables: "Printed or digital version", validator: 'Administrator Designee' },
   { name: "Record Treatment History: Past and ongoing", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Nurse', frequency: 'Monthly', deliverables: "Chronological summary", validator: 'Wellness Nurse' },
   { name: "Document and log fall incidents", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Fall log and corrective action", validator: 'Nurse' },
-  { name: "Record lift assist events", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Lift assist log", validator: 'Nurse' },
+  { name: "Record lift assist events", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Lift assist log", validator: 'Nurse' }, // Changed from Housekeeping / Aide
   { name: "Update Care Plan Reviews & Assessments", category: 'Resident Documentation & Clinical Care', responsibleRole: ['Nurse', 'Director (Owner)'], frequency: 'Quarterly', deliverables: "Updated digital care plan", validator: null },
   { name: "Conduct ECP error resolution review", category: 'Compliance & Survey Prep Tasks', responsibleRole: ['Administrator Designee', 'Director (Owner)'], frequency: 'Quarterly', deliverables: "List of resolved audit flags", validator: null, complianceChapterTag: "Ch. 2.15" },
   { name: "Perform QMAP passing rate audit", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'QMAP Supervisor', frequency: 'Monthly', deliverables: "Score sheet", validator: 'Director (Owner)', complianceChapterTag: "Ch. 9.11" },
@@ -127,8 +135,8 @@ const specificTasksSeed: SeedTask[] = [
   { name: "Post & verify Resident Rights, House Rules, Emergency Plan", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Admin Assistant', frequency: 'Monthly', deliverables: "Photos & checklist", validator: 'Administrator Designee', complianceChapterTag: "Ch. 24.1" },
   { name: "Prepare Survey Readiness Packet", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Administrator Designee', frequency: 'Quarterly', deliverables: "Binder or PDF", validator: 'Director (Owner)' },
   { name: "Track policy & procedure manual reviews", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Director (Owner)', frequency: 'Annually', deliverables: "Signed review sheet", validator: null },
-  { name: "Log all resident smoking activity", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Caregiver', frequency: 'Daily', deliverables: "Time-stamped log", validator: 'Administrator Designee' },
-  { name: "Audit compliance with smoking safety in designated backyard area", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Administrator Designee', frequency: 'Weekly', deliverables: "Violation log and supervision verification", validator: 'Director (Owner)' },
+  { name: "Log all resident smoking activity", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Caregiver', frequency: 'Daily', deliverables: "Time-stamped log", validator: 'Administrator Designee' }, // Changed from Housekeeping Supervisor
+  { name: "Audit compliance with smoking safety in designated backyard smoking area", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Administrator Designee', frequency: 'Weekly', deliverables: "Violation log and supervision verification", validator: 'Director (Owner)' },
   { name: "Observe and document behavioral incidents", category: 'Smoking, Behavior, and Environment', responsibleRole: ['Caregiver', 'Nurse'], frequency: 'As Needed', deliverables: "Incident form", validator: 'Wellness Nurse' },
   { name: "Perform Resident Room Safety Compliance Check", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Caregiver', frequency: 'Weekly', deliverables: "Room safety checklist", validator: 'Administrator Designee', complianceChapterTag: "Ch. 12.4" },
 ];
@@ -146,7 +154,7 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
 
   const status = getRandomElement(allResolutionStatuses);
   let assignedStaffMember: string;
-  let assignedStaffMemberId: string = `staff_user_${i % 9 + 1}`; // Mock 9 staff IDs
+  let assignedStaffMemberId: string = `staff_user_${(i % 9) + 1}`; // Mock 9 staff IDs
 
   if (Array.isArray(seed.responsibleRole)) {
     const role1 = seed.responsibleRole[0];
@@ -159,7 +167,7 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
   let completedBy: string | null = null;
   if (status === 'Resolved' || status === 'Complete') {
     lastCompletedOn = cycleDays > 0 ? getRandomDate(addDays(instanceStartDate, -cycleDays), instanceStartDate) : getRandomDate(addDays(new Date(), -30), new Date());
-    if (lastCompletedOn > instanceStartDate) lastCompletedOn = instanceStartDate; // Ensure it's not after start
+    if (lastCompletedOn > instanceStartDate && isValid(instanceStartDate)) lastCompletedOn = instanceStartDate; // Ensure it's not after start
     completedBy = assignedStaffMember;
   }
 
@@ -186,7 +194,7 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
     deliverables: seed.deliverables,
     notes: `Task instance for ${instanceStartDate.toLocaleDateString()}. ${getRandomElement(['Ensure proper documentation.', 'Follow up with validator.', 'Report any deviations.',''])}`,
     activities: [
-      { timestamp: initialActivityTimestamp > new Date() ? new Date() : initialActivityTimestamp, user: 'System', action: 'Task Instance Generated', details: 'Task instance created based on recurrence pattern.' },
+      { timestamp: (isValid(initialActivityTimestamp) && initialActivityTimestamp > new Date()) ? new Date() : initialActivityTimestamp, user: 'System', action: 'Task Instance Generated', details: 'Task instance created based on recurrence pattern.' },
       ...(status !== 'Pending' && instanceStartDate < new Date() ? [{ timestamp: instanceStartDate, user: assignedStaffMember, action: 'Task Actioned', details: `Task status set to ${status}.` }] : []),
       ...((status === 'Resolved' || status === 'Complete') && lastCompletedOn ? [{ timestamp: lastCompletedOn, user: completedBy || assignedStaffMember, action: 'Task Resolved/Completed', details: `Task marked as ${status}.` }] : []),
     ],
@@ -205,8 +213,8 @@ export const mockChecklistItems: ChecklistItem[] = mockTasks.map(task => ({
   taskName: task.name,
   assignedStaff: task.assignedStaff,
   assignedStaffId: task.assignedStaffId,
-  validator: typeof task.validator === 'string' ? task.validator : null, // Handle AppRole type for validator
-  dueDate: task.endDate || task.startDate, // Use endDate if available, else startDate
+  validator: typeof task.validator === 'string' ? task.validator : null, 
+  dueDate: task.endDate || task.startDate, 
   status: task.status === 'Complete' || task.status === 'Resolved' ? 'Complete' : (task.status === 'Flagged' ? 'Flagged' : 'Pending'),
   createdAt: task.startDate,
   statusUpdatedAt: task.lastCompletedOn || task.activities.slice(-1)[0]?.timestamp || task.startDate,
@@ -278,7 +286,7 @@ export const mockStaffTrainingData: StaffTrainingRecord[] = allMockStaffNames.fl
     let status: TrainingStatus;
     const today = new Date(2025, 4, 13); // Static "today" for consistency
 
-    if (!completionDate) {
+    if (!completionDate || !isValid(completionDate)) {
       status = 'Pending Documentation';
     } else {
       const hasExpiry = trainingType !== 'Orientation'; // Orientation typically doesn't expire
@@ -293,8 +301,8 @@ export const mockStaffTrainingData: StaffTrainingRecord[] = allMockStaffNames.fl
       }
     }
     const staffRole = allAppRoles.find(role => staffNamesByRole[role]?.includes(staffName)) || 'Caregiver';
-    const createdAt = completionDate ? subDays(completionDate, Math.floor(Math.random() * 30) + 1) : subDays(today, Math.floor(Math.random() * 90) + 1);
-    const updatedAt = status === 'Compliant' && completionDate ? completionDate : today;
+    const createdAt = completionDate && isValid(completionDate) ? subDays(completionDate, Math.floor(Math.random() * 30) + 1) : subDays(today, Math.floor(Math.random() * 90) + 1);
+    const updatedAt = status === 'Compliant' && completionDate && isValid(completionDate) ? completionDate : today;
 
 
     return {
