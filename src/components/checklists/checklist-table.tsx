@@ -2,9 +2,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot, doc, updateDoc, Timestamp, query, orderBy, where, getDocs, writeBatch, limit } from 'firebase/firestore';
-import type { ChecklistItem, ResolutionStatus, RecurringTask } from '@/types';
+import { supabase } from '@/lib/supabase'; // Assuming supabase client is set up here
+import type { ChecklistItem, ResolutionStatus } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,54 +53,56 @@ export default function ChecklistTable() {
   
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, 'checklists'), orderBy('dueDate', 'desc'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const items: ChecklistItem[] = [];
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        items.push({
-          id: docSnap.id,
-          ...data,
-          dueDate: (data.dueDate as Timestamp)?.toDate() || new Date(), // Convert Firestore Timestamp to JS Date
-          createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(data.createdAt),
-          lastCompletedOn: (data.lastCompletedOn as Timestamp)?.toDate() || null,
-          statusUpdatedAt: (data.statusUpdatedAt as Timestamp)?.toDate() || null,
-        } as ChecklistItem);
-      });
-      setChecklistItems(items);
-      setLoading(false);
-    }, (err) => {
-      console.error("Error fetching checklist items:", err);
-      setError("Failed to load checklist items. Ensure Firestore is configured and you have an internet connection.");
-      setLoading(false);
-      toast({ variant: "destructive", title: "Error", description: "Could not load checklist items." });
-    });
-
-    return () => unsubscribe();
+    const fetchChecklistItems = async () => {
+      try {
+        // TODO: Implement actual Supabase query with proper error handling and sorting
+        const response = await fetch('/api/checklists');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch checklists: ${response.statusText}`);
+        }
+        const items: ChecklistItem[] = await response.json();
+        
+        // Convert date strings from API to Date objects
+        const processedItems = items.map(item => ({
+          ...item,
+          dueDate: item.dueDate ? parseISO(item.dueDate as unknown as string) : new Date(),
+          createdAt: item.createdAt ? parseISO(item.createdAt as unknown as string) : new Date(),
+          lastCompletedOn: item.lastCompletedOn ? parseISO(item.lastCompletedOn as unknown as string) : null,
+          statusUpdatedAt: item.statusUpdatedAt ? parseISO(item.statusUpdatedAt as unknown as string) : null,
+        }));
+        setChecklistItems(processedItems);
+        setError(null);
+      } catch (err: any) {
+        console.error("Error fetching checklist items:", err);
+        setError("Failed to load checklist items. Ensure Supabase is configured and your API is working.");
+        toast({ variant: "destructive", title: "Error", description: "Could not load checklist items." });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchChecklistItems();
   }, [toast]);
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
-    const itemRef = doc(db, 'checklists', itemId);
-    const nowTimestamp = Timestamp.now();
-    try {
-      const updatePayload: Partial<Omit<ChecklistItem, 'id' | 'dueDate' | 'createdAt' | 'taskId'>> & { statusUpdatedAt: Timestamp, lastCompletedOn?: Timestamp | null, completedBy?: string | null } = { 
-        status: newStatus,
-        statusUpdatedAt: nowTimestamp,
-      };
-      if (newStatus === 'Complete') {
-        updatePayload.lastCompletedOn = nowTimestamp;
-        const item = checklistItems.find(i => i.id === itemId);
-        updatePayload.completedBy = item?.assignedStaff || "System"; 
-      } else if (newStatus !== 'Complete' && checklistItems.find(i => i.id === itemId)?.status === 'Complete') {
-        updatePayload.lastCompletedOn = null;
-        updatePayload.completedBy = null;
-      }
-      await updateDoc(itemRef, updatePayload as any); 
-      toast({ title: "Status Updated", description: `Task status changed to ${newStatus}.` });
-    } catch (err) {
-      console.error("Error updating status:", err);
-      toast({ variant: "destructive", title: "Error", description: "Failed to update status." });
+    // TODO: Implement PATCH request to API endpoint (e.g., /api/checklists/[id]) to update status in Supabase
+    // For now, optimistic UI update:
+    const now = new Date();
+    const item = checklistItems.find(i => i.id === itemId);
+    let updatePayload: Partial<ChecklistItem> = {
+      status: newStatus,
+      statusUpdatedAt: now,
+    };
+
+    if (newStatus === 'Complete') {
+      updatePayload.lastCompletedOn = now;
+      updatePayload.completedBy = item?.assignedStaff || "System"; 
+    } else if (newStatus !== 'Complete' && item?.status === 'Complete') {
+      updatePayload.lastCompletedOn = null;
+      updatePayload.completedBy = null;
     }
+    
+    setChecklistItems(prevItems => prevItems.map(i => i.id === itemId ? { ...i, ...updatePayload } : i));
+    toast({ title: "Status Updated (UI Only)", description: `Task status changed to ${newStatus}. Implement API call.` });
   };
 
   const openEvidenceModal = (item: ChecklistItem) => {
@@ -112,16 +113,11 @@ export default function ChecklistTable() {
 
   const handleSaveEvidence = async () => {
     if (!selectedItemForModal) return;
-    const itemRef = doc(db, 'checklists', selectedItemForModal.id);
-    try {
-      await updateDoc(itemRef, { evidenceLink: currentEvidenceLink });
-      toast({ title: "Evidence Link Saved", description: "Evidence link has been updated." });
-      setIsEvidenceModalOpen(false);
-      setSelectedItemForModal(null);
-    } catch (err) {
-      console.error("Error saving evidence link:", err);
-      toast({ variant: "destructive", title: "Error", description: "Failed to save evidence link." });
-    }
+    // TODO: Implement PATCH request to API endpoint to save evidenceLink
+    setChecklistItems(prevItems => prevItems.map(i => i.id === selectedItemForModal.id ? { ...i, evidenceLink: currentEvidenceLink } : i));
+    toast({ title: "Evidence Link Saved (UI Only)", description: "Evidence link has been updated. Implement API call." });
+    setIsEvidenceModalOpen(false);
+    setSelectedItemForModal(null);
   };
 
   const openNotesModal = (item: ChecklistItem) => {
@@ -133,25 +129,17 @@ export default function ChecklistTable() {
 
   const handleSaveNotesAndValidator = async () => {
     if (!selectedItemForModal) return;
-    const itemRef = doc(db, 'checklists', selectedItemForModal.id);
-    try {
-      await updateDoc(itemRef, { 
-        notes: currentNotes,
-        validator: currentValidator 
-      });
-      toast({ title: "Details Saved", description: "Notes and validator have been updated." });
-      setIsNotesModalOpen(false);
-      setSelectedItemForModal(null);
-    } catch (err) {
-      console.error("Error saving notes/validator:", err);
-      toast({ variant: "destructive", title: "Error", description: "Failed to save notes/validator." });
-    }
+    // TODO: Implement PATCH request to API endpoint to save notes and validator
+    setChecklistItems(prevItems => prevItems.map(i => i.id === selectedItemForModal.id ? { ...i, notes: currentNotes, validator: currentValidator } : i));
+    toast({ title: "Details Saved (UI Only)", description: "Notes and validator have been updated. Implement API call." });
+    setIsNotesModalOpen(false);
+    setSelectedItemForModal(null);
   };
 
 
   const filteredItems = useMemo(() => {
     return checklistItems.filter(item => {
-      const itemDueDateAsDate = item.dueDate instanceof Date ? item.dueDate : (item.dueDate as Timestamp)?.toDate();
+      const itemDueDateAsDate = item.dueDate instanceof Date ? item.dueDate : parseISO(item.dueDate as unknown as string);
       if (!itemDueDateAsDate || !isValidDate(itemDueDateAsDate)) return false;
 
       const dateMatch = !filterDate || isEqualDate(dateFnsStartOfDay(itemDueDateAsDate), dateFnsStartOfDay(filterDate));
@@ -172,154 +160,14 @@ export default function ChecklistTable() {
   };
   
   const handleManualGenerate = async () => {
-    toast({ title: "Manual Trigger", description: "Simulating task generation. Check Firestore and console."});
-    console.log("Manual task generation process started...");
-
-    try {
-        const recurringTasksSnapshot = await getDocs(query(collection(db, 'recurringTasks')));
-        if (recurringTasksSnapshot.empty) {
-            toast({ title: "No recurring tasks found in DB", variant: "destructive" });
-            console.log("No recurring tasks defined in Firestore 'recurringTasks' collection.");
-            return;
-        }
-
-        const clientToday = new Date();
-        const clientTodayStart = dateFnsStartOfDay(clientToday);
-
-        const batch = writeBatch(db);
-        let tasksToCreateCount = 0;
-        let tasksSkippedCount = 0;
-
-        for (const docSnap of recurringTasksSnapshot.docs) {
-            const taskData = docSnap.data() as RecurringTask;
-            const taskId = docSnap.id;
-
-            if (taskData.generateHistory && taskData.startDateForHistory) {
-                let loopCurrentDate = parseISO(taskData.startDateForHistory);
-                if (!isValidDate(loopCurrentDate)) {
-                    console.warn(`Invalid startDateForHistory for ${taskData.taskName}: ${taskData.startDateForHistory}`);
-                    continue;
-                }
-                
-                loopCurrentDate = dateFnsStartOfDay(loopCurrentDate); // Ensure we start at beginning of day
-                console.log(`Processing history for ${taskData.taskName} from ${format(loopCurrentDate, 'yyyy-MM-dd')} to ${format(clientTodayStart, 'yyyy-MM-dd')}`);
-
-                while (differenceInCalendarDays(loopCurrentDate, clientTodayStart) <= 0) {
-                    const loopCurrentDayName = format(loopCurrentDate, 'EEEE'); 
-                    const historicalDueTimestamp = Timestamp.fromDate(loopCurrentDate); // Due date is start of the historical day
-                    
-                    let shouldGenerateHistorical = false;
-                    if (taskData.frequency === 'daily') {
-                        shouldGenerateHistorical = true;
-                    } else if (taskData.frequency === 'weekly' && taskData.recurrenceDays?.includes(loopCurrentDayName)) {
-                        shouldGenerateHistorical = true;
-                    } else if (taskData.frequency === 'monthly' && taskData.recurrenceDayOfMonth && loopCurrentDate.getDate() === taskData.recurrenceDayOfMonth) {
-                        shouldGenerateHistorical = true;
-                    }
-                    
-                    if (shouldGenerateHistorical) {
-                        const checklistQueryHistorical = await getDocs(query(collection(db, 'checklists'),
-                            where('taskId', '==', taskId),
-                            where('dueDate', '==', historicalDueTimestamp),
-                            limit(1)
-                        ));
-
-                        if (checklistQueryHistorical.empty) {
-                            const newChecklistItemRef = doc(collection(db, 'checklists'));
-                            const isPastDate = differenceInCalendarDays(loopCurrentDate, clientTodayStart) < 0;
-                            batch.set(newChecklistItemRef, {
-                                taskName: taskData.taskName,
-                                assignedStaff: taskData.assignedStaff,
-                                validator: taskData.validator || null,
-                                dueDate: historicalDueTimestamp,
-                                status: isPastDate ? 'Complete' : 'Pending',
-                                createdAt: historicalDueTimestamp, // For backfill, createdAt can be same as dueDate
-                                statusUpdatedAt: historicalDueTimestamp,
-                                taskId: taskId,
-                                notes: isPastDate ? 'Auto-completed during backfill.' : '',
-                                evidenceLink: '',
-                                lastCompletedOn: isPastDate ? historicalDueTimestamp : null,
-                                completedBy: isPastDate ? 'System (Backfill)' : null,
-                                category: taskData.category || null,
-                                backfilled: true,
-                            });
-                            tasksToCreateCount++;
-                        } else {
-                            tasksSkippedCount++;
-                        }
-                    }
-                    loopCurrentDate.setDate(loopCurrentDate.getDate() + 1); // Increment day
-                }
-            } else {
-                // Regular generation for today if generateHistory is false or not set
-                const currentDayName = format(clientToday, 'EEEE');
-                const todayDueTimestamp = Timestamp.fromDate(clientTodayStart);
-                let shouldGenerateToday = false;
-                if (taskData.frequency === 'daily') {
-                    shouldGenerateToday = true;
-                } else if (taskData.frequency === 'weekly' && taskData.recurrenceDays?.includes(currentDayName)) {
-                    shouldGenerateToday = true;
-                } else if (taskData.frequency === 'monthly' && taskData.recurrenceDayOfMonth && clientToday.getDate() === taskData.recurrenceDayOfMonth) {
-                    shouldGenerateToday = true;
-                }
-
-                if (shouldGenerateToday) {
-                    const checklistQueryToday = await getDocs(query(collection(db, 'checklists'),
-                        where('taskId', '==', taskId),
-                        where('dueDate', '==', todayDueTimestamp),
-                        limit(1)
-                    ));
-                    if (checklistQueryToday.empty) {
-                        const newChecklistItemRef = doc(collection(db, 'checklists'));
-                        const nowTimestamp = Timestamp.now();
-                        batch.set(newChecklistItemRef, {
-                            taskName: taskData.taskName,
-                            assignedStaff: taskData.assignedStaff,
-                            validator: taskData.validator || null,
-                            dueDate: todayDueTimestamp,
-                            status: 'Pending',
-                            createdAt: nowTimestamp,
-                            statusUpdatedAt: nowTimestamp,
-                            taskId: taskId,
-                            category: taskData.category || null,
-                            notes: '', 
-                            evidenceLink: '', 
-                            lastCompletedOn: null, 
-                            completedBy: null,
-                            backfilled: false,
-                        });
-                        tasksToCreateCount++;
-                        console.log(`Manually queued task for today: ${taskData.taskName}`);
-                    } else {
-                        tasksSkippedCount++;
-                    }
-                }
-            }
-        }
-
-        if (tasksToCreateCount > 0) {
-            await batch.commit();
-            toast({ title: "Success", description: `${tasksToCreateCount} checklist items were generated/queued.` });
-            console.log(`Successfully created/queued ${tasksToCreateCount} new checklist items via manual trigger.`);
-        } else {
-            toast({ title: "No new tasks", description: "No new tasks were due for generation or they already exist." });
-            console.log("No new tasks created by manual trigger. All due tasks may already exist.");
-        }
-        if (tasksSkippedCount > 0) {
-             console.log(`Skipped ${tasksSkippedCount} tasks (manual trigger) as they already existed for their respective due dates.`);
-        }
-        console.log("Manual task generation process finished.");
-
-    } catch (e) {
-        console.error("Error manually generating tasks:", e);
-        toast({ title: "Manual Generation Error", description: String(e), variant: "destructive" });
-    }
+    toast({ title: "Manual Trigger (Not Implemented)", description: "Manual task generation needs to be adapted for Supabase backend."});
+    console.warn("Manual task generation not implemented for Supabase. This would require calling a Supabase Edge Function or a custom API endpoint.");
   };
 
   const handleExportToday = () => {
     const todayClient = new Date();
     const itemsToExport = checklistItems.filter(item => {
-        const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : (item.dueDate as Timestamp)?.toDate();
+        const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : parseISO(item.dueDate as unknown as string);
         return itemDueDateJs && isValidDate(itemDueDateJs) && isToday(itemDueDateJs);
     });
 
@@ -330,8 +178,8 @@ export default function ChecklistTable() {
 
     const headers = ["Task Name", "Assigned Staff", "Due Date", "Status", "Validator", "Last Completed", "Completed By", "Evidence Link", "Notes", "Category"];
     const rows = itemsToExport.map(item => {
-      const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : (item.dueDate as Timestamp)?.toDate();
-      const itemLastCompletedJs = item.lastCompletedOn instanceof Date ? item.lastCompletedOn : (item.lastCompletedOn as Timestamp)?.toDate();
+      const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : parseISO(item.dueDate as unknown as string);
+      const itemLastCompletedJs = item.lastCompletedOn instanceof Date ? item.lastCompletedOn : (item.lastCompletedOn ? parseISO(item.lastCompletedOn as unknown as string) : null);
       
       return [
         item.taskName,
@@ -344,7 +192,7 @@ export default function ChecklistTable() {
         item.evidenceLink || 'N/A',
         item.notes || 'N/A',
         item.category || 'N/A',
-      ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',');
+      ].map(field => `"${String(field ?? '').replace(/"/g, '""')}"`).join(',');
     });
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
@@ -431,8 +279,8 @@ export default function ChecklistTable() {
             />
           </div>
           <div className="flex space-x-2">
-            <Button onClick={handleManualGenerate} variant="outline" title="Manually simulate task generation (for testing)" className="w-full">
-                <RefreshCw className="mr-2 h-4 w-4" /> Test Generate
+            <Button onClick={handleManualGenerate} variant="outline" title="Manually simulate task generation (for testing)" className="w-full" disabled>
+                <RefreshCw className="mr-2 h-4 w-4" /> Test Gen (N/A)
             </Button>
             <Button onClick={handleExportToday} variant="outline" title="Export today's checklist to CSV" className="w-full">
                 <FileText className="mr-2 h-4 w-4" /> Export Today
@@ -458,14 +306,14 @@ export default function ChecklistTable() {
           </TableHeader>
           <TableBody>
             {filteredItems.length > 0 ? filteredItems.map((item) => {
-              const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : (item.dueDate as Timestamp)?.toDate();
+              const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : parseISO(item.dueDate as unknown as string);
               const displayDueDate = itemDueDateJs && isValidDate(itemDueDateJs)
                 ? isToday(itemDueDateJs) ? <span className="text-accent font-semibold">Today</span> : format(itemDueDateJs, 'PP')
                 : 'N/A';
               
               let lastActionDate: Date | null = null;
-              const itemStatusUpdatedAtJs = item.statusUpdatedAt instanceof Date ? item.statusUpdatedAt : (item.statusUpdatedAt as Timestamp)?.toDate();
-              const itemLastCompletedOnJs = item.lastCompletedOn instanceof Date ? item.lastCompletedOn : (item.lastCompletedOn as Timestamp)?.toDate();
+              const itemStatusUpdatedAtJs = item.statusUpdatedAt instanceof Date ? item.statusUpdatedAt : (item.statusUpdatedAt ? parseISO(item.statusUpdatedAt as unknown as string) : null);
+              const itemLastCompletedOnJs = item.lastCompletedOn instanceof Date ? item.lastCompletedOn : (item.lastCompletedOn ? parseISO(item.lastCompletedOn as unknown as string) : null);
 
               if (item.status === 'Complete' && itemLastCompletedOnJs && isValidDate(itemLastCompletedOnJs)) {
                   lastActionDate = itemLastCompletedOnJs;
@@ -521,7 +369,7 @@ export default function ChecklistTable() {
             )}) : (
               <TableRow>
                 <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                  No checklist items found matching your criteria, or Firestore data is not yet available.
+                  No checklist items found matching your criteria, or data is not yet available from the API.
                 </TableCell>
               </TableRow>
             )}
@@ -589,4 +437,3 @@ export default function ChecklistTable() {
     </div>
   );
 }
-

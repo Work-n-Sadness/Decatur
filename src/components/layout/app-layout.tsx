@@ -30,9 +30,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Building2, LogOut, UserCircle, Moon, Sun } from 'lucide-react';
+import { Building2, LogOut, UserCircle, Moon, Sun, ChevronDown, ChevronUp } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { SidebarIcons } from '@/components/icons';
+import type { AppRole } from '@/types'; // For potential future use with user data
 
 interface NavItem {
   href: string;
@@ -44,12 +45,14 @@ interface NavGroup {
   label: string;
   items: NavItem[];
   icon?: LucideIcon;
+  defaultOpen?: boolean; // To suggest if a group should be open by default
 }
 
 const navGroups: NavGroup[] = [
   {
     label: 'OPERATIONS',
     icon: SidebarIcons.Dashboard,
+    defaultOpen: true,
     items: [
       { href: '/', label: 'Dashboard', icon: SidebarIcons.Dashboard },
       { href: '/core-operations/audit-tool', label: 'Audit Tool', icon: SidebarIcons.AuditTool },
@@ -234,6 +237,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = React.useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   React.useEffect(() => {
     setMounted(true);
@@ -247,14 +251,34 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Effect to open the group of the currently active page
+  useEffect(() => {
+    if (!mounted) return;
+    let activeGroupLabel: string | null = null;
+    for (const group of navGroups) {
+      if (group.items.some(item => item.href === pathname || (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length)))) {
+        activeGroupLabel = group.label;
+        break;
+      }
+    }
+
+    // Initialize openGroups, respecting defaultOpen and opening the active group
+    const initialOpenGroups: Record<string, boolean> = {};
+    navGroups.forEach(group => {
+      initialOpenGroups[group.label] = group.defaultOpen || (activeGroupLabel === group.label);
+    });
+    setOpenGroups(initialOpenGroups);
+
+  }, [pathname, mounted]);
+
+
   const currentTopLevelLabel = React.useMemo(() => {
-    if (!mounted) {
+    if (!mounted) { // Avoid hydration mismatch
       const defaultItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
       return defaultItem ? defaultItem.label : 'Dashboard';
     }
     for (const group of navGroups) {
       for (const item of group.items) {
-        // More robust check for active path, especially for nested routes
         if (item.href === '/' && pathname === '/') {
             return item.label;
         }
@@ -263,6 +287,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
       }
     }
+    // Fallback if no specific match (e.g., on a 404 page not in nav)
     const rootItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
     return rootItem ? rootItem.label : 'Dashboard';
   }, [pathname, mounted]);
@@ -275,7 +300,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
-  if (!mounted) {
+  const toggleGroup = (groupLabel: string) => {
+    setOpenGroups(prev => ({ ...prev, [groupLabel]: !prev[groupLabel] }));
+  };
+
+  if (!mounted) { // Prevents hydration issues with theme and pathname
     return null;
   }
 
@@ -291,27 +320,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           {navGroups.map((group) => (
             <SidebarGroup key={group.label}>
-              <SidebarGroupLabel>
-                {group.icon && <group.icon className="mr-2 h-4 w-4 inline-block" />}
-                {group.label}
+              <SidebarGroupLabel
+                onClick={() => toggleGroup(group.label)}
+                className="cursor-pointer flex items-center justify-between hover:bg-sidebar-accent/50 rounded-md"
+              >
+                <div className="flex items-center">
+                  {group.icon && <group.icon className="mr-2 h-4 w-4 inline-block" />}
+                  {group.label}
+                </div>
+                {openGroups[group.label] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <Link href={item.href} passHref legacyBehavior>
-                        <SidebarMenuButton
-                          isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length))}
-                          tooltip={item.label}
-                        >
-                          <item.icon className="h-5 w-5" />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </Link>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
+              {openGroups[group.label] && (
+                <SidebarGroupContent className="pl-2 border-l border-sidebar-border ml-2">
+                  <SidebarMenu>
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <Link href={item.href} passHref legacyBehavior>
+                          <SidebarMenuButton
+                            isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length))}
+                            tooltip={item.label}
+                          >
+                            <item.icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                        </Link>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              )}
             </SidebarGroup>
           ))}
         </SidebarContent>
@@ -334,7 +371,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="facility sign" />
+                  <AvatarImage src="https://placehold.co/40x40.png?text=DW&font=roboto" alt="User Avatar" data-ai-hint="facility logo simple" />
                   <AvatarFallback>
                     <UserCircle className="h-6 w-6" />
                   </AvatarFallback>

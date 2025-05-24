@@ -8,94 +8,98 @@ body {
 
 @layer base {
   :root {
-    --background: 188 78% 79%; /* Sea Blue #a3e7f0 */
-    --foreground: 0 5% 20%; /* Dark Gray #332E2E for text on Sea Blue */
+    /* Orange-Centric Light Theme */
+    --background: 0 0% 98%; /* Very Light Gray / Off-White */
+    --foreground: 20 10% 10%; /* Dark Charcoal for text */
 
     --card: 0 0% 100%; /* White */
-    --card-foreground: 0 5% 20%; /* Dark Gray for text on card */
+    --card-foreground: 20 10% 10%;
 
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 0 5% 20%; /* Dark Gray for text on popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 10% 10%;
 
-    --primary: 18 94% 58%; /* Orange #f86f2d */
-    --primary-foreground: 0 0% 100%; /* White for text on primary */
+    --primary: 18 94% 58%; /* Vibrant Orange #f86f2d */
+    --primary-foreground: 0 0% 100%; /* White for text on orange */
 
-    --secondary: 188 70% 88%; /* Lighter Sea Blue for panels */
-    --secondary-foreground: 0 5% 20%; /* Dark Gray for text on lighter sea blue */
+    --secondary: 20 80% 92%; /* Lighter, Peachy Orange */
+    --secondary-foreground: 18 90% 35%; /* Darker Orange for text on peachy orange */
 
-    --muted: 188 60% 94%; /* Very light Sea Blue, almost white */
-    --muted-foreground: 0 0% 45%; /* Medium gray #737373 */
+    --muted: 0 0% 94%; /* Light Gray */
+    --muted-foreground: 0 0% 45%; /* Medium Gray */
 
-    --accent: 18 94% 58%; /* Orange #f86f2d */
-    --accent-foreground: 0 0% 100%; /* White for text on accent */
+    --accent: 18 94% 58%; /* Vibrant Orange #f86f2d */
+    --accent-foreground: 0 0% 100%; /* White */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 188 50% 70%; /* Darker Sea Blue for borders */
-    --input: 0 0% 98%; /* Off-white for input background */
-    --ring: 18 94% 58%; /* Orange #f86f2d for focus rings */
+    --border: 0 0% 88%; /* Light Gray Border */
+    --input: 0 0% 92%; /* Slightly darker light gray for input background */
+    --ring: 18 94% 58%; /* Vibrant Orange for focus rings */
 
-    --chart-1: 18 94% 58%; /* Orange #f86f2d */
-    --chart-2: 188 60% 65%; /* Darker Sea Blue */
-    --chart-3: 35 90% 60%; /* Yellow/Gold to complement Orange */
-    --chart-4: 190 40% 50%; /* Muted Teal */
-    --chart-5: 0 0% 50%; /* Gray */
+    --chart-1: 18 94% 58%; /* Vibrant Orange */
+    --chart-2: 30 90% 65%; /* Complementary Lighter Orange/Yellow */
+    --chart-3: 10 70% 50%; /* Muted Terracotta */
+    --chart-4: 0 0% 60%;   /* Medium Gray */
+    --chart-5: 20 10% 30%; /* Dark Gray for contrast */
     --radius: 0.5rem;
 
-    /* Sidebar - kept relatively neutral to not clash with main sea blue background */
-    --sidebar-background: 0 0% 97%; /* Very Light Gray #F7F7F7 */
-    --sidebar-foreground: 0 5% 20%; /* Dark Gray */
-    --sidebar-primary: 18 94% 58%; /* Orange #f86f2d for active sidebar items */
-    --sidebar-primary-foreground: 0 0% 100%; /* White text on Orange */
-    --sidebar-accent: 188 70% 90%; /* Lighter Sea Blue for hover */
-    --sidebar-accent-foreground: 18 94% 58%; /* Orange #f86f2d text on sea blue hover */
-    --sidebar-border: 0 0% 88%; /* Light Gray Border */
-    --sidebar-ring: 18 94% 58%; /* Orange #f86f2d for focus rings */
+    /* Sidebar - Light Theme */
+    --sidebar-background: 0 0% 96%; /* Slightly darker than main background */
+    --sidebar-foreground: 20 10% 15%;
+    --sidebar-primary: 18 94% 58%; /* Orange for active items */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 18 90% 85%; /* Lighter Orange for hover */
+    --sidebar-accent-foreground: 18 94% 40%; /* Darker Orange text on hover */
+    --sidebar-border: 0 0% 85%;
+    --sidebar-ring: 18 94% 58%;
   }
 
   .dark {
-    --background: 200 10% 12%; /* Dark, slightly bluish gray */
-    --foreground: 180 5% 90%; /* Light, slightly cyanic gray */
+    /* Orange-Centric Dark Theme */
+    --background: 20 10% 8%; /* Very Dark Gray / Charcoal */
+    --foreground: 0 0% 95%; /* Light Gray / Off-White for text */
 
-    --card: 200 10% 18%;
-    --card-foreground: 180 5% 90%;
+    --card: 20 10% 12%; /* Darker Charcoal */
+    --card-foreground: 0 0% 95%;
 
-    --popover: 200 10% 18%;
-    --popover-foreground: 180 5% 90%;
+    --popover: 20 10% 10%; /* Even Darker for Popovers */
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 18 94% 58%; /* Orange #f86f2d */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 18 94% 58%; /* Vibrant Orange #f86f2d */
+    --primary-foreground: 0 0% 100%; /* White for text on orange */
 
-    --secondary: 200 10% 24%; /* Slightly lighter dark panel color */
-    --secondary-foreground: 180 5% 90%;
+    --secondary: 18 80% 30%; /* Muted Dark Orange */
+    --secondary-foreground: 15 70% 85%; /* Lighter Orange for text on dark orange */
 
-    --muted: 200 10% 24%;
-    --muted-foreground: 180 5% 60%;
+    --muted: 20 10% 15%; /* Dark Gray */
+    --muted-foreground: 0 0% 65%; /* Lighter Medium Gray */
 
-    --accent: 18 94% 58%; /* Orange #f86f2d */
-    --accent-foreground: 0 0% 100%; /* White */
-    
+    --accent: 18 94% 58%; /* Vibrant Orange #f86f2d */
+    --accent-foreground: 0 0% 100%;
+
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 200 10% 28%;
-    --input: 200 10% 28%;
-    --ring: 18 94% 58%; /* Orange #f86f2d */
 
-    --chart-1: 18 94% 58%; /* Orange #f86f2d */
-    --chart-2: 188 70% 70%; /* Lighter Sea Blue for dark mode */
-    --chart-3: 35 80% 55%;
-    --chart-4: 190 30% 40%;
-    --chart-5: 0 0% 70%;
+    --border: 20 10% 20%; /* Darker Gray Border */
+    --input: 20 10% 18%; /* Slightly lighter dark gray for input background */
+    --ring: 18 94% 58%; /* Vibrant Orange for focus rings */
 
-    --sidebar-background: 200 10% 8%; /* Even darker for sidebar */
-    --sidebar-foreground: 180 5% 90%;
-    --sidebar-primary: 18 94% 58%; /* Orange #f86f2d for active sidebar items */
-    --sidebar-primary-foreground: 0 0% 100%; 
-    --sidebar-accent: 200 10% 15%;
-    --sidebar-accent-foreground: 18 94% 58%; /* Orange #f86f2d text on hover */
-    --sidebar-border: 200 10% 15%;
-    --sidebar-ring: 18 94% 58%; /* Orange #f86f2d for focus rings */
+    --chart-1: 18 94% 58%; /* Vibrant Orange */
+    --chart-2: 30 85% 70%; /* Brighter Lighter Orange/Yellow for dark mode */
+    --chart-3: 10 60% 60%; /* Brighter Muted Terracotta for dark mode */
+    --chart-4: 0 0% 50%;   /* Medium Gray */
+    --chart-5: 0 0% 80%;   /* Light Gray for contrast */
+
+    /* Sidebar - Dark Theme */
+    --sidebar-background: 20 10% 5%; /* Even darker for sidebar */
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 18 94% 58%; /* Orange for active items */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 18 80% 25%; /* Darker Orange for hover */
+    --sidebar-accent-foreground: 18 90% 75%; /* Lighter Orange text on hover */
+    --sidebar-border: 20 10% 15%;
+    --sidebar-ring: 18 94% 58%;
   }
 }
 

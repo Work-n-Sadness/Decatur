@@ -1,31 +1,13 @@
-module.exports = {
-  root: true,
-  env: {
-    es6: true,
-    node: true,
-  },
-  extends: [
-    "eslint:recommended",
-    "plugin:import/errors",
-    "plugin:import/warnings",
-    "plugin:import/typescript",
-    // "google", // You can add Google's ESLint config if desired
-    // "plugin:@typescript-eslint/recommended", // Uncomment if using TypeScript ESLint plugin
-  ],
-  parserOptions: {
-    project: ["tsconfig.json", "tsconfig.dev.json"],
-    sourceType: "module",
-  },
-  ignorePatterns: [
-    "/lib/**/*", // Ignore built files.
-  ],
-  plugins: [
-    "import",
-    // "@typescript-eslint", // Uncomment if using TypeScript ESLint plugin
-  ],
-  rules: {
-    "quotes": ["error", "double"],
-    "import/no-unresolved": 0,
-    "indent": ["error", 2],
-  },
-};
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl) {
+  throw new Error("Supabase URL is not defined. Please set NEXT_PUBLIC_SUPABASE_URL in your .env.local file.");
+}
+if (!supabaseAnonKey) {
+  throw new Error("Supabase Anon Key is not defined. Please set NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
