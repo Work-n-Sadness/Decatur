@@ -19,13 +19,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import React, { useEffect, useState } from 'react';
-import { allResolutionStatuses, allMockRoles, allTaskFrequencies, allTaskCategories, allMockStaffNames } from '@/lib/mock-data'; 
-import { cn } from '@/lib/utils'; // Added import for cn
+import { allResolutionStatuses, allAppRoles, allTaskFrequencies, allTaskCategories, allMockStaffNames } from '@/lib/mock-data'; 
+import { cn } from '@/lib/utils'; 
 
 const taskSchema = z.object({
   name: z.string().min(1, "Task name is required"),
-  category: z.string().min(1, "Category is required"), // Assuming TaskCategory will be string from select
-  frequency: z.string().min(1, "Frequency is required"), // Assuming TaskFrequency will be string from select
+  category: z.string().min(1, "Category is required"), 
+  frequency: z.string().min(1, "Frequency is required"), 
   responsibleRole: z.union([z.string().min(1, "Responsible role is required"), z.array(z.string().min(1,"Each responsible role is required")).min(1, "At least one responsible role is required")]),
   assignedStaff: z.string().min(1, "Assigned staff is required"),
   validator: z.string().nullable().optional(),
@@ -90,7 +90,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
   if (!task) return null;
 
   const CategoryIcon = getTaskCategoryIcon(task.category);
-  const StatusIcon = getResolutionStatusIcon(task.status); // JSX Element
+  const StatusIcon = getResolutionStatusIcon(task.status); 
   const FrequencyIcon = getTaskFrequencyIcon(task.frequency);
 
 
@@ -115,13 +115,13 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
 
     if (newStatus === 'Resolved' && originalStatus !== 'Resolved') {
       updatedTask.lastCompletedOn = new Date();
-      updatedTask.completedBy = data.assignedStaff; // Or a dedicated 'resolvedBy' field if different
+      updatedTask.completedBy = data.assignedStaff; 
       updatedTask.progress = 100;
       updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: 'Task Resolved', details: 'Task marked as resolved.' });
     } else if (newStatus !== 'Resolved' && originalStatus === 'Resolved') {
       updatedTask.lastCompletedOn = null;
       updatedTask.completedBy = null;
-      // Optionally reset progress or leave as is
+      
       updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: 'Task Un-Resolved', details: `Task status changed from Resolved to ${newStatus}.` });
     } else if (newStatus !== originalStatus) {
         updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: `Status Change: ${originalStatus} -> ${newStatus}`, details: `Task status updated to ${newStatus}.`});
@@ -129,7 +129,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
     
     if (data.status === 'Resolved' && data.progress !== 100) {
         updatedTask.progress = 100;
-        form.setValue('progress', 100); // Also update form state if still editing
+        form.setValue('progress', 100); 
     }
 
 
@@ -226,17 +226,15 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                         name="responsibleRole"
                         control={form.control}
                         render={({ field }) => (
-                          // For simplicity, this assumes single role selection. Multi-select would need a different component.
-                          // If field.value is an array, we take the first element for the Select.
                           <Select 
-                            onValueChange={(value) => field.onChange(value)} // Can also make it field.onChange([value]) for array
+                            onValueChange={(value) => field.onChange(value)} 
                             value={Array.isArray(field.value) ? field.value[0] : field.value}
                           >
                             <SelectTrigger className="mt-1">
                                 <SelectValue placeholder="Select responsible role" />
                             </SelectTrigger>
                             <SelectContent>
-                                {allMockRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                                {allAppRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         )}
@@ -274,7 +272,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="">None</SelectItem>
-                                {allMockRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                                {allAppRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                                 {allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -307,7 +305,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                            <Input id="progress" type="number" {...field} 
                            onChange={e => field.onChange(parseInt(e.target.value) || 0)} 
                            className="mt-1" 
-                           readOnly={form.watch("status") === "Resolved"} // Watch status field
+                           readOnly={form.watch("status") === "Resolved"} 
                            />
                         )}
                     />

@@ -10,21 +10,26 @@ export type TaskCategory =
 
 export type TaskFrequency = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'As Needed' | 'Annually' | 'Bi-annually' | 'Mid Yearly';
 
-export type Role =
-  | 'Nurse'
-  | 'Caregiver'
-  | 'Admin'
+// Updated to reflect more specific roles from the operational model
+export type AppRole =
+  | 'Director (Owner)'
+  | 'Assistant Director'
+  | 'Administrator Designee'
+  | 'Admin Assistant'
+  | 'Caregiver' // Handles QMAP, Housekeeping, ADLs, Meals
+  | 'RN (External)'
+  | 'Doctor (Consultant)'
+  // Keeping some original broader roles for flexibility or if they map to specific tasks
+  | 'Nurse' // Could be an internal LPN/RN not the external one
   | 'Maintenance'
-  | 'Director'
   | 'Wellness Nurse'
   | 'Housekeeping Supervisor'
   | 'QMAP Supervisor'
-  | 'Housekeeping / Aide'
-  | 'kitchen_supervisor_id' // From seed
-  | 'clinical_director_id' // From seed
-  | 'housekeeping_lead_id' // From seed
-  | 'safety_officer_id' // From seed
-  | 'maintenance_id'; // From seed
+  | 'kitchen_supervisor_id'
+  | 'clinical_director_id'
+  | 'housekeeping_lead_id'
+  | 'safety_officer_id'
+  | 'maintenance_id';
 
 
 export interface ActivityLog {
@@ -62,11 +67,12 @@ export interface Task {
   name: string;
   category: TaskCategory;
   frequency: TaskFrequency;
-  responsibleRole: Role | Role[];
+  responsibleRole: AppRole | AppRole[];
   status: ResolutionStatus;
   progress: number;
-  assignedStaff: string;
-  validator: Role | string | null;
+  assignedStaff: string; // Display name/role
+  assignedStaffId?: string; // Actual user ID
+  validator: AppRole | string | null;
   startDate: Date;
   endDate: Date | null;
   time: string | null;
@@ -79,25 +85,41 @@ export interface Task {
   validatorApproval?: string | null;
   complianceChapterTag?: string;
   recurrenceConfig?: RecurrenceConfig;
-  // New fields for resident medical needs and special care tags
   residentCareFlags?: ResidentCareFlag[];
   conditionNotes?: string;
-  hipaaProtectedNotes?: string; // Note: Actual HIPAA compliance requires backend controls
+  hipaaProtectedNotes?: string;
 }
 
-export interface AuditCategory {
+export type AuditToolCategory =
+  | 'Health Protocols / Medications'
+  | 'Food Safety'
+  | 'Fire Safety'
+  | 'Office Admin'
+  | 'Documentation & Compliance'
+  | 'Personnel File & Staff Training'
+  | 'Postings & Required Notices'
+  | 'Environmental & Sanitation Safety'
+  | 'General ALR Compliance';
+
+// Simplified status for audit records for now, can be expanded
+export type AuditStatus = 'Pending Review' | 'In Progress' | 'Action Required' | 'Compliant' | 'Non-Compliant' | 'Resolved';
+
+
+export interface AuditRecord {
   id: string;
-  name: TaskCategory | 'General Compliance' | string;
-  items: AuditItem[];
+  name: string;
+  category: AuditToolCategory;
+  assignedRole: AppRole | AppRole[];
+  validator?: AppRole | string | null;
+  lastCompletedDate?: Date | null;
+  status: AuditStatus;
+  evidenceLink?: string;
+  chapterReferenceTag?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface AuditItem {
-  id: string;
-  description: string;
-  compliant: boolean | null;
-  notes: string;
-  evidence?: string;
-}
 
 export type TrainingType = 'QMAP Training' | 'TB Test' | 'CPR Certification' | 'Orientation';
 export type TrainingStatus = 'Compliant' | 'Expiring Soon' | 'Overdue' | 'Pending Documentation';
@@ -105,55 +127,51 @@ export type TrainingStatus = 'Compliant' | 'Expiring Soon' | 'Overdue' | 'Pendin
 export interface StaffTrainingRecord {
   id: string;
   staffMemberName: string;
-  staffRole: Role;
+  staffRole: AppRole;
   trainingType: TrainingType;
   completionDate?: Date | null;
   expiryDate?: Date | null;
   status: TrainingStatus;
   documentationLink?: string;
   notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// For Firebase Cloud Function and Checklist UI
-export interface RecurringTask {
-  id: string; // Firestore document ID
+export interface RecurringTaskSeed {
+  id: string;
   taskName: string;
   frequency: 'daily' | 'weekly' | 'monthly';
-  recurrenceDays?: string[]; // For weekly, e.g., ["Monday", "Friday"]
-  recurrenceDayOfMonth?: number; // For monthly
-  assignedStaff: string;
-  validator?: string;
+  recurrenceDays?: string[];
+  recurrenceDayOfMonth?: number;
+  assignedStaff: string; // Role or specific user ID
+  validator?: string; // Role or specific user ID
   autoGenerateChecklist: boolean;
   category?: string;
-  startDateForHistory?: string; // YYYY-MM-DD for client-side backfill simulation
-  generateHistory?: boolean; // Flag for client-side backfill simulation
+  startDateForHistory?: string;
+  generateHistory?: boolean;
 }
 
 export interface ChecklistItem {
-  id: string; // Firestore document ID
+  id: string;
   taskName: string;
-  assignedStaff: string;
-  validator?: string | null;
-  dueDate: firebase.firestore.Timestamp | Date; // Stored as Timestamp, used as Date on client
+  assignedStaff: string; // Role or user ID
+  assignedStaffId?: string;
+  validator?: string | null; // Role or user ID
+  dueDate: Date; // Will be JS Date on client after parsing from string or Timestamp
   status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>;
-  createdAt: firebase.firestore.Timestamp | Date; // Will be Timestamp from Firestore, Date on client
-  statusUpdatedAt?: firebase.firestore.Timestamp | Date | null; // Will be Timestamp from Firestore, Date on client
+  createdAt: Date; // Will be JS Date
+  statusUpdatedAt?: Date | null; // Will be JS Date
   taskId: string;
   notes?: string;
   evidenceLink?: string;
-  lastCompletedOn?: firebase.firestore.Timestamp | Date | null; // Will be Timestamp from Firestore, Date on client
+  lastCompletedOn?: Date | null; // Will be JS Date
   completedBy?: string | null;
   category?: string;
   backfilled?: boolean;
 }
 
-// Firebase namespace for Timestamp if needed elsewhere
-// import type firebase from 'firebase/compat/app'; // For Timestamp type if using compat
-// Or
-import type { Timestamp } from "firebase/firestore";
 
-
-// New types for Facility Certifications & Installations
 export type CertificationStatus = 'Active' | 'Expired' | 'Due Soon';
 export type InstallationStatus = 'Operational' | 'Needs Repair' | 'Out of Service';
 export type InstallationFrequency = 'Monthly' | 'Quarterly' | 'Annually' | 'Semi-Annually' | 'Daily Check' | 'Monthly Test, Semi-Annual Service';
@@ -169,8 +187,8 @@ export interface FacilityCertification {
   certificateUpload?: string; // URL to the uploaded certificate
   lastReviewedBy?: string;
   notes?: string;
-  createdAt: Date; 
-  updatedAt: Date; 
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface FacilityInstallation {
@@ -180,11 +198,20 @@ export interface FacilityInstallation {
   location?: string;
   lastInspectionDate?: Date | null;
   nextInspectionDue?: Date | null;
-  inspectionFrequency?: InstallationFrequency; 
+  inspectionFrequency?: InstallationFrequency;
   serviceVendor?: string;
   status: InstallationStatus;
   uploadInspectionLog?: string; // URL to the uploaded inspection log
   notes?: string;
-  createdAt: Date; 
-  updatedAt: Date; 
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface StaffResponsibilityMatrixEntry {
+  role: AppRole;
+  responsibilities: {
+    taskName: string;
+    deliverables: string;
+    category: TaskCategory;
+  }[];
 }

@@ -7,53 +7,71 @@ import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
 import AttachEvidenceDialog from '@/components/dashboard/attach-evidence-dialog';
 import DashboardFilters from '@/components/dashboard/dashboard-filters';
 import WelcomeBanner from '@/components/dashboard/welcome-banner';
-import { mockTasks, allMockRoles, allMockComplianceChapters, allTaskCategories, allResolutionStatuses, allTaskFrequencies, allMockStaffNames, allCareFlags } from '@/lib/mock-data';
-import type { Task, TaskCategory, ResolutionStatus, Role, TaskFrequency, ActivityLog, ResidentCareFlag } from '@/types';
+import { mockTasks, allAppRoles, allMockComplianceChapters, allTaskCategories, allResolutionStatuses, allTaskFrequencies, allMockStaffNames, allCareFlags } from '@/lib/mock-data';
+import type { Task, TaskCategory, ResolutionStatus, AppRole, TaskFrequency, ActivityLog, ResidentCareFlag } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getTaskCategoryIcon } from '@/components/icons';
-import { Info, Image as ImageIcon } from "lucide-react"; 
+import { Info, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from 'date-fns';
-import Image from 'next/image'; 
+import Image from 'next/image';
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState<Partial<{ 
-    category: TaskCategory; 
-    status: ResolutionStatus; 
-    role: Role; 
-    frequency: TaskFrequency; 
+  const [filters, setFilters] = useState<Partial<{
+    category: TaskCategory;
+    status: ResolutionStatus;
+    role: AppRole;
+    frequency: TaskFrequency;
     complianceChapterTag: string;
     careFlag: ResidentCareFlag; // Added careFlag to filters
   }>>({});
   const [sortBy, setSortBy] = useState<string>('dueDate_asc');
-  
+
   const [isAttachEvidenceDialogOpen, setIsAttachEvidenceDialogOpen] = useState(false);
   const [selectedTaskForEvidence, setSelectedTaskForEvidence] = useState<Task | null>(null);
-  
+
   const { toast } = useToast();
 
   useEffect(() => {
-    setTasks(mockTasks.map(task => ({ 
-      ...task, 
-      activities: task.activities || [],
-      startDate: typeof task.startDate === 'string' ? parseISO(task.startDate) : task.startDate,
-      endDate: task.endDate && typeof task.endDate === 'string' ? parseISO(task.endDate) : task.endDate,
-      lastCompletedOn: task.lastCompletedOn && typeof task.lastCompletedOn === 'string' ? parseISO(task.lastCompletedOn) : task.lastCompletedOn,
-    })));
-  }, []);
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch('/api/tasks');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+        }
+        const data: any[] = await response.json();
+        const processedData: Task[] = data.map(item => ({
+          ...item,
+          activities: item.activities?.map((act: any) => ({ ...act, timestamp: parseISO(act.timestamp) })) || [],
+          startDate: parseISO(item.startDate),
+          endDate: item.endDate ? parseISO(item.endDate) : null,
+          lastCompletedOn: item.lastCompletedOn ? parseISO(item.lastCompletedOn) : null,
+        }));
+        setTasks(processedData);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load tasks. Please try again later.",
+        });
+      }
+    };
+    fetchTasks();
+  }, [toast]);
 
   const handleSearch = (term: string) => setSearchTerm(term.toLowerCase());
-  const handleFilterChange = (newFilters: Partial<{ 
-    category: TaskCategory; 
-    status: ResolutionStatus; 
-    role: Role; 
-    frequency: TaskFrequency; 
+  const handleFilterChange = (newFilters: Partial<{
+    category: TaskCategory;
+    status: ResolutionStatus;
+    role: AppRole;
+    frequency: TaskFrequency;
     complianceChapterTag: string;
     careFlag: ResidentCareFlag;
    }>) => {
@@ -72,9 +90,11 @@ export default function DashboardPage() {
   };
 
   const handleSaveTask = (updatedTaskFromDialog: Task) => {
+    // TODO: Implement API call to save task to Supabase
+    // For now, optimistic UI update
     let taskToProcess = { ...updatedTaskFromDialog };
     const originalTaskState = tasks.find(t => t.id === taskToProcess.id);
-  
+
     const baseActivities = originalTaskState?.activities || [];
     let newActivities: ActivityLog[] = [...baseActivities];
 
@@ -87,25 +107,25 @@ export default function DashboardPage() {
         details: `Task status updated to ${taskToProcess.status}.`,
       });
     }
-    
+
     const isResolvingNow = taskToProcess.status === 'Resolved' && originalTaskState?.status !== 'Resolved';
-  
+
     if (isResolvingNow) {
-      taskToProcess.lastCompletedOn = taskToProcess.lastCompletedOn || new Date(); 
+      taskToProcess.lastCompletedOn = taskToProcess.lastCompletedOn || new Date();
       taskToProcess.completedBy = taskToProcess.completedBy || taskToProcess.assignedStaff;
       taskToProcess.progress = 100;
-      
+
       // Check if this activity was already added by the dialog logic. Avoid duplicates.
       const existingResolveActivity = newActivities.find(act => act.action === 'Task Resolved' && act.user === taskToProcess.assignedStaff);
       if (!existingResolveActivity) {
         newActivities.push({
           timestamp: taskToProcess.lastCompletedOn,
-          user: taskToProcess.completedBy, 
+          user: taskToProcess.completedBy!,
           action: 'Task Resolved',
           details: `Task marked as resolved. Progress set to 100%.`,
         });
       }
-      
+
       toast({
         title: "Task Resolved",
         description: `"${taskToProcess.name}" has been successfully resolved.`,
@@ -136,17 +156,17 @@ export default function DashboardPage() {
           title: "Task Status Updated",
           description: `Task "${taskToProcess.name}" is no longer resolved. Status: ${taskToProcess.status}.`,
         });
-    } else { 
+    } else {
        // For other statuses or general updates
        toast({
           title: "Task Updated",
           description: `Task "${taskToProcess.name}" has been saved successfully.`,
         });
     }
-    
+
     taskToProcess.activities = newActivities;
     setTasks(prevTasks => prevTasks.map(t => (t.id === taskToProcess.id ? taskToProcess : t)));
-    
+
     if (selectedTask && selectedTask.id === taskToProcess.id) {
       setSelectedTask(taskToProcess);
     }
@@ -163,11 +183,13 @@ export default function DashboardPage() {
   };
 
   const handleSaveEvidenceLink = (taskId: string, evidenceLink: string) => {
+     // TODO: Implement API call to save evidence link to Supabase
+    // For now, optimistic UI update
     const taskToUpdate = tasks.find(t => t.id === taskId);
     if (!taskToUpdate) return;
 
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
         task.id === taskId ? { ...task, evidenceLink: evidenceLink || undefined, activities: [...(task.activities || []), { timestamp: new Date(), user: task.assignedStaff || 'System', action: 'Evidence Updated', details: `Evidence link ${evidenceLink ? 'added/updated' : 'removed'}.`}] } : task
       )
     );
@@ -211,7 +233,7 @@ export default function DashboardPage() {
       task.complianceChapterTag || '',
       task.residentCareFlags ? task.residentCareFlags.join('; ') : '',
     ].map(escapeCsvField).join(','));
-    
+
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -225,25 +247,25 @@ export default function DashboardPage() {
 
   const handleExportAuditLog = () => {
     const headers = [
-      "Task ID", "Task Name", "Category", "Frequency", "Responsible Role(s)", "Assigned Staff", 
-      "Validator Role", "Initial Start Date", "Initial End Date", "Current Status", "Progress (%)", 
+      "Task ID", "Task Name", "Category", "Frequency", "Responsible Role(s)", "Assigned Staff",
+      "Validator Role", "Initial Start Date", "Initial End Date", "Current Status", "Progress (%)",
       "Last Resolved On", "Resolved By", "Validator Approval", "Compliance Chapter", "Care Flags",
       "Activity Timestamp", "Activity User", "Activity Action", "Activity Details"
     ];
-    
+
     let rows: string[] = [];
 
     filteredAndSortedTasks.forEach(task => {
       const commonTaskData = [
-        task.id, task.name, task.category, task.frequency, 
-        Array.isArray(task.responsibleRole) ? task.responsibleRole.join('; ') : task.responsibleRole, 
+        task.id, task.name, task.category, task.frequency,
+        Array.isArray(task.responsibleRole) ? task.responsibleRole.join('; ') : task.responsibleRole,
         task.assignedStaff,
         task.validator,
         task.startDate ? format(new Date(task.startDate), 'yyyy-MM-dd HH:mm') : '',
         task.endDate ? format(new Date(task.endDate), 'yyyy-MM-dd HH:mm') : '',
         task.status, task.progress,
         task.lastCompletedOn ? format(new Date(task.lastCompletedOn), 'yyyy-MM-dd HH:mm') : '',
-        task.completedBy || '', 
+        task.completedBy || '',
         task.validatorApproval || '',
         task.complianceChapterTag || '',
         task.residentCareFlags ? task.residentCareFlags.join('; ') : '',
@@ -252,7 +274,7 @@ export default function DashboardPage() {
       if (task.activities && task.activities.length > 0) {
         task.activities.forEach(activity => {
           const activityData = [
-            activity.timestamp ? format(new Date(activity.timestamp), 'yyyy-MM-dd HH:mm:ss') : '', 
+            activity.timestamp ? format(new Date(activity.timestamp), 'yyyy-MM-dd HH:mm:ss') : '',
             activity.user,
             activity.action,
             activity.details
@@ -278,9 +300,9 @@ export default function DashboardPage() {
 
   const handleExportSurveyPrepPacket = () => {
     const headers = [
-      "Task ID", "Task Name", "Category", "Frequency", "Responsible Role(s)", "Assigned Staff", 
+      "Task ID", "Task Name", "Category", "Frequency", "Responsible Role(s)", "Assigned Staff",
       "Validator", "Status", "Progress (%)", "Start Date", "End Date", "Due Time",
-      "Deliverables", "Notes", "Evidence Link", "Last Resolved On", "Resolved By", 
+      "Deliverables", "Notes", "Evidence Link", "Last Resolved On", "Resolved By",
       "Validator Approval", "Compliance Chapter", "Care Flags", "Activities Log (JSON)"
     ];
     const rows = filteredAndSortedTasks.map(task => [
@@ -306,7 +328,7 @@ export default function DashboardPage() {
       task.residentCareFlags ? task.residentCareFlags.join('; ') : '',
       JSON.stringify(task.activities?.map(act => ({ ...act, timestamp: act.timestamp ? format(new Date(act.timestamp), 'yyyy-MM-dd HH:mm:ss') : ''})) || [])
     ].map(escapeCsvField).join(','));
-    
+
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -324,7 +346,7 @@ export default function DashboardPage() {
       .filter(task => task.name.toLowerCase().includes(searchTerm))
       .filter(task => !filters.category || filters.category === 'all' || task.category === filters.category)
       .filter(task => !filters.status || filters.status === 'all' || task.status === filters.status)
-      .filter(task => !filters.role || filters.role === 'all' || (Array.isArray(task.responsibleRole) ? task.responsibleRole.includes(filters.role as Role) : task.responsibleRole === filters.role))
+      .filter(task => !filters.role || filters.role === 'all' || (Array.isArray(task.responsibleRole) ? task.responsibleRole.includes(filters.role as AppRole) : task.responsibleRole === filters.role))
       .filter(task => !filters.frequency || filters.frequency === 'all' || task.frequency === filters.frequency)
       .filter(task => !filters.complianceChapterTag || filters.complianceChapterTag === 'all' || task.complianceChapterTag === filters.complianceChapterTag)
       .filter(task => !filters.careFlag || filters.careFlag === 'all' || (task.residentCareFlags && task.residentCareFlags.includes(filters.careFlag)));
@@ -390,7 +412,7 @@ export default function DashboardPage() {
               height={400}
               className="object-cover w-full h-full"
               data-ai-hint="facility building"
-              priority 
+              priority
             />
           </div>
         </CardContent>
@@ -404,8 +426,8 @@ export default function DashboardPage() {
         onExportSurveyPrepPacket={handleExportSurveyPrepPacket}
         categories={allTaskCategories}
         statuses={allResolutionStatuses}
-        roles={allMockRoles}
-        frequencies={allTaskFrequencies} 
+        roles={allAppRoles}
+        frequencies={allTaskFrequencies}
         complianceChapterTags={allMockComplianceChapters}
       />
 
@@ -427,9 +449,9 @@ export default function DashboardPage() {
                   {categoryTasks.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                       {categoryTasks.map(task => (
-                        <TaskCard 
-                          key={task.id} 
-                          task={task} 
+                        <TaskCard
+                          key={task.id}
+                          task={task}
                           onOpenDetails={handleOpenDetails}
                           onOpenAttachEvidence={handleOpenAttachEvidence}
                         />
@@ -469,3 +491,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
