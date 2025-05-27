@@ -100,23 +100,35 @@ export type AuditToolCategory =
   | 'Postings & Required Notices'
   | 'Environmental & Sanitation Safety'
   | 'General ALR Compliance'
-  | 'Resident Records Management'; // Added for Face Sheets
+  | 'Resident Records Management' // For Face Sheets
+  | 'Resident Care Plans'; // For Care Plans
+
 
 // Simplified status for audit records for now, can be expanded
-export type AuditStatus = 'Pending Review' | 'In Progress' | 'Action Required' | 'Compliant' | 'Non-Compliant' | 'Resolved' | 'Up-to-date' | 'Archived';
+export type AuditStatus = 
+  | 'Pending Review' 
+  | 'In Progress' 
+  | 'Action Required' 
+  | 'Compliant' 
+  | 'Non-Compliant' 
+  | 'Resolved' 
+  | 'Up-to-date' // For Face Sheets
+  | 'Archived' // For Face Sheets, Care Plans
+  | 'Review Needed' // For Face Sheets, Care Plans
+  | 'Active'; // For Care Plans
 
 
 export interface AuditRecord {
   id: string;
-  name: string; // For Face Sheets, this could be "Resident Name - Face Sheet"
+  name: string; 
   category: AuditToolCategory;
-  assignedRole: AppRole | AppRole[]; // Staff responsible for maintaining/reviewing the face sheet
-  validator?: AppRole | string | null; // e.g., Nurse or Admin for validation
-  lastCompletedDate?: Date | null; // Could be "Last Reviewed Date" or "Last Updated Date"
-  status: AuditStatus; // e.g., 'Up-to-date', 'Review Needed', 'Archived'
-  evidenceLink?: string; // Link to the digital face sheet document
-  chapterReferenceTag?: string; // e.g., if there are specific regulatory tags for face sheets
-  notes?: string; // Any relevant notes
+  assignedRole: AppRole | AppRole[]; 
+  validator?: AppRole | string | null; 
+  lastCompletedDate?: Date | null; 
+  status: AuditStatus; 
+  evidenceLink?: string; 
+  chapterReferenceTag?: string; 
+  notes?: string; 
   createdAt: Date;
   updatedAt: Date;
 }
@@ -160,19 +172,18 @@ export interface ChecklistItem {
   assignedStaff: string;
   assignedStaffId?: string;
   validator?: string | null;
-  dueDate: Date; // Firestore Timestamp on backend, JS Date on client
+  dueDate: string; // YYYY-MM-DD
   status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>;
-  createdAt: Date; // Firestore Timestamp on backend, JS Date on client
-  statusUpdatedAt?: Date | null; // Firestore Timestamp on backend, JS Date on client
+  createdAt: firebase.firestore.Timestamp | Date;
+  statusUpdatedAt?: firebase.firestore.Timestamp | Date | null;
   taskId: string;
   notes?: string;
   evidenceLink?: string;
-  lastCompletedOn?: Date | null; // Firestore Timestamp on backend, JS Date on client
+  lastCompletedOn?: firebase.firestore.Timestamp | Date | null;
   completedBy?: string | null;
   category?: string;
   backfilled?: boolean;
 }
-
 
 export type CertificationStatus = 'Active' | 'Expired' | 'Due Soon';
 export type InstallationStatus = 'Operational' | 'Needs Repair' | 'Out of Service';
@@ -217,5 +228,3 @@ export interface StaffResponsibilityMatrixEntry {
     category: TaskCategory;
   }[];
 }
-
-    
