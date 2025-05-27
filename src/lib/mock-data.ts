@@ -48,22 +48,22 @@ const staffNamesByRole: Record<AppRole, string[]> = {
     'Administrator Designee': ['Carlos Ray (Admin Designee)'],
     'Admin Assistant': ['Diana Prince (Admin Asst.)'],
     'Caregiver': [ 
-        'Evan Wright (Caregiver/QMAP/Housekeeping)',
-        'Fiona Green (Caregiver/QMAP/Meals)',
-        'George Hill (Caregiver/QMAP/ADLs)',
-        'Hannah Scott (Caregiver/QMAP/Housekeeping)',
-        'Ian King (Caregiver/QMAP/Meals)',
+        'Evan Wright (Caregiver)',
+        'Fiona Green (Caregiver)',
+        'George Hill (Caregiver)',
+        'Hannah Scott (Caregiver)',
+        'Ian King (Caregiver)',
     ],
     'RN (External)': ['Nurse Jackie (RN Consultant)'],
     'Doctor (Consultant)': ['Dr. Who (MD Consultant)'],
     'Nurse': ['General Nurse (Pool)'], 
     'Maintenance': ['Maintenance Mike (Contractor)'],
     'Wellness Nurse': ['Wendy Bloom (Wellness Coord.)'], 
-    'Housekeeping Supervisor': ['Hannah Scott (Caregiver/QMAP/Housekeeping)'], 
+    'Housekeeping Supervisor': ['Hannah Scott (Caregiver)'], 
     'QMAP Supervisor': ['Carlos Ray (Admin Designee)'], 
-    'kitchen_supervisor_id': ['Fiona Green (Caregiver/QMAP/Meals)'], 
+    'kitchen_supervisor_id': ['Fiona Green (Caregiver)'], 
     'clinical_director_id': ['Alex Johnson (Director)'],
-    'housekeeping_lead_id': ['Hannah Scott (Caregiver/QMAP/Housekeeping)'],
+    'housekeeping_lead_id': ['Hannah Scott (Caregiver)'],
     'safety_officer_id': ['Carlos Ray (Admin Designee)'],
     'maintenance_id': ['Maintenance Mike (Contractor)'],
 };
@@ -123,7 +123,7 @@ const specificTasksSeed: SeedTask[] = [
   { name: "Maintain updated Face Sheets", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Admin Assistant', frequency: 'Monthly', deliverables: "Printed or digital version", validator: 'Administrator Designee' },
   { name: "Record Treatment History: Past and ongoing", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Nurse', frequency: 'Monthly', deliverables: "Chronological summary", validator: 'Wellness Nurse' },
   { name: "Document and log fall incidents", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Fall log and corrective action", validator: 'Nurse' },
-  { name: "Record lift assist events", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Lift assist log", validator: 'Nurse' },
+  { name: "Record lift assist events", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Lift assist log", validator: 'Nurse' }, // Role changed from "Housekeeping / Aide" to Caregiver for consistency
   { name: "Update Care Plan Reviews & Assessments", category: 'Resident Documentation & Clinical Care', responsibleRole: ['Nurse', 'Director (Owner)'], frequency: 'Quarterly', deliverables: "Updated digital care plan", validator: null, complianceChapterTag: "Ch. 2.15" },
   { name: "Conduct ECP error resolution review", category: 'Compliance & Survey Prep Tasks', responsibleRole: ['Administrator Designee', 'Director (Owner)'], frequency: 'Quarterly', deliverables: "List of resolved audit flags", validator: null, complianceChapterTag: "Ch. 2.15" },
   { name: "Perform QMAP passing rate audit", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'QMAP Supervisor', frequency: 'Monthly', deliverables: "Score sheet", validator: 'Director (Owner)', complianceChapterTag: "Ch. 9.11" },
@@ -131,7 +131,7 @@ const specificTasksSeed: SeedTask[] = [
   { name: "Post & verify Resident Rights, House Rules, Emergency Plan", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Admin Assistant', frequency: 'Monthly', deliverables: "Photos & checklist", validator: 'Administrator Designee', complianceChapterTag: "Ch. 24.1" },
   { name: "Prepare Survey Readiness Packet", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Administrator Designee', frequency: 'Quarterly', deliverables: "Binder or PDF", validator: 'Director (Owner)' },
   { name: "Track policy & procedure manual reviews", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'Director (Owner)', frequency: 'Annually', deliverables: "Signed review sheet", validator: null },
-  { name: "Log all resident smoking activity", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Caregiver', frequency: 'Daily', deliverables: "Time-stamped log", validator: 'Administrator Designee' },
+  { name: "Log all resident smoking activity", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Housekeeping Supervisor', frequency: 'Daily', deliverables: "Time-stamped log", validator: 'Administrator Designee' },
   { name: "Audit compliance with smoking safety in designated backyard smoking area", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Administrator Designee', frequency: 'Weekly', deliverables: "Violation log and supervision verification", validator: 'Director (Owner)' },
   { name: "Observe and document behavioral incidents", category: 'Smoking, Behavior, and Environment', responsibleRole: ['Caregiver', 'Nurse'], frequency: 'As Needed', deliverables: "Incident form", validator: 'Wellness Nurse' },
   { name: "Perform Resident Room Safety Compliance Check", category: 'Smoking, Behavior, and Environment', responsibleRole: 'Caregiver', frequency: 'Weekly', deliverables: "Room safety checklist", validator: 'Administrator Designee', complianceChapterTag: "Ch. 12.4" },
@@ -210,14 +210,14 @@ export const mockChecklistItems: ChecklistItem[] = mockTasks.map(task => ({
   assignedStaff: task.assignedStaff,
   assignedStaffId: task.assignedStaffId,
   validator: typeof task.validator === 'string' ? task.validator : null, 
-  dueDate: (task.endDate || task.startDate).toISOString().split('T')[0], // Ensure YYYY-MM-DD format
+  dueDate: (task.endDate || task.startDate), //dueDate is now a Date object
   status: task.status === 'Complete' || task.status === 'Resolved' ? 'Complete' : (task.status === 'Flagged' ? 'Flagged' : 'Pending'),
-  createdAt: task.startDate, // This will be a Date object
-  statusUpdatedAt: task.lastCompletedOn || task.activities.slice(-1)[0]?.timestamp || task.startDate, // This will be a Date object
+  createdAt: task.startDate, 
+  statusUpdatedAt: task.lastCompletedOn || task.activities.slice(-1)[0]?.timestamp || task.startDate, 
   taskId: task.id,
   notes: task.notes,
   evidenceLink: task.evidenceLink,
-  lastCompletedOn: task.lastCompletedOn, // This will be a Date object or null
+  lastCompletedOn: task.lastCompletedOn, 
   completedBy: task.completedBy,
   category: task.category,
   backfilled: Math.random() < 0.5,
@@ -236,12 +236,13 @@ export const allAuditCategories: AuditToolCategory[] = [
   'General ALR Compliance',
   'Resident Records Management', 
   'Resident Care Plans',
+  'Resident Progress Notes',
 ];
 export const allAuditStatuses: AuditStatus[] = ['Pending Review', 'In Progress', 'Action Required', 'Compliant', 'Non-Compliant', 'Resolved', 'Up-to-date', 'Archived', 'Review Needed', 'Active'];
 
 
 export const mockAuditRecords: AuditRecord[] = Array.from({ length: 25 }, (_, i) => {
-  const category = getRandomElement(allAuditCategories.filter(c => c !== 'Resident Records Management' && c !== 'Resident Care Plans')); 
+  const category = getRandomElement(allAuditCategories.filter(c => c !== 'Resident Records Management' && c !== 'Resident Care Plans' && c !== 'Resident Progress Notes')); 
   const assignedRole = getRandomElement(allAppRoles);
   const status = getRandomElement(allAuditStatuses.filter(s => s !== 'Up-to-date' && s !== 'Archived' && s !== 'Active' && s !== 'Review Needed'));
   const lastCompleted = status === 'Compliant' || status === 'Resolved' ? getRandomDate(subMonths(new Date(), 6), new Date()) : undefined;
@@ -277,6 +278,12 @@ export const mockCarePlanAuditRecords: AuditRecord[] = [
   { id: 'cp_002', name: 'Harriet Tubman - Care Plan Initial', category: 'Resident Care Plans', assignedRole: 'Wellness Nurse', status: 'Active', notes: 'New admission, care plan established.', validator: 'Director (Owner)', createdAt: new Date(2025,4,5), updatedAt: new Date(2025,4,5) },
   { id: 'cp_003', name: 'Isaac Newton - Care Plan Annual Update', category: 'Resident Care Plans', assignedRole: 'Wellness Nurse', status: 'Review Needed', notes: 'Annual review scheduled for next week.', validator: 'Director (Owner)', createdAt: new Date(2024,5,1), updatedAt: new Date(2025,4,1) },
   { id: 'cp_004', name: 'Joan of Arc - Care Plan (Discharged)', category: 'Resident Care Plans', assignedRole: 'Wellness Nurse', lastCompletedDate: new Date(2024, 10, 1), status: 'Archived', notes: 'Resident moved to skilled nursing.', validator: 'Director (Owner)', createdAt: new Date(2024,1,15), updatedAt: new Date(2024,10,1) },
+];
+
+export const mockProgressNoteAuditRecords: AuditRecord[] = [
+  { id: 'pn_001', name: 'Abigail Adams - Weekly Note', category: 'Resident Progress Notes', assignedRole: 'Caregiver', lastCompletedDate: new Date(2025, 4, 10), status: 'Up-to-date', validator: 'Wellness Nurse', notes: 'Resident participated well in activities.', createdAt: new Date(2025,4,10), updatedAt: new Date(2025,4,10) },
+  { id: 'pn_002', name: 'Benjamin Franklin - Monthly Summary', category: 'Resident Progress Notes', assignedRole: 'Wellness Nurse', lastCompletedDate: new Date(2025, 3, 30), status: 'Up-to-date', validator: 'Director (Owner)', evidenceLink: 'https://example.com/pn_franklin_apr.pdf', createdAt: new Date(2025,3,30), updatedAt: new Date(2025,3,30) },
+  { id: 'pn_003', name: 'Clara Barton - Incident Note', category: 'Resident Progress Notes', assignedRole: 'Caregiver', status: 'Pending Review', notes: 'Minor fall, no injury. Doctor notified.', validator: 'Wellness Nurse', createdAt: new Date(2025,4,12), updatedAt: new Date(2025,4,12) },
 ];
 
 
@@ -415,3 +422,4 @@ export const recurringTasksSeedData: RecurringTaskSeed[] = [
     generateHistory: true
   }
 ];
+

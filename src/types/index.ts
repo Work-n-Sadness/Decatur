@@ -101,7 +101,8 @@ export type AuditToolCategory =
   | 'Environmental & Sanitation Safety'
   | 'General ALR Compliance'
   | 'Resident Records Management' // For Face Sheets
-  | 'Resident Care Plans'; // For Care Plans
+  | 'Resident Care Plans' // For Care Plans
+  | 'Resident Progress Notes'; // For Progress Notes
 
 
 // Simplified status for audit records for now, can be expanded
@@ -112,8 +113,8 @@ export type AuditStatus =
   | 'Compliant' 
   | 'Non-Compliant' 
   | 'Resolved' 
-  | 'Up-to-date' // For Face Sheets
-  | 'Archived' // For Face Sheets, Care Plans
+  | 'Up-to-date' // For Face Sheets, Progress Notes
+  | 'Archived' // For Face Sheets, Care Plans, Progress Notes
   | 'Review Needed' // For Face Sheets, Care Plans
   | 'Active'; // For Care Plans
 
@@ -172,14 +173,14 @@ export interface ChecklistItem {
   assignedStaff: string;
   assignedStaffId?: string;
   validator?: string | null;
-  dueDate: string; // YYYY-MM-DD
+  dueDate: Date; // Changed from string to Date to align with Firestore Timestamps
   status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>;
-  createdAt: firebase.firestore.Timestamp | Date;
-  statusUpdatedAt?: firebase.firestore.Timestamp | Date | null;
+  createdAt: Date; // Changed from Firestore Timestamp to Date
+  statusUpdatedAt?: Date | null; // Changed from Firestore Timestamp to Date
   taskId: string;
   notes?: string;
   evidenceLink?: string;
-  lastCompletedOn?: firebase.firestore.Timestamp | Date | null;
+  lastCompletedOn?: Date | null; // Changed from Firestore Timestamp to Date
   completedBy?: string | null;
   category?: string;
   backfilled?: boolean;
