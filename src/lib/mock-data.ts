@@ -1,5 +1,5 @@
 
-import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, AppRole, AuditToolCategory, AuditRecord, AuditStatus, StaffTrainingRecord, TrainingType, TrainingStatus, RecurrenceConfig, FacilityCertification, CertificationStatus, FacilityInstallation, InstallationStatus, InstallationFrequency, ResidentCareFlag, ChecklistItem, StaffResponsibilityMatrixEntry, RecurringTaskSeed } from '@/types';
+import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, AppRole, AuditToolCategory, AuditRecord, AuditStatus, StaffTrainingRecord, TrainingType, TrainingStatus, RecurrenceConfig, FacilityCertification, CertificationStatus, FacilityInstallation, InstallationStatus, InstallationFrequency, ResidentCareFlag, ChecklistItem, RecurringTask as RecurringTaskSeed, StaffResponsibilityMatrixEntry } from '@/types';
 import { addDays, startOfDay, getDay, getDate, subDays, subMonths, addMonths, endOfMonth, subYears, isValid, parseISO, addYears } from 'date-fns';
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
@@ -34,11 +34,11 @@ export const allAppRoles: AppRole[] = [
     'Wellness Nurse',
     'Housekeeping Supervisor',
     'QMAP Supervisor',
-    'kitchen_supervisor_id', // Legacy, map to Caregiver or specific staff
-    'clinical_director_id',  // Legacy, map to Director or Wellness Nurse
-    'housekeeping_lead_id',// Legacy, map to Caregiver or Housekeeping Supervisor
-    'safety_officer_id',   // Legacy, map to Admin Designee
-    'maintenance_id'       // Legacy, map to Maintenance
+    'kitchen_supervisor_id', 
+    'clinical_director_id',  
+    'housekeeping_lead_id',
+    'safety_officer_id',   
+    'maintenance_id'       
 ];
 
 
@@ -54,18 +54,18 @@ const staffNamesByRole: Record<AppRole, string[]> = {
         'Hannah Scott (Caregiver/Housekeeping Lead)',
         'Ian King (Caregiver/Night Shift)',
     ],
-    'RN (External)': ['Nurse Jackie (RN Consultant)'],
-    'Doctor (Consultant)': ['Dr. Who (MD Consultant)'],
-    'Nurse': ['Wendy Bloom (Wellness Nurse)'], // General Nurse for internal tasks could be Wellness Nurse
-    'Maintenance': ['Maintenance Mike (Contractor)'],
+    'RN (External)': ['Jackie Nurse (RN Consultant)'],
+    'Doctor (Consultant)': ['Dr. Evelyn Reed (MD Consultant)'],
+    'Nurse': ['Wendy Bloom (Wellness Nurse)'], 
+    'Maintenance': ['Mike Fixit (Maintenance Contractor)'],
     'Wellness Nurse': ['Wendy Bloom (Wellness Nurse)'],
     'Housekeeping Supervisor': ['Hannah Scott (Caregiver/Housekeeping Lead)'],
-    'QMAP Supervisor': ['Carlos Ray (Admin Designee)'],
+    'QMAP Supervisor': ['Evan Wright (Caregiver/QMAP)'], 
     'kitchen_supervisor_id': ['Fiona Green (Caregiver/Cook)'],
     'clinical_director_id': ['Alex Johnson (Director)'],
     'housekeeping_lead_id': ['Hannah Scott (Caregiver/Housekeeping Lead)'],
     'safety_officer_id': ['Carlos Ray (Admin Designee)'],
-    'maintenance_id': ['Maintenance Mike (Contractor)'],
+    'maintenance_id': ['Mike Fixit (Maintenance Contractor)'],
 };
 
 export const allMockStaffNames: string[] = Array.from(new Set(Object.values(staffNamesByRole).flat()));
@@ -123,7 +123,7 @@ const specificTasksSeed: SeedTask[] = [
   { name: "Maintain updated Face Sheets", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Admin Assistant', frequency: 'Monthly', deliverables: "Printed or digital version", validator: 'Administrator Designee' },
   { name: "Record Treatment History: Past and ongoing", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Wellness Nurse', frequency: 'Monthly', deliverables: "Chronological summary", validator: 'Wellness Nurse' },
   { name: "Document and log fall incidents", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Fall log and corrective action", validator: 'Wellness Nurse' },
-  { name: "Record lift assist events", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Lift assist log", validator: 'Wellness Nurse' }, // Role changed from "Housekeeping / Aide" to Caregiver for consistency
+  { name: "Record lift assist events", category: 'Resident Documentation & Clinical Care', responsibleRole: 'Caregiver', frequency: 'As Needed', deliverables: "Lift assist log", validator: 'Wellness Nurse' }, 
   { name: "Update Care Plan Reviews & Assessments", category: 'Resident Documentation & Clinical Care', responsibleRole: ['Wellness Nurse', 'Director (Owner)'], frequency: 'Quarterly', deliverables: "Updated digital care plan", validator: null, complianceChapterTag: "Ch. 2.15" },
   { name: "Conduct ECP error resolution review", category: 'Compliance & Survey Prep Tasks', responsibleRole: ['Administrator Designee', 'Director (Owner)'], frequency: 'Quarterly', deliverables: "List of resolved audit flags", validator: null, complianceChapterTag: "Ch. 2.15" },
   { name: "Perform QMAP passing rate audit", category: 'Compliance & Survey Prep Tasks', responsibleRole: 'QMAP Supervisor', frequency: 'Monthly', deliverables: "Score sheet", validator: 'Director (Owner)', complianceChapterTag: "Ch. 9.11" },
@@ -138,7 +138,7 @@ const specificTasksSeed: SeedTask[] = [
 ];
 
 export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
-  const instanceStartDate = getRandomDate(new Date(2024, 9, 1), new Date(2025, 4, 13)); // Q4 2024 to May 2025
+  const instanceStartDate = getRandomDate(new Date(2024, 9, 1), new Date(2025, 4, 13)); 
   const patternStartDate = new Date(instanceStartDate.getFullYear(), instanceStartDate.getMonth(), 1);
 
   const freqCycleDaysMap: Record<TaskFrequency, number> = {
@@ -150,7 +150,7 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
 
   const status = getRandomElement(allResolutionStatuses);
   let assignedStaffMember: string;
-  let assignedStaffMemberId: string = `staff_user_${(i % 9) + 1}`; // Ensure this refers to one of the 9 staff
+  let assignedStaffMemberId: string = `staff_user_${(i % 9) + 1}`; 
 
   if (Array.isArray(seed.responsibleRole)) {
     const role1 = seed.responsibleRole[0];
@@ -158,13 +158,13 @@ export const mockTasks: Task[] = specificTasksSeed.map((seed, i) => {
   } else {
     assignedStaffMember = getRandomElement(staffNamesByRole[seed.responsibleRole] || allMockStaffNames);
   }
-  // Ensure assigned staff member ID is one of the 9 if the role is internal
+  
   const internalRoles = ['Director (Owner)', 'Assistant Director', 'Administrator Designee', 'Admin Assistant', 'Caregiver', 'Wellness Nurse', 'Housekeeping Supervisor', 'QMAP Supervisor'];
-  const isInternal = Array.isArray(seed.responsibleRole) ? seed.responsibleRole.some(r => internalRoles.includes(r)) : internalRoles.includes(seed.responsibleRole);
+  const isInternal = Array.isArray(seed.responsibleRole) ? seed.responsibleRole.some(r => internalRoles.includes(r as AppRole)) : internalRoles.includes(seed.responsibleRole as AppRole);
   if (isInternal) {
-      assignedStaffMemberId = `staff_user_${(i % 9) + 1}`;
+      assignedStaffMemberId = `staff_user_${(i % allMockStaffNames.filter(name => !name.includes("External") && !name.includes("Consultant") && !name.includes("Contractor")).length) + 1}`;
   } else {
-      assignedStaffMemberId = `ext_user_${i+1}`; // For external roles
+      assignedStaffMemberId = `ext_user_${i+1}`; 
   }
 
 
@@ -247,18 +247,20 @@ export const allAuditCategories: AuditToolCategory[] = [
   'Resident Care Plans',
   'Resident Progress Notes',
   'Resident Admissions & Discharges',
+  'Case Management Coordination',
 ];
 export const allAuditStatuses: AuditStatus[] = [
     'Pending Review', 'In Progress', 'Action Required', 'Compliant', 'Non-Compliant',
     'Resolved', 'Up-to-date', 'Archived', 'Review Needed', 'Active',
-    'Admission Pending', 'Admission Complete', 'Discharge Pending', 'Discharge Complete'
+    'Admission Pending', 'Admission Complete', 'Discharge Pending', 'Discharge Complete',
+    'Active Engagement', 'Referral Made', 'Follow-up Scheduled' 
 ];
 
 
 export const mockAuditRecords: AuditRecord[] = Array.from({ length: 25 }, (_, i) => {
-  const category = getRandomElement(allAuditCategories.filter(c => !['Resident Records Management', 'Resident Care Plans', 'Resident Progress Notes', 'Resident Admissions & Discharges'].includes(c)));
+  const category = getRandomElement(allAuditCategories.filter(c => !['Resident Records Management', 'Resident Care Plans', 'Resident Progress Notes', 'Resident Admissions & Discharges', 'Case Management Coordination'].includes(c)));
   const assignedRole = getRandomElement(allAppRoles);
-  const status = getRandomElement(allAuditStatuses.filter(s => !['Up-to-date', 'Archived', 'Active', 'Review Needed', 'Admission Pending', 'Admission Complete', 'Discharge Pending', 'Discharge Complete'].includes(s)));
+  const status = getRandomElement(allAuditStatuses.filter(s => !['Up-to-date', 'Archived', 'Active', 'Review Needed', 'Admission Pending', 'Admission Complete', 'Discharge Pending', 'Discharge Complete', 'Active Engagement', 'Referral Made', 'Follow-up Scheduled'].includes(s)));
   const lastCompleted = status === 'Compliant' || status === 'Resolved' ? getRandomDate(subMonths(new Date(), 6), new Date()) : undefined;
   const createdAt = getRandomDate(subYears(new Date(), 1), new Date());
   const updatedAt = lastCompleted || createdAt;
@@ -287,7 +289,6 @@ export const mockFaceSheetAuditRecords: AuditRecord[] = [
   { id: 'fs_005', name: 'Eleanor Roosevelt - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', lastCompletedDate: new Date(2023, 11, 1), status: 'Archived', notes: 'Resident discharged.', validator: 'Administrator Designee', evidenceLink: 'https://example.com/fs_roosevelt_archived.pdf', createdAt: new Date(2023,1,1), updatedAt: new Date(2023,11,1) },
 ].map(record => ({
     ...record,
-    // Ensure all dates are actual Date objects for consistency if they come from strings
     lastCompletedDate: record.lastCompletedDate ? (record.lastCompletedDate instanceof Date ? record.lastCompletedDate : parseISO(record.lastCompletedDate as unknown as string)) : null,
     createdAt: record.createdAt instanceof Date ? record.createdAt : parseISO(record.createdAt as unknown as string),
     updatedAt: record.updatedAt instanceof Date ? record.updatedAt : parseISO(record.updatedAt as unknown as string),
@@ -329,6 +330,19 @@ export const mockAdmissionDischargeRecords: AuditRecord[] = [
     updatedAt: record.updatedAt instanceof Date ? record.updatedAt : parseISO(record.updatedAt as unknown as string),
 }));
 
+export const mockCaseManagementRecords: AuditRecord[] = [
+  { id: 'cm_001', name: 'Helping Hands Agency - Q2 Review', category: 'Case Management Coordination', assignedRole: 'Administrator Designee', lastCompletedDate: new Date(2025, 3, 25), status: 'Active Engagement', validator: 'Director (Owner)', notes: 'Quarterly review completed, no issues.', chapterReferenceTag: 'Ch. 2.15', createdAt: new Date(2025,3,25), updatedAt: new Date(2025,3,25) },
+  { id: 'cm_002', name: 'Resident Alice B. - VA Benefits Application', category: 'Case Management Coordination', assignedRole: 'Admin Assistant', status: 'Referral Made', notes: 'Referral to VA specialist submitted.', validator: 'Administrator Designee', createdAt: new Date(2025,4,1), updatedAt: new Date(2025,4,1) },
+  { id: 'cm_003', name: 'Community Support Services - Partnership Meeting', category: 'Case Management Coordination', assignedRole: 'Director (Owner)', status: 'Follow-up Scheduled', notes: 'Follow-up meeting scheduled for June 10th.', validator: null, createdAt: new Date(2025,4,10), updatedAt: new Date(2025,4,10) },
+  { id: 'cm_004', name: 'Resident Charles D. - Home Health Coordination', category: 'Case Management Coordination', assignedRole: 'Wellness Nurse', lastCompletedDate: new Date(2025, 2, 15), status: 'Resolved', notes: 'Home health services successfully initiated.', evidenceLink: 'https://example.com/hh_charlesd.pdf', validator: 'Administrator Designee', createdAt: new Date(2025,1,20), updatedAt: new Date(2025,2,15) },
+  { id: 'cm_005', name: 'Transitions Agency - Service Agreement', category: 'Case Management Coordination', assignedRole: 'Assistant Director', status: 'Action Required', notes: 'Service agreement needs legal review before signing.', validator: 'Director (Owner)', createdAt: new Date(2025,4,12), updatedAt: new Date(2025,4,12) },
+].map(record => ({
+    ...record,
+    lastCompletedDate: record.lastCompletedDate ? (record.lastCompletedDate instanceof Date ? record.lastCompletedDate : parseISO(record.lastCompletedDate as unknown as string)) : null,
+    createdAt: record.createdAt instanceof Date ? record.createdAt : parseISO(record.createdAt as unknown as string),
+    updatedAt: record.updatedAt instanceof Date ? record.updatedAt : parseISO(record.updatedAt as unknown as string),
+}));
+
 
 export const mockStaffResponsibilityMatrix: StaffResponsibilityMatrixEntry[] = allAppRoles.map(role => ({
   role,
@@ -354,10 +368,10 @@ export const mockStaffTrainingData: StaffTrainingRecord[] = allMockStaffNames.fl
     } else {
       const hasExpiry = trainingType !== 'Orientation';
       if (hasExpiry) {
-        expiryDate = addYears(completionDate, trainingType === 'TB Test' ? 1 : 2);
+        expiryDate = addYears(completionDate, trainingType === 'TB Test' ? 1 : 2); 
         const daysUntilExpiry = (expiryDate.getTime() - today.getTime()) / (1000 * 3600 * 24);
         if (daysUntilExpiry < 0) status = 'Overdue';
-        else if (daysUntilExpiry <= 60) status = 'Expiring Soon';
+        else if (daysUntilExpiry <= 60) status = 'Expiring Soon'; 
         else status = 'Compliant';
       } else {
         status = 'Compliant';
@@ -480,35 +494,95 @@ export const recurringTasksSeedData: RecurringTaskSeed[] = [
   }
 ];
 
-// Ensure all date fields in mock data are consistently Date objects or null
-// This helps prevent issues with toISOString() calls in API routes
-[mockAuditRecords, mockFaceSheetAuditRecords, mockCarePlanAuditRecords, mockProgressNoteAuditRecords, mockAdmissionDischargeRecords, mockCertifications, mockInstallations].forEach(collection => {
-    collection.forEach(record => {
-        if (record.lastCompletedDate && typeof record.lastCompletedDate === 'string') record.lastCompletedDate = parseISO(record.lastCompletedDate);
-        if (record.createdAt && typeof record.createdAt === 'string') record.createdAt = parseISO(record.createdAt);
-        if (record.updatedAt && typeof record.updatedAt === 'string') record.updatedAt = parseISO(record.updatedAt);
-        if ('issueDate' in record && record.issueDate && typeof record.issueDate === 'string') (record as FacilityCertification).issueDate = parseISO(record.issueDate);
-        if ('expirationDate' in record && record.expirationDate && typeof record.expirationDate === 'string') (record as FacilityCertification).expirationDate = parseISO(record.expirationDate);
-        if ('lastInspectionDate' in record && record.lastInspectionDate && typeof record.lastInspectionDate === 'string') (record as FacilityInstallation).lastInspectionDate = parseISO(record.lastInspectionDate);
-        if ('nextInspectionDue' in record && record.nextInspectionDue && typeof record.nextInspectionDue === 'string') (record as FacilityInstallation).nextInspectionDue = parseISO(record.nextInspectionDue);
-    });
+
+const allMockAuditCollections = [
+  mockAuditRecords, 
+  mockFaceSheetAuditRecords, 
+  mockCarePlanAuditRecords, 
+  mockProgressNoteAuditRecords, 
+  mockAdmissionDischargeRecords,
+  mockCaseManagementRecords,
+  mockCertifications, 
+  mockInstallations
+];
+
+allMockAuditCollections.forEach(collection => {
+  collection.forEach((record: any) => { 
+    if (record.lastCompletedDate && typeof record.lastCompletedDate === 'string') {
+      const parsed = parseISO(record.lastCompletedDate);
+      if (isValid(parsed)) record.lastCompletedDate = parsed; else record.lastCompletedDate = null;
+    }
+    if (record.createdAt && typeof record.createdAt === 'string') {
+      const parsed = parseISO(record.createdAt);
+      if (isValid(parsed)) record.createdAt = parsed; else record.createdAt = new Date(0); // Fallback
+    }
+    if (record.updatedAt && typeof record.updatedAt === 'string') {
+      const parsed = parseISO(record.updatedAt);
+      if (isValid(parsed)) record.updatedAt = parsed; else record.updatedAt = new Date(0); // Fallback
+    }
+    if ('issueDate' in record && record.issueDate && typeof record.issueDate === 'string') {
+      const parsed = parseISO(record.issueDate);
+      if (isValid(parsed)) (record as FacilityCertification).issueDate = parsed; else (record as FacilityCertification).issueDate = new Date(0);
+    }
+    if ('expirationDate' in record && record.expirationDate && typeof record.expirationDate === 'string') {
+       const parsed = parseISO(record.expirationDate);
+       if (isValid(parsed)) (record as FacilityCertification).expirationDate = parsed; else (record as FacilityCertification).expirationDate = new Date(0);
+    }
+    if ('lastInspectionDate' in record && record.lastInspectionDate && typeof record.lastInspectionDate === 'string') {
+      const parsed = parseISO(record.lastInspectionDate);
+      if (isValid(parsed)) (record as FacilityInstallation).lastInspectionDate = parsed; else (record as FacilityInstallation).lastInspectionDate = null;
+    }
+    if ('nextInspectionDue' in record && record.nextInspectionDue && typeof record.nextInspectionDue === 'string') {
+      const parsed = parseISO(record.nextInspectionDue);
+      if (isValid(parsed)) (record as FacilityInstallation).nextInspectionDue = parsed; else (record as FacilityInstallation).nextInspectionDue = null;
+    }
+  });
 });
 
 mockTasks.forEach(task => {
-    if (task.startDate && typeof task.startDate === 'string') task.startDate = parseISO(task.startDate);
-    if (task.endDate && typeof task.endDate === 'string') task.endDate = parseISO(task.endDate);
-    if (task.lastCompletedOn && typeof task.lastCompletedOn === 'string') task.lastCompletedOn = parseISO(task.lastCompletedOn);
+    if (task.startDate && typeof task.startDate === 'string') {
+        const parsed = parseISO(task.startDate);
+        if (isValid(parsed)) task.startDate = parsed; else task.startDate = new Date(0);
+    }
+    if (task.endDate && typeof task.endDate === 'string') {
+        const parsed = parseISO(task.endDate);
+        if (isValid(parsed)) task.endDate = parsed; else task.endDate = null;
+    }
+    if (task.lastCompletedOn && typeof task.lastCompletedOn === 'string') {
+        const parsed = parseISO(task.lastCompletedOn);
+        if (isValid(parsed)) task.lastCompletedOn = parsed; else task.lastCompletedOn = null;
+    }
     task.activities.forEach(act => {
-        if (act.timestamp && typeof act.timestamp === 'string') act.timestamp = parseISO(act.timestamp);
+        if (act.timestamp && typeof act.timestamp === 'string') {
+            const parsed = parseISO(act.timestamp);
+            if (isValid(parsed)) act.timestamp = parsed; else act.timestamp = new Date(0);
+        }
     });
-    if (task.recurrenceConfig?.patternStartDate && typeof task.recurrenceConfig.patternStartDate === 'string') task.recurrenceConfig.patternStartDate = parseISO(task.recurrenceConfig.patternStartDate);
-    if (task.recurrenceConfig?.patternEndDate && typeof task.recurrenceConfig.patternEndDate === 'string') task.recurrenceConfig.patternEndDate = parseISO(task.recurrenceConfig.patternEndDate);
-
+    if (task.recurrenceConfig?.patternStartDate && typeof task.recurrenceConfig.patternStartDate === 'string') {
+        const parsed = parseISO(task.recurrenceConfig.patternStartDate);
+        if (isValid(parsed)) task.recurrenceConfig.patternStartDate = parsed; else task.recurrenceConfig.patternStartDate = new Date(0);
+    }
+    if (task.recurrenceConfig?.patternEndDate && typeof task.recurrenceConfig.patternEndDate === 'string') {
+         const parsed = parseISO(task.recurrenceConfig.patternEndDate);
+         if (isValid(parsed)) task.recurrenceConfig.patternEndDate = parsed; else task.recurrenceConfig.patternEndDate = null;
+    }
 });
 
 mockChecklistItems.forEach(item => {
-    if (item.dueDate && typeof item.dueDate === 'string') item.dueDate = parseISO(item.dueDate);
-    if (item.createdAt && typeof item.createdAt === 'string') item.createdAt = parseISO(item.createdAt);
-    if (item.statusUpdatedAt && typeof item.statusUpdatedAt === 'string') item.statusUpdatedAt = parseISO(item.statusUpdatedAt);
-    if (item.lastCompletedOn && typeof item.lastCompletedOn === 'string') item.lastCompletedOn = parseISO(item.lastCompletedOn);
+    if (item.dueDate && typeof item.dueDate === 'string') {
+        const parsed = parseISO(item.dueDate);
+        if (isValid(parsed)) item.dueDate = parsed; else item.dueDate = new Date(0);
+    }
+    if (item.createdAt && typeof item.createdAt === 'string') {
+        const parsed = parseISO(item.createdAt);
+        if (isValid(parsed)) item.createdAt = parsed; else item.createdAt = new Date(0);
+    }
+    if (item.statusUpdatedAt && typeof item.statusUpdatedAt === 'string') {
+        const parsed = parseISO(item.statusUpdatedAt);
+        if (isValid(parsed)) item.statusUpdatedAt = parsed; else item.statusUpdatedAt = null;
+    }
+    if (item.lastCompletedOn && typeof item.lastCompletedOn === 'string') {
+        const parsed = parseISO(item.lastCompletedOn);
+        if (isValid(parsed)) item.lastCompletedOn = parsed; else item.lastCompletedOn = null;
+    }
 });

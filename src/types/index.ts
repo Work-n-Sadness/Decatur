@@ -10,17 +10,15 @@ export type TaskCategory =
 
 export type TaskFrequency = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'As Needed' | 'Annually' | 'Bi-annually' | 'Mid Yearly';
 
-// Updated to reflect more specific roles from the operational model
 export type AppRole =
   | 'Director (Owner)'
   | 'Assistant Director'
   | 'Administrator Designee'
   | 'Admin Assistant'
-  | 'Caregiver' // Handles QMAP, Housekeeping, ADLs, Meals
+  | 'Caregiver'
   | 'RN (External)'
   | 'Doctor (Consultant)'
-  // Keeping some original broader roles for flexibility or if they map to specific tasks
-  | 'Nurse' // Could be an internal LPN/RN not the external one
+  | 'Nurse'
   | 'Maintenance'
   | 'Wellness Nurse'
   | 'Housekeeping Supervisor'
@@ -70,8 +68,8 @@ export interface Task {
   responsibleRole: AppRole | AppRole[];
   status: ResolutionStatus;
   progress: number;
-  assignedStaff: string; // Display name/role
-  assignedStaffId?: string; // Actual user ID
+  assignedStaff: string; 
+  assignedStaffId?: string; 
   validator: AppRole | string | null;
   startDate: Date;
   endDate: Date | null;
@@ -100,13 +98,13 @@ export type AuditToolCategory =
   | 'Postings & Required Notices'
   | 'Environmental & Sanitation Safety'
   | 'General ALR Compliance'
-  | 'Resident Records Management' // For Face Sheets
-  | 'Resident Care Plans' // For Care Plans
-  | 'Resident Progress Notes' // For Progress Notes
-  | 'Resident Admissions & Discharges'; // For Moving-in & Moving-out
+  | 'Resident Records Management' 
+  | 'Resident Care Plans' 
+  | 'Resident Progress Notes' 
+  | 'Resident Admissions & Discharges'
+  | 'Case Management Coordination';
 
 
-// Simplified status for audit records for now, can be expanded
 export type AuditStatus = 
   | 'Pending Review' 
   | 'In Progress' 
@@ -114,14 +112,17 @@ export type AuditStatus =
   | 'Compliant' 
   | 'Non-Compliant' 
   | 'Resolved' 
-  | 'Up-to-date' // For Face Sheets, Progress Notes
-  | 'Archived' // For Face Sheets, Care Plans, Progress Notes, Admissions/Discharges
-  | 'Review Needed' // For Face Sheets, Care Plans
-  | 'Active' // For Care Plans
+  | 'Up-to-date' 
+  | 'Archived' 
+  | 'Review Needed' 
+  | 'Active' 
   | 'Admission Pending'
   | 'Admission Complete'
   | 'Discharge Pending'
-  | 'Discharge Complete';
+  | 'Discharge Complete'
+  | 'Active Engagement' // For Case Management
+  | 'Referral Made'     // For Case Management
+  | 'Follow-up Scheduled';// For Case Management
 
 
 export interface AuditRecord {
@@ -130,7 +131,7 @@ export interface AuditRecord {
   category: AuditToolCategory;
   assignedRole: AppRole | AppRole[]; 
   validator?: AppRole | string | null; 
-  lastCompletedDate?: Date | null; // Generic date field, can mean review date, completion date etc.
+  lastCompletedDate?: Date | null; 
   status: AuditStatus; 
   evidenceLink?: string; 
   chapterReferenceTag?: string; 
@@ -157,17 +158,17 @@ export interface StaffTrainingRecord {
   updatedAt: Date;
 }
 
-export interface RecurringTaskSeed {
+export interface RecurringTask {
   id: string;
   taskName: string;
   frequency: 'daily' | 'weekly' | 'monthly';
-  recurrenceDays?: string[]; // For weekly tasks, e.g., ["Monday", "Wednesday"]
-  recurrenceDayOfMonth?: number; // For monthly tasks
-  assignedStaff: string; // Role or specific user ID
-  validator?: string; // Role or specific user ID
+  recurrenceDays?: string[]; 
+  recurrenceDayOfMonth?: number; 
+  assignedStaff: string; 
+  validator?: string; 
   autoGenerateChecklist: boolean;
   category?: string;
-  startDateForHistory?: string; // YYYY-MM-DD format
+  startDateForHistory?: string; 
   generateHistory?: boolean;
 }
 
@@ -178,14 +179,14 @@ export interface ChecklistItem {
   assignedStaff: string;
   assignedStaffId?: string;
   validator?: string | null;
-  dueDate: Date; // Changed from string to Date to align with Firestore Timestamps
+  dueDate: Date; 
   status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>;
-  createdAt: Date; // Changed from Firestore Timestamp to Date
-  statusUpdatedAt?: Date | null; // Changed from Firestore Timestamp to Date
+  createdAt: Date; 
+  statusUpdatedAt?: Date | null; 
   taskId: string;
   notes?: string;
   evidenceLink?: string;
-  lastCompletedOn?: Date | null; // Changed from Firestore Timestamp to Date
+  lastCompletedOn?: Date | null; 
   completedBy?: string | null;
   category?: string;
   backfilled?: boolean;
@@ -203,7 +204,7 @@ export interface FacilityCertification {
   issueDate: Date;
   expirationDate: Date;
   status: CertificationStatus;
-  certificateUpload?: string; // URL to the uploaded certificate
+  certificateUpload?: string; 
   lastReviewedBy?: string;
   notes?: string;
   createdAt: Date;
@@ -220,7 +221,7 @@ export interface FacilityInstallation {
   inspectionFrequency?: InstallationFrequency;
   serviceVendor?: string;
   status: InstallationStatus;
-  uploadInspectionLog?: string; // URL to the uploaded inspection log
+  uploadInspectionLog?: string; 
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
