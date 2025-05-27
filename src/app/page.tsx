@@ -7,7 +7,7 @@ import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
 import AttachEvidenceDialog from '@/components/dashboard/attach-evidence-dialog';
 import DashboardFilters from '@/components/dashboard/dashboard-filters';
 import WelcomeBanner from '@/components/dashboard/welcome-banner';
-import { mockTasks, allAppRoles, allMockComplianceChapters, allTaskCategories, allResolutionStatuses, allTaskFrequencies, allMockStaffNames, allCareFlags } from '@/lib/mock-data';
+import { allAppRoles, allMockComplianceChapters, allTaskCategories, allResolutionStatuses, allTaskFrequencies, allCareFlags } from '@/lib/mock-data';
 import type { Task, TaskCategory, ResolutionStatus, AppRole, TaskFrequency, ActivityLog, ResidentCareFlag } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,7 +43,22 @@ export default function DashboardPage() {
       try {
         const response = await fetch('/api/tasks');
         if (!response.ok) {
-          throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+          let errorDetails = `HTTP error ${response.status}`;
+          if (response.statusText) {
+            errorDetails += ` ${response.statusText}`;
+          }
+          try {
+            const errorBody = await response.json();
+            if (errorBody && errorBody.message) {
+              errorDetails = `${errorDetails}: ${errorBody.message}`;
+              if (errorBody.error) {
+                errorDetails += ` (Server error: ${errorBody.error})`;
+              }
+            }
+          } catch (e) {
+            // Failed to parse JSON body, or no JSON body was sent
+          }
+          throw new Error(`Failed to fetch tasks. ${errorDetails}`);
         }
         const data: any[] = await response.json();
         const processedData: Task[] = data.map(item => ({
@@ -58,8 +73,8 @@ export default function DashboardPage() {
         console.error("Error fetching tasks:", error);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Could not load tasks. Please try again later.",
+          title: "Error Loading Tasks",
+          description: error instanceof Error ? error.message : "Could not load tasks. Please try again later.",
         });
       }
     };
@@ -90,7 +105,7 @@ export default function DashboardPage() {
   };
 
   const handleSaveTask = (updatedTaskFromDialog: Task) => {
-    // TODO: Implement API call to save task to Supabase
+    // TODO: Implement API call to save task to Supabase (e.g., PATCH /api/tasks/[taskId])
     // For now, optimistic UI update
     let taskToProcess = { ...updatedTaskFromDialog };
     const originalTaskState = tasks.find(t => t.id === taskToProcess.id);
@@ -170,6 +185,21 @@ export default function DashboardPage() {
     if (selectedTask && selectedTask.id === taskToProcess.id) {
       setSelectedTask(taskToProcess);
     }
+    // TODO: Add API call here and handle response
+    // Example:
+    // try {
+    //   const response = await fetch(`/api/tasks/${taskToProcess.id}`, {
+    //     method: 'PATCH',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(taskToProcess), // Send only fields that can be updated
+    //   });
+    //   if (!response.ok) throw new Error('Failed to save task to server');
+    //   // Optionally re-fetch or update with server response
+    // } catch (error) {
+    //   console.error("Error saving task:", error);
+    //   toast({ variant: "destructive", title: "Save Error", description: "Could not save task to server." });
+    //   // Optionally revert optimistic update here
+    // }
   };
 
   const handleOpenAttachEvidence = (task: Task) => {
@@ -183,14 +213,21 @@ export default function DashboardPage() {
   };
 
   const handleSaveEvidenceLink = (taskId: string, evidenceLink: string) => {
-     // TODO: Implement API call to save evidence link to Supabase
+     // TODO: Implement API call to save evidence link to Supabase (e.g., PATCH /api/tasks/[taskId]/evidence)
     // For now, optimistic UI update
     const taskToUpdate = tasks.find(t => t.id === taskId);
     if (!taskToUpdate) return;
 
+    const updatedActivities = [...(taskToUpdate.activities || []), { 
+      timestamp: new Date(), 
+      user: taskToUpdate.assignedStaff || 'System', 
+      action: 'Evidence Updated', 
+      details: `Evidence link ${evidenceLink ? 'added/updated' : 'removed'}.`
+    }];
+
     setTasks(prevTasks =>
       prevTasks.map(task =>
-        task.id === taskId ? { ...task, evidenceLink: evidenceLink || undefined, activities: [...(task.activities || []), { timestamp: new Date(), user: task.assignedStaff || 'System', action: 'Evidence Updated', details: `Evidence link ${evidenceLink ? 'added/updated' : 'removed'}.`}] } : task
+        task.id === taskId ? { ...task, evidenceLink: evidenceLink || undefined, activities: updatedActivities } : task
       )
     );
     toast({
@@ -200,7 +237,7 @@ export default function DashboardPage() {
     handleCloseAttachEvidenceDialog();
     // If the detailed dialog is open for this task, update its state too
     if (selectedTask && selectedTask.id === taskId) {
-      setSelectedTask(prev => prev ? {...prev, evidenceLink: evidenceLink || undefined} : null);
+      setSelectedTask(prev => prev ? {...prev, evidenceLink: evidenceLink || undefined, activities: updatedActivities} : null);
     }
   };
 
@@ -366,7 +403,7 @@ export default function DashboardPage() {
         currentTasks.sort((a, b) => (b.endDate ? new Date(b.endDate).getTime() : -Infinity) - (a.endDate ? new Date(a.endDate).getTime() : -Infinity));
         break;
       case 'status':
-        const statusOrder: ResolutionStatus[] = ['Escalated', 'Pending', 'Resolved'];
+        const statusOrder: ResolutionStatus[] = ['Escalated', 'Pending', 'Resolved', 'Complete', 'Flagged']; // Adjusted order
         currentTasks.sort((a,b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
         break;
       case 'progress_asc':
@@ -491,5 +528,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
