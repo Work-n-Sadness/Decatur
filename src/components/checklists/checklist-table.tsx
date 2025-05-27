@@ -2,8 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase'; // Assuming supabase client is set up here
-import type { ChecklistItem, ResolutionStatus } from '@/types';
+import type { ChecklistItem, ResolutionStatus } from '@/types'; // Assuming Supabase client is set up here
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +13,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CalendarIcon, Filter, Paperclip, RefreshCw, Save, Upload, AlertCircle, Edit3, Clock, ExternalLink, FileText } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { format, parseISO, isValid as isValidDate, isToday, differenceInCalendarDays, startOfDay as dateFnsStartOfDay, isEqual as isEqualDate } from 'date-fns';
+import { format, parseISO, isValid as isValidDate, isToday, differenceInCalendarDays, startOfDay as dateFnsStartOfDay, isEqual as isEqualDate, isBefore } from 'date-fns';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+// No direct Supabase import here as data fetching is through API
 
 const CHECKLIST_STATUSES: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>[] = ['Pending', 'Complete', 'Flagged'];
 
@@ -43,7 +43,6 @@ export default function ChecklistTable() {
   const [filterStaff, setFilterStaff] = useState('');
   const [filterValidator, setFilterValidator] = useState('');
 
-
   const [isEvidenceModalOpen, setIsEvidenceModalOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [selectedItemForModal, setSelectedItemForModal] = useState<ChecklistItem | null>(null);
@@ -52,30 +51,44 @@ export default function ChecklistTable() {
   const [currentValidator, setCurrentValidator] = useState('');
   
   useEffect(() => {
-    setLoading(true);
     const fetchChecklistItems = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        // TODO: Implement actual Supabase query with proper error handling and sorting
         const response = await fetch('/api/checklists');
         if (!response.ok) {
-          throw new Error(`Failed to fetch checklists: ${response.statusText}`);
+          let errorDetails = `HTTP error ${response.status}`;
+          if (response.statusText) {
+            errorDetails += ` ${response.statusText}`;
+          }
+          try {
+            const errorBody = await response.json();
+            if (errorBody && errorBody.message) {
+              errorDetails = `${errorDetails}: ${errorBody.message}`;
+              if (errorBody.error) {
+                errorDetails += ` (Server error: ${errorBody.error})`;
+              }
+            }
+          } catch (e) {
+            // Failed to parse JSON body, or no JSON body was sent
+          }
+          throw new Error(`Failed to fetch checklists. ${errorDetails}`);
         }
-        const items: ChecklistItem[] = await response.json();
+        const items: any[] = await response.json();
         
-        // Convert date strings from API to Date objects
-        const processedItems = items.map(item => ({
+        const processedItems: ChecklistItem[] = items.map(item => ({
           ...item,
-          dueDate: item.dueDate ? parseISO(item.dueDate as unknown as string) : new Date(),
-          createdAt: item.createdAt ? parseISO(item.createdAt as unknown as string) : new Date(),
-          lastCompletedOn: item.lastCompletedOn ? parseISO(item.lastCompletedOn as unknown as string) : null,
-          statusUpdatedAt: item.statusUpdatedAt ? parseISO(item.statusUpdatedAt as unknown as string) : null,
+          // dueDate from API is already a string YYYY-MM-DD, but parseISO and startOfDay ensure it's a Date object for client logic
+          dueDate: item.dueDate ? dateFnsStartOfDay(parseISO(item.dueDate)) : dateFnsStartOfDay(new Date()), 
+          createdAt: item.createdAt ? parseISO(item.createdAt) : new Date(),
+          lastCompletedOn: item.lastCompletedOn ? parseISO(item.lastCompletedOn) : null,
+          statusUpdatedAt: item.statusUpdatedAt ? parseISO(item.statusUpdatedAt) : null,
         }));
         setChecklistItems(processedItems);
-        setError(null);
       } catch (err: any) {
         console.error("Error fetching checklist items:", err);
-        setError("Failed to load checklist items. Ensure Supabase is configured and your API is working.");
-        toast({ variant: "destructive", title: "Error", description: "Could not load checklist items." });
+        setError(err.message || "Could not load checklist items. Please try again later.");
+        toast({ variant: "destructive", title: "Error", description: err.message || "Could not load checklist items." });
       } finally {
         setLoading(false);
       }
@@ -84,8 +97,6 @@ export default function ChecklistTable() {
   }, [toast]);
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
-    // TODO: Implement PATCH request to API endpoint (e.g., /api/checklists/[id]) to update status in Supabase
-    // For now, optimistic UI update:
     const now = new Date();
     const item = checklistItems.find(i => i.id === itemId);
     let updatePayload: Partial<ChecklistItem> = {
@@ -101,7 +112,24 @@ export default function ChecklistTable() {
       updatePayload.completedBy = null;
     }
     
+    // Optimistic UI update
     setChecklistItems(prevItems => prevItems.map(i => i.id === itemId ? { ...i, ...updatePayload } : i));
+    
+    // TODO: Implement PATCH request to API endpoint (e.g., /api/checklists/[id]) to update status in Supabase
+    // Example:
+    // try {
+    //   const response = await fetch(`/api/checklists/${itemId}`, {
+    //     method: 'PATCH',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ status: newStatus, statusUpdatedAt: now.toISOString(), lastCompletedOn: updatePayload.lastCompletedOn?.toISOString(), completedBy: updatePayload.completedBy }),
+    //   });
+    //   if (!response.ok) throw new Error('Failed to update status');
+    //   toast({ title: "Status Updated", description: `Task status changed to ${newStatus}.` });
+    // } catch (error) {
+    //   console.error("Error updating status:", error);
+    //   toast({ variant: "destructive", title: "Update Error", description: "Could not update status on server." });
+    //   // Optionally revert optimistic update here
+    // }
     toast({ title: "Status Updated (UI Only)", description: `Task status changed to ${newStatus}. Implement API call.` });
   };
 
@@ -113,8 +141,23 @@ export default function ChecklistTable() {
 
   const handleSaveEvidence = async () => {
     if (!selectedItemForModal) return;
-    // TODO: Implement PATCH request to API endpoint to save evidenceLink
+    // Optimistic UI update
     setChecklistItems(prevItems => prevItems.map(i => i.id === selectedItemForModal.id ? { ...i, evidenceLink: currentEvidenceLink } : i));
+    
+    // TODO: Implement PATCH request to API endpoint to save evidenceLink
+    // Example:
+    // try {
+    //   const response = await fetch(`/api/checklists/${selectedItemForModal.id}`, {
+    //     method: 'PATCH',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ evidenceLink: currentEvidenceLink }),
+    //   });
+    //   if (!response.ok) throw new Error('Failed to save evidence');
+    //   toast({ title: "Evidence Link Saved", description: "Evidence link has been updated." });
+    // } catch (error) {
+    //   console.error("Error saving evidence:", error);
+    //   toast({ variant: "destructive", title: "Save Error", description: "Could not save evidence link." });
+    // }
     toast({ title: "Evidence Link Saved (UI Only)", description: "Evidence link has been updated. Implement API call." });
     setIsEvidenceModalOpen(false);
     setSelectedItemForModal(null);
@@ -129,13 +172,27 @@ export default function ChecklistTable() {
 
   const handleSaveNotesAndValidator = async () => {
     if (!selectedItemForModal) return;
-    // TODO: Implement PATCH request to API endpoint to save notes and validator
+    // Optimistic UI update
     setChecklistItems(prevItems => prevItems.map(i => i.id === selectedItemForModal.id ? { ...i, notes: currentNotes, validator: currentValidator } : i));
+    
+    // TODO: Implement PATCH request to API endpoint to save notes and validator
+    // Example:
+    // try {
+    //   const response = await fetch(`/api/checklists/${selectedItemForModal.id}`, {
+    //     method: 'PATCH',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ notes: currentNotes, validator: currentValidator }),
+    //   });
+    //   if (!response.ok) throw new Error('Failed to save details');
+    //   toast({ title: "Details Saved", description: "Notes and validator have been updated." });
+    // } catch (error) {
+    //   console.error("Error saving details:", error);
+    //   toast({ variant: "destructive", title: "Save Error", description: "Could not save notes/validator." });
+    // }
     toast({ title: "Details Saved (UI Only)", description: "Notes and validator have been updated. Implement API call." });
     setIsNotesModalOpen(false);
     setSelectedItemForModal(null);
   };
-
 
   const filteredItems = useMemo(() => {
     return checklistItems.filter(item => {
@@ -160,15 +217,15 @@ export default function ChecklistTable() {
   };
   
   const handleManualGenerate = async () => {
-    toast({ title: "Manual Trigger (Not Implemented)", description: "Manual task generation needs to be adapted for Supabase backend."});
-    console.warn("Manual task generation not implemented for Supabase. This would require calling a Supabase Edge Function or a custom API endpoint.");
+    toast({ title: "Manual Task Generation", description: "This feature is for testing and requires a separate backend process (e.g., Supabase Edge Function) for live recurrence."});
+    console.warn("Manual task generation would call a Supabase Edge Function or a custom API endpoint to simulate recurrence logic.");
   };
 
   const handleExportToday = () => {
-    const todayClient = new Date();
+    const todayClient = dateFnsStartOfDay(new Date()); // Use startOfDay for consistent comparison
     const itemsToExport = checklistItems.filter(item => {
         const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : parseISO(item.dueDate as unknown as string);
-        return itemDueDateJs && isValidDate(itemDueDateJs) && isToday(itemDueDateJs);
+        return itemDueDateJs && isValidDate(itemDueDateJs) && isEqualDate(dateFnsStartOfDay(itemDueDateJs), todayClient);
     });
 
     if (itemsToExport.length === 0) {
@@ -205,7 +262,6 @@ export default function ChecklistTable() {
     document.body.removeChild(link);
     toast({ title: "Export Successful", description: `Today's checklist exported as CSV.` });
   };
-
 
   if (loading) {
     return <div className="flex justify-center items-center h-32"><RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" /> <span className="ml-2">Loading checklists...</span></div>;
@@ -279,8 +335,8 @@ export default function ChecklistTable() {
             />
           </div>
           <div className="flex space-x-2">
-            <Button onClick={handleManualGenerate} variant="outline" title="Manually simulate task generation (for testing)" className="w-full" disabled>
-                <RefreshCw className="mr-2 h-4 w-4" /> Test Gen (N/A)
+            <Button onClick={handleManualGenerate} variant="outline" title="Simulate task generation for testing" className="w-full">
+                <RefreshCw className="mr-2 h-4 w-4" /> Test Gen (Client)
             </Button>
             <Button onClick={handleExportToday} variant="outline" title="Export today's checklist to CSV" className="w-full">
                 <FileText className="mr-2 h-4 w-4" /> Export Today
@@ -369,7 +425,7 @@ export default function ChecklistTable() {
             )}) : (
               <TableRow>
                 <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                  No checklist items found matching your criteria, or data is not yet available from the API.
+                  No checklist items found matching your criteria.
                 </TableCell>
               </TableRow>
             )}
