@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, RefreshCw, AlertCircle } from 'lucide-react';
-import { format, isValid, parseISO } from 'date-fns';
+import { PlusCircle, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react';
+import { format, isValid as isValidDate, parseISO } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,18 +16,17 @@ import { useToast } from "@/hooks/use-toast";
 const getCertificationStatusBadgeVariant = (status: CertificationStatus): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case 'Active':
-      return 'default';
+      return 'default'; // Typically green or primary
     case 'Due Soon':
-      return 'secondary';
+      return 'secondary'; // Typically yellow or orange
     case 'Expired':
-      return 'destructive';
+      return 'destructive'; // Typically red
     default:
       return 'outline';
   }
 };
 
-// Define FacilityCertificationsTable component
-function FacilityCertificationsTable() {
+export function FacilityCertificationsTable() {
   const [certifications, setCertifications] = useState<FacilityCertification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,29 +37,41 @@ function FacilityCertificationsTable() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/facility-certifications');
+        const response = await fetch('/api/facility-certifications'); // Ensure this path is correct
         if (!response.ok) {
           let errorDetails = `HTTP error ${response.status}`;
           if (response.statusText) errorDetails += ` ${response.statusText}`;
+          // Try to get more details from the response body if it's JSON
           try {
             const errorBody = await response.json();
             if (errorBody && errorBody.message) errorDetails = `${errorDetails}: ${errorBody.message}`;
-          } catch (e) { /* Ignore if body isn't JSON */ }
+            if (errorBody && errorBody.error) errorDetails = `${errorDetails} (Server error: ${errorBody.error})`;
+          } catch (e) { /* Ignore if body isn't JSON or response is not a JSON error */ }
           throw new Error(`Failed to fetch certifications. ${errorDetails}`);
         }
         const data: any[] = await response.json();
-        const processedData: FacilityCertification[] = data.map(item => ({
-          ...item,
-          issueDate: item.issueDate ? parseISO(item.issueDate) : new Date(0), // Fallback to prevent invalid date errors
-          expirationDate: item.expirationDate ? parseISO(item.expirationDate) : new Date(0),
-          createdAt: item.createdAt ? parseISO(item.createdAt) : new Date(0),
-          updatedAt: item.updatedAt ? parseISO(item.updatedAt) : new Date(0),
-        }));
+        
+        const processedData: FacilityCertification[] = data.map(item => {
+          // Ensure all date fields are parsed correctly
+          const issueDate = item.issueDate ? parseISO(item.issueDate) : new Date(0);
+          const expirationDate = item.expirationDate ? parseISO(item.expirationDate) : new Date(0);
+          const createdAt = item.createdAt ? parseISO(item.createdAt) : new Date(0);
+          const updatedAt = item.updatedAt ? parseISO(item.updatedAt) : new Date(0);
+
+          return {
+            ...item,
+            issueDate: isValidDate(issueDate) ? issueDate : new Date(0),
+            expirationDate: isValidDate(expirationDate) ? expirationDate : new Date(0),
+            createdAt: isValidDate(createdAt) ? createdAt : new Date(0),
+            updatedAt: isValidDate(updatedAt) ? updatedAt : new Date(0),
+          };
+        });
         setCertifications(processedData);
       } catch (err: any) {
         console.error("Error fetching certifications:", err);
-        setError(err.message || "Could not load certifications. Please try again later.");
-        toast({ variant: "destructive", title: "Error", description: err.message || "Could not load certifications." });
+        const description = err.message || "Could not load certifications. Please try again later. Ensure the API route /api/facility-certifications is available and working.";
+        setError(description);
+        toast({ variant: "destructive", title: "Error Loading Certifications", description });
       } finally {
         setLoading(false);
       }
@@ -88,7 +99,7 @@ function FacilityCertificationsTable() {
   if (!loading && !error && certifications.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-8">
-        No certifications found. Add a new certification to get started.
+        No certifications found. Add a new certification to get started, or check the API endpoint.
       </div>
     );
   }
@@ -112,8 +123,8 @@ function FacilityCertificationsTable() {
             <TableRow key={cert.id}>
               <TableCell className="font-medium">{cert.certificationName}</TableCell>
               <TableCell>{cert.certifyingAgency}</TableCell>
-              <TableCell>{isValid(cert.issueDate) ? format(cert.issueDate, 'PP') : 'N/A'}</TableCell>
-              <TableCell>{isValid(cert.expirationDate) ? format(cert.expirationDate, 'PP') : 'N/A'}</TableCell>
+              <TableCell>{isValidDate(cert.issueDate) ? format(cert.issueDate, 'PP') : 'N/A'}</TableCell>
+              <TableCell>{isValidDate(cert.expirationDate) ? format(cert.expirationDate, 'PP') : 'N/A'}</TableCell>
               <TableCell>
                 <Badge variant={getCertificationStatusBadgeVariant(cert.status)}>
                   {cert.status}
@@ -123,8 +134,8 @@ function FacilityCertificationsTable() {
               <TableCell>
                 {cert.certificateUpload ? (
                   <Button variant="link" size="sm" asChild className="p-0 h-auto">
-                    <a href={cert.certificateUpload} target="_blank" rel="noopener noreferrer" className="text-accent">
-                      View Document
+                    <a href={cert.certificateUpload} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center">
+                      View Document <ExternalLink className="ml-1 h-3 w-3" />
                     </a>
                   </Button>
                 ) : (
@@ -169,6 +180,3 @@ export default function CertificationsPage() {
     </Card>
   );
 }
-
-// User's requested named export
-export { FacilityCertificationsTable };
