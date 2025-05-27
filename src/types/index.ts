@@ -102,7 +102,8 @@ export type AuditToolCategory =
   | 'General ALR Compliance'
   | 'Resident Records Management' // For Face Sheets
   | 'Resident Care Plans' // For Care Plans
-  | 'Resident Progress Notes'; // For Progress Notes
+  | 'Resident Progress Notes' // For Progress Notes
+  | 'Resident Admissions & Discharges'; // For Moving-in & Moving-out
 
 
 // Simplified status for audit records for now, can be expanded
@@ -114,9 +115,13 @@ export type AuditStatus =
   | 'Non-Compliant' 
   | 'Resolved' 
   | 'Up-to-date' // For Face Sheets, Progress Notes
-  | 'Archived' // For Face Sheets, Care Plans, Progress Notes
+  | 'Archived' // For Face Sheets, Care Plans, Progress Notes, Admissions/Discharges
   | 'Review Needed' // For Face Sheets, Care Plans
-  | 'Active'; // For Care Plans
+  | 'Active' // For Care Plans
+  | 'Admission Pending'
+  | 'Admission Complete'
+  | 'Discharge Pending'
+  | 'Discharge Complete';
 
 
 export interface AuditRecord {
@@ -125,7 +130,7 @@ export interface AuditRecord {
   category: AuditToolCategory;
   assignedRole: AppRole | AppRole[]; 
   validator?: AppRole | string | null; 
-  lastCompletedDate?: Date | null; 
+  lastCompletedDate?: Date | null; // Generic date field, can mean review date, completion date etc.
   status: AuditStatus; 
   evidenceLink?: string; 
   chapterReferenceTag?: string; 
