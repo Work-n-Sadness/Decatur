@@ -2,16 +2,15 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase'; // Uses shared instance
-import { collection, onSnapshot, query, orderBy, type Timestamp } from 'firebase/firestore';
 import type { FacilityCertification, CertificationStatus } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, RefreshCw, AlertCircle } from 'lucide-react';
-import { format, isValid } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from "@/hooks/use-toast";
 
 // Helper function to determine badge variant based on status
 const getCertificationStatusBadgeVariant = (status: CertificationStatus): "default" | "secondary" | "destructive" | "outline" => {
@@ -32,33 +31,42 @@ function FacilityCertificationsTable() {
   const [certifications, setCertifications] = useState<FacilityCertification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    setLoading(true);
-    const q = query(collection(db, "facilityCertifications"), orderBy("expirationDate", "asc"));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => {
-        const docData = doc.data();
-        return {
-          id: doc.id,
-          ...docData,
-          issueDate: docData.issueDate && (docData.issueDate as Timestamp).toDate ? (docData.issueDate as Timestamp).toDate() : new Date(),
-          expirationDate: docData.expirationDate && (docData.expirationDate as Timestamp).toDate ? (docData.expirationDate as Timestamp).toDate() : new Date(),
-          createdAt: docData.createdAt && (docData.createdAt as Timestamp).toDate ? (docData.createdAt as Timestamp).toDate() : new Date(),
-          updatedAt: docData.updatedAt && (docData.updatedAt as Timestamp).toDate ? (docData.updatedAt as Timestamp).toDate() : new Date(),
-        } as FacilityCertification;
-      });
-      setCertifications(data);
-      setLoading(false);
-    }, (err) => {
-      console.error("Error fetching certifications:", err);
-      setError("Failed to load certifications. Please try again later.");
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    const fetchCertifications = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/facility-certifications');
+        if (!response.ok) {
+          let errorDetails = `HTTP error ${response.status}`;
+          if (response.statusText) errorDetails += ` ${response.statusText}`;
+          try {
+            const errorBody = await response.json();
+            if (errorBody && errorBody.message) errorDetails = `${errorDetails}: ${errorBody.message}`;
+          } catch (e) { /* Ignore if body isn't JSON */ }
+          throw new Error(`Failed to fetch certifications. ${errorDetails}`);
+        }
+        const data: any[] = await response.json();
+        const processedData: FacilityCertification[] = data.map(item => ({
+          ...item,
+          issueDate: item.issueDate ? parseISO(item.issueDate) : new Date(0), // Fallback to prevent invalid date errors
+          expirationDate: item.expirationDate ? parseISO(item.expirationDate) : new Date(0),
+          createdAt: item.createdAt ? parseISO(item.createdAt) : new Date(0),
+          updatedAt: item.updatedAt ? parseISO(item.updatedAt) : new Date(0),
+        }));
+        setCertifications(processedData);
+      } catch (err: any) {
+        console.error("Error fetching certifications:", err);
+        setError(err.message || "Could not load certifications. Please try again later.");
+        toast({ variant: "destructive", title: "Error", description: err.message || "Could not load certifications." });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCertifications();
+  }, [toast]);
 
   if (loading) {
     return (
@@ -136,12 +144,18 @@ export default function CertificationsPage() {
   const pageTitle = "Facility Certifications";
   const descriptionText = "Track and monitor facility-level certifications. Ensure compliance with all regulatory requirements by keeping certifications up to date.";
   
+  // TODO: Implement add new certification functionality - open a dialog/form
+  const handleAddNewCertification = () => {
+    console.log("Add new certification clicked"); 
+    // Example: setIsFormOpen(true); setEditingRecord(null);
+  };
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           {pageTitle}
-          <Button size="sm">
+          <Button size="sm" onClick={handleAddNewCertification}>
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Certification
           </Button>
         </CardTitle>
@@ -150,7 +164,7 @@ export default function CertificationsPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <FacilityCertificationsTable /> {/* Use the extracted component */}
+        <FacilityCertificationsTable />
       </CardContent>
     </Card>
   );
