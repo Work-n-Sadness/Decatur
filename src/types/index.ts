@@ -99,23 +99,24 @@ export type AuditToolCategory =
   | 'Personnel File & Staff Training'
   | 'Postings & Required Notices'
   | 'Environmental & Sanitation Safety'
-  | 'General ALR Compliance';
+  | 'General ALR Compliance'
+  | 'Resident Records Management'; // Added for Face Sheets
 
 // Simplified status for audit records for now, can be expanded
-export type AuditStatus = 'Pending Review' | 'In Progress' | 'Action Required' | 'Compliant' | 'Non-Compliant' | 'Resolved';
+export type AuditStatus = 'Pending Review' | 'In Progress' | 'Action Required' | 'Compliant' | 'Non-Compliant' | 'Resolved' | 'Up-to-date' | 'Archived';
 
 
 export interface AuditRecord {
   id: string;
-  name: string;
+  name: string; // For Face Sheets, this could be "Resident Name - Face Sheet"
   category: AuditToolCategory;
-  assignedRole: AppRole | AppRole[];
-  validator?: AppRole | string | null;
-  lastCompletedDate?: Date | null;
-  status: AuditStatus;
-  evidenceLink?: string;
-  chapterReferenceTag?: string;
-  notes?: string;
+  assignedRole: AppRole | AppRole[]; // Staff responsible for maintaining/reviewing the face sheet
+  validator?: AppRole | string | null; // e.g., Nurse or Admin for validation
+  lastCompletedDate?: Date | null; // Could be "Last Reviewed Date" or "Last Updated Date"
+  status: AuditStatus; // e.g., 'Up-to-date', 'Review Needed', 'Archived'
+  evidenceLink?: string; // Link to the digital face sheet document
+  chapterReferenceTag?: string; // e.g., if there are specific regulatory tags for face sheets
+  notes?: string; // Any relevant notes
   createdAt: Date;
   updatedAt: Date;
 }
@@ -142,30 +143,31 @@ export interface RecurringTaskSeed {
   id: string;
   taskName: string;
   frequency: 'daily' | 'weekly' | 'monthly';
-  recurrenceDays?: string[];
-  recurrenceDayOfMonth?: number;
+  recurrenceDays?: string[]; // For weekly tasks, e.g., ["Monday", "Wednesday"]
+  recurrenceDayOfMonth?: number; // For monthly tasks
   assignedStaff: string; // Role or specific user ID
   validator?: string; // Role or specific user ID
   autoGenerateChecklist: boolean;
   category?: string;
-  startDateForHistory?: string;
+  startDateForHistory?: string; // YYYY-MM-DD format
   generateHistory?: boolean;
 }
+
 
 export interface ChecklistItem {
   id: string;
   taskName: string;
-  assignedStaff: string; // Role or user ID
+  assignedStaff: string;
   assignedStaffId?: string;
-  validator?: string | null; // Role or user ID
-  dueDate: Date; // Will be JS Date on client after parsing from string or Timestamp
+  validator?: string | null;
+  dueDate: Date; // Firestore Timestamp on backend, JS Date on client
   status: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>;
-  createdAt: Date; // Will be JS Date
-  statusUpdatedAt?: Date | null; // Will be JS Date
+  createdAt: Date; // Firestore Timestamp on backend, JS Date on client
+  statusUpdatedAt?: Date | null; // Firestore Timestamp on backend, JS Date on client
   taskId: string;
   notes?: string;
   evidenceLink?: string;
-  lastCompletedOn?: Date | null; // Will be JS Date
+  lastCompletedOn?: Date | null; // Firestore Timestamp on backend, JS Date on client
   completedBy?: string | null;
   category?: string;
   backfilled?: boolean;
@@ -215,3 +217,5 @@ export interface StaffResponsibilityMatrixEntry {
     category: TaskCategory;
   }[];
 }
+
+    
