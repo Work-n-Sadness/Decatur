@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BarChart3, CalendarIcon, Download, Filter, FileText, Repeat, History } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, subWeeks, subQuarters, subYears, type Duration, addDays, subDays, isValid } from "date-fns"; // Added isValid
-import { allTaskCategories, allResolutionStatuses, allMockRoles, allTaskFrequencies, mockTasks } from '@/lib/mock-data'; 
+import { allTaskCategories, allResolutionStatuses, allAppRoles, allTaskFrequencies, mockTasks } from '@/lib/mock-data'; 
 import type { TaskCategory, ResolutionStatus, Role, TaskFrequency, Task } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
@@ -126,11 +126,11 @@ export default function ReportsPage() {
     const filteredReportTasks = mockTasks.filter(task => {
         let taskDateToCompare: Date | null = null;
         // Prioritize completion, then due, then start date for filtering
-        if (task.lastCompletedOn && isValid(new Date(task.lastCompletedOn))) { // Changed isValidDate to isValid
+        if (task.lastCompletedOn && isValid(new Date(task.lastCompletedOn))) { 
             taskDateToCompare = new Date(task.lastCompletedOn);
-        } else if (task.endDate && isValid(new Date(task.endDate))) { // Changed isValidDate to isValid
+        } else if (task.endDate && isValid(new Date(task.endDate))) { 
             taskDateToCompare = new Date(task.endDate);
-        } else if (task.startDate && isValid(new Date(task.startDate))) { // Changed isValidDate to isValid
+        } else if (task.startDate && isValid(new Date(task.startDate))) { 
             taskDateToCompare = new Date(task.startDate);
         }
         
@@ -247,8 +247,8 @@ export default function ReportsPage() {
                     disabled={selectedPresetDateRangeKey !== 'custom'}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {customDateRange.from && isValid(customDateRange.from) ? ( // Changed isValidDate to isValid
-                      customDateRange.to && isValid(customDateRange.to) ? ( // Changed isValidDate to isValid
+                    {customDateRange.from && isValid(customDateRange.from) ? ( 
+                      customDateRange.to && isValid(customDateRange.to) ? ( 
                         <>
                           {format(customDateRange.from, "LLL dd, y")} -{" "}
                           {format(customDateRange.to, "LLL dd, y")}
@@ -304,7 +304,7 @@ export default function ReportsPage() {
                  <div>
                     <Label className="text-sm font-medium mb-2 block">Responsible Roles</Label>
                      <ScrollArea className="h-40 w-full rounded-md border p-2 bg-background">
-                        {allMockRoles.map(role => (
+                        {allAppRoles.map(role => (
                             <div key={role} className="flex items-center space-x-2 mb-1">
                                 <Checkbox id={`role-${role}`} checked={selectedRoles.includes(role as Role)} onCheckedChange={() => toggleSelection(selectedRoles, role as Role, setSelectedRoles)} />
                                 <Label htmlFor={`role-${role}`} className="text-sm font-normal cursor-pointer">{role}</Label>
