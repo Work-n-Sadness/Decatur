@@ -33,7 +33,7 @@ import {
 import { Building2, LogOut, UserCircle, Moon, Sun, ChevronDown, ChevronUp } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { SidebarIcons } from '@/components/icons';
-import type { AppRole } from '@/types'; // For potential future use with user data
+import type { AppRole } from '@/types'; 
 
 interface NavItem {
   href: string;
@@ -45,7 +45,7 @@ interface NavGroup {
   label: string;
   items: NavItem[];
   icon?: LucideIcon;
-  defaultOpen?: boolean; // To suggest if a group should be open by default
+  defaultOpen?: boolean; 
 }
 
 const navGroups: NavGroup[] = [
@@ -251,7 +251,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Effect to open the group of the currently active page
   useEffect(() => {
     if (!mounted) return;
     let activeGroupLabel: string | null = null;
@@ -262,7 +261,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Initialize openGroups, respecting defaultOpen and opening the active group
     const initialOpenGroups: Record<string, boolean> = {};
     navGroups.forEach(group => {
       initialOpenGroups[group.label] = group.defaultOpen || (activeGroupLabel === group.label);
@@ -273,7 +271,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
 
   const currentTopLevelLabel = React.useMemo(() => {
-    if (!mounted) { // Avoid hydration mismatch
+    if (!mounted) { 
       const defaultItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
       return defaultItem ? defaultItem.label : 'Dashboard';
     }
@@ -287,7 +285,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
       }
     }
-    // Fallback if no specific match (e.g., on a 404 page not in nav)
     const rootItem = navGroups.flatMap(g => g.items).find(item => item.href === '/');
     return rootItem ? rootItem.label : 'Dashboard';
   }, [pathname, mounted]);
@@ -304,7 +301,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setOpenGroups(prev => ({ ...prev, [groupLabel]: !prev[groupLabel] }));
   };
 
-  if (!mounted) { // Prevents hydration issues with theme and pathname
+  if (!mounted) { 
     return null;
   }
 
@@ -314,7 +311,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader className="p-4">
           <Link href="/" className="flex items-center gap-2">
             <Building2 className="h-8 w-8 text-accent" />
-            <h1 className="text-xl font-semibold text-foreground">Decatur West</h1>
+            <h1 className="text-xl font-semibold text-foreground">DCS</h1>
           </Link>
         </SidebarHeader>
         <SidebarContent>
@@ -371,7 +368,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/40x40.png?text=DW&font=roboto" alt="User Avatar" data-ai-hint="facility logo simple" />
+                  <AvatarImage src="https://placehold.co/40x40.png?text=DCS&font=roboto" alt="DCS User Avatar" data-ai-hint="facility logo simple" />
                   <AvatarFallback>
                     <UserCircle className="h-6 w-6" />
                   </AvatarFallback>

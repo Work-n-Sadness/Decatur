@@ -3,13 +3,13 @@ import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
-import AppLayout from '@/components/layout/app-layout'; // Corrected import: GeistSans and GeistMono are types
+import AppLayout from '@/components/layout/app-layout'; 
 import { Toaster } from "@/components/ui/toaster";
 
 
 export const metadata: Metadata = {
-  title: 'Decatur West - Workflow Dashboard',
-  description: 'Assisted Living Residence Workflow Dashboard',
+  title: 'Dedicated Care Specialist - Workflow Dashboard',
+  description: 'Assisted Living Residence Workflow Dashboard for Dedicated Care Specialist',
 };
 
 export default function RootLayout({

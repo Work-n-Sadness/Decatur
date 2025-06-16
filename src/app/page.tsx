@@ -29,7 +29,7 @@ export default function DashboardPage() {
     role: AppRole;
     frequency: TaskFrequency;
     complianceChapterTag: string;
-    careFlag: ResidentCareFlag; // Added careFlag to filters
+    careFlag: ResidentCareFlag; 
   }>>({});
   const [sortBy, setSortBy] = useState<string>('dueDate_asc');
 
@@ -105,19 +105,16 @@ export default function DashboardPage() {
   };
 
   const handleSaveTask = (updatedTaskFromDialog: Task) => {
-    // TODO: Implement API call to save task to Supabase (e.g., PATCH /api/tasks/[taskId])
-    // For now, optimistic UI update
     let taskToProcess = { ...updatedTaskFromDialog };
     const originalTaskState = tasks.find(t => t.id === taskToProcess.id);
 
     const baseActivities = originalTaskState?.activities || [];
     let newActivities: ActivityLog[] = [...baseActivities];
 
-    // Log status change if it occurred and it's not just a general save on a resolved task
     if (originalTaskState && originalTaskState.status !== taskToProcess.status) {
       newActivities.push({
         timestamp: new Date(),
-        user: taskToProcess.assignedStaff || 'System', // Use assigned staff or a system user
+        user: taskToProcess.assignedStaff || 'System', 
         action: `Status Change: ${originalTaskState.status} -> ${taskToProcess.status}`,
         details: `Task status updated to ${taskToProcess.status}.`,
       });
@@ -130,7 +127,6 @@ export default function DashboardPage() {
       taskToProcess.completedBy = taskToProcess.completedBy || taskToProcess.assignedStaff;
       taskToProcess.progress = 100;
 
-      // Check if this activity was already added by the dialog logic. Avoid duplicates.
       const existingResolveActivity = newActivities.find(act => act.action === 'Task Resolved' && act.user === taskToProcess.assignedStaff);
       if (!existingResolveActivity) {
         newActivities.push({
@@ -147,17 +143,14 @@ export default function DashboardPage() {
       });
 
     } else if (taskToProcess.status === 'Resolved' && originalTaskState?.status === 'Resolved') {
-       // If it was already resolved, just a general update. Ensure progress is 100.
        taskToProcess.progress = 100;
        toast({
           title: "Task Updated",
           description: `Task "${originalTaskState?.name || taskToProcess.name}" details saved.`,
         });
     } else if (originalTaskState?.status === 'Resolved' && taskToProcess.status !== 'Resolved') {
-        // Task moved from Resolved to another status
         taskToProcess.lastCompletedOn = null;
         taskToProcess.completedBy = null;
-        // Optionally adjust progress here if needed, e.g., taskToProcess.progress = 0;
         const existingUnresolveActivity = newActivities.find(act => act.action === 'Task Un-Resolved');
         if (!existingUnresolveActivity) {
            newActivities.push({
@@ -172,7 +165,6 @@ export default function DashboardPage() {
           description: `Task "${taskToProcess.name}" is no longer resolved. Status: ${taskToProcess.status}.`,
         });
     } else {
-       // For other statuses or general updates
        toast({
           title: "Task Updated",
           description: `Task "${taskToProcess.name}" has been saved successfully.`,
@@ -185,21 +177,6 @@ export default function DashboardPage() {
     if (selectedTask && selectedTask.id === taskToProcess.id) {
       setSelectedTask(taskToProcess);
     }
-    // TODO: Add API call here and handle response
-    // Example:
-    // try {
-    //   const response = await fetch(`/api/tasks/${taskToProcess.id}`, {
-    //     method: 'PATCH',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(taskToProcess), // Send only fields that can be updated
-    //   });
-    //   if (!response.ok) throw new Error('Failed to save task to server');
-    //   // Optionally re-fetch or update with server response
-    // } catch (error) {
-    //   console.error("Error saving task:", error);
-    //   toast({ variant: "destructive", title: "Save Error", description: "Could not save task to server." });
-    //   // Optionally revert optimistic update here
-    // }
   };
 
   const handleOpenAttachEvidence = (task: Task) => {
@@ -213,8 +190,6 @@ export default function DashboardPage() {
   };
 
   const handleSaveEvidenceLink = (taskId: string, evidenceLink: string) => {
-     // TODO: Implement API call to save evidence link to Supabase (e.g., PATCH /api/tasks/[taskId]/evidence)
-    // For now, optimistic UI update
     const taskToUpdate = tasks.find(t => t.id === taskId);
     if (!taskToUpdate) return;
 
@@ -235,7 +210,6 @@ export default function DashboardPage() {
       description: `Evidence link for task has been updated.`,
     });
     handleCloseAttachEvidenceDialog();
-    // If the detailed dialog is open for this task, update its state too
     if (selectedTask && selectedTask.id === taskId) {
       setSelectedTask(prev => prev ? {...prev, evidenceLink: evidenceLink || undefined, activities: updatedActivities} : null);
     }
@@ -319,7 +293,6 @@ export default function DashboardPage() {
           rows.push([...commonTaskData, ...activityData].map(escapeCsvField).join(','));
         });
       } else {
-        // Add task even if no activities, with empty activity fields
         rows.push([...commonTaskData, '', '', '', ''].map(escapeCsvField).join(','));
       }
     });
@@ -403,7 +376,7 @@ export default function DashboardPage() {
         currentTasks.sort((a, b) => (b.endDate ? new Date(b.endDate).getTime() : -Infinity) - (a.endDate ? new Date(a.endDate).getTime() : -Infinity));
         break;
       case 'status':
-        const statusOrder: ResolutionStatus[] = ['Escalated', 'Pending', 'Resolved', 'Complete', 'Flagged']; // Adjusted order
+        const statusOrder: ResolutionStatus[] = ['Escalated', 'Pending', 'Resolved', 'Complete', 'Flagged']; 
         currentTasks.sort((a,b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
         break;
       case 'progress_asc':
@@ -416,7 +389,7 @@ export default function DashboardPage() {
         const frequencyOrder: TaskFrequency[] = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Mid Yearly', 'Annually', 'Bi-annually', 'As Needed'];
         currentTasks.sort((a,b) => frequencyOrder.indexOf(a.frequency) - frequencyOrder.indexOf(b.frequency));
         break;
-      default: // Default to due date ascending
+      default: 
         currentTasks.sort((a, b) => (a.endDate ? new Date(a.endDate).getTime() : Infinity) - (b.endDate ? new Date(b.endDate).getTime() : Infinity));
         break;
     }
@@ -444,11 +417,11 @@ export default function DashboardPage() {
           <div className="aspect-video bg-muted rounded-md overflow-hidden flex items-center justify-center">
             <Image
               src="https://placehold.co/600x400.png"
-              alt="Facility Exterior"
+              alt="Dedicated Care Specialist Facility"
               width={600}
               height={400}
               className="object-cover w-full h-full"
-              data-ai-hint="facility building"
+              data-ai-hint="care facility building"
               priority
             />
           </div>
