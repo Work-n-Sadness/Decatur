@@ -8,8 +8,8 @@ import { Toaster } from "@/components/ui/toaster";
 
 
 export const metadata: Metadata = {
-  title: 'Dedicated Care Specialist - Workflow Dashboard',
-  description: 'Assisted Living Residence Workflow Dashboard for Dedicated Care Specialist',
+  title: 'Dedicated Care Suite - Workflow Dashboard',
+  description: 'Assisted Living Residence Workflow Dashboard for Dedicated Care Suite',
 };
 
 export default function RootLayout({

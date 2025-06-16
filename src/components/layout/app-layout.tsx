@@ -30,7 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Building2, LogOut, UserCircle, Moon, Sun, ChevronDown, ChevronUp } from 'lucide-react';
+import { Shield as ShieldIcon, LogOut, UserCircle, Moon, Sun, ChevronDown, ChevronUp } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { SidebarIcons } from '@/components/icons';
 import type { AppRole } from '@/types'; 
@@ -310,7 +310,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar>
         <SidebarHeader className="p-4">
           <Link href="/" className="flex items-center gap-2">
-            <Building2 className="h-8 w-8 text-accent" />
+            <ShieldIcon className="h-8 w-8 text-accent" />
             <h1 className="text-xl font-semibold text-foreground">DCS</h1>
           </Link>
         </SidebarHeader>
@@ -368,7 +368,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/40x40.png?text=DCS&font=roboto" alt="DCS User Avatar" data-ai-hint="facility logo simple" />
+                  <AvatarImage src="https://placehold.co/40x40.png?text=DCS&font=roboto" alt="DCS User Avatar" data-ai-hint="shield cross logo" />
                   <AvatarFallback>
                     <UserCircle className="h-6 w-6" />
                   </AvatarFallback>

@@ -417,7 +417,7 @@ export default function DashboardPage() {
           <div className="aspect-video bg-muted rounded-md overflow-hidden flex items-center justify-center">
             <Image
               src="https://placehold.co/600x400.png"
-              alt="Dedicated Care Specialist Facility"
+              alt="Dedicated Care Suite Facility"
               width={600}
               height={400}
               className="object-cover w-full h-full"
