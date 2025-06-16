@@ -48,64 +48,32 @@ interface NavGroup {
   defaultOpen?: boolean; 
 }
 
+// Updated navGroups focusing on compliance
 const navGroups: NavGroup[] = [
   {
     label: 'OPERATIONS',
-    icon: SidebarIcons.Dashboard,
+    icon: SidebarIcons.Dashboard, // Or a more compliance-focused group icon if available
     defaultOpen: true,
     items: [
       { href: '/', label: 'Dashboard', icon: SidebarIcons.Dashboard },
       { href: '/core-operations/audit-tool', label: 'Audit Tool', icon: SidebarIcons.AuditTool },
       { href: '/compliance-summary', label: 'Compliance Summary', icon: SidebarIcons.ComplianceSummary },
-      { href: '/reports', label: 'Reports', icon: SidebarIcons.Reports },
       { href: '/core-operations/survey-readiness', label: 'Survey Readiness', icon: SidebarIcons.SurveyReadiness },
       { href: '/checklists', label: 'Checklists', icon: SidebarIcons.Checklists },
     ],
   },
   {
-    label: 'RESIDENTS',
-    icon: SidebarIcons.ProfilesFaceSheets,
-    items: [
-      { href: '/resident-records/face-sheets', label: 'Face Sheets', icon: SidebarIcons.ProfilesFaceSheets },
-      { href: '/resident-records/care-plans', label: 'Care Plans', icon: SidebarIcons.CarePlans },
-      { href: '/resident-records/progress-notes', label: 'Progress Notes', icon: SidebarIcons.ProgressNotes },
-      { href: '/resident-records/moving-in-out', label: 'Residents Moving-in & Moving-out', icon: SidebarIcons.ResidentsMovingInOut },
-      { href: '/resident-records/case-management', label: 'Case Management', icon: SidebarIcons.CaseManagement },
-      { href: '/resident-records/resident-management-forum', label: 'Resident-Management Forum', icon: SidebarIcons.ResidentManagementForum },
-    ],
-  },
-  {
     label: 'MEDICAL NEEDS & CARE TAGS',
     icon: SidebarIcons.MedicalNeedsCareTagsGroup,
+    defaultOpen: true,
     items: [
         { href: '/medical-needs/special-care-tags', label: 'Special Care Tags', icon: SidebarIcons.SpecialCareTags },
     ],
   },
   {
-    label: 'MEDICATION & ECP',
-    icon: SidebarIcons.MedOrders,
-    items: [
-      { href: '/medication-clinical/medication-orders', label: 'Medication Orders', icon: SidebarIcons.MedOrders },
-      { href: '/medication-clinical/mar-logs', label: 'MAR Logs', icon: SidebarIcons.MARLogs },
-      { href: '/medication-clinical/prn-monitoring', label: 'PRN Monitoring', icon: SidebarIcons.PRNMonitoring },
-      { href: '/medication-clinical/pharmacy-orders', label: 'Pharmacy Orders', icon: SidebarIcons.PharmacyOrders },
-      { href: '/medication-clinical/discontinued-meds', label: 'Discontinued Meds', icon: SidebarIcons.DiscontinuedMeds },
-      { href: '/medication-clinical/treatment-history', label: 'Treatment History', icon: SidebarIcons.TreatmentHistory },
-      { href: '/medication-clinical/doctor-orders', label: 'Doctor Orders', icon: SidebarIcons.DoctorOrders },
-    ],
-  },
-  {
-    label: 'ECP CHARTING',
-    icon: SidebarIcons.FlaggedECPActions,
-    items: [
-        { href: '/ecp-charting/flagged-actions', label: 'Flagged ECP Actions', icon: SidebarIcons.FlaggedECPActions },
-        { href: '/ecp-charting/mar-corrections', label: 'MAR Corrections Log', icon: SidebarIcons.MARCorrections },
-        { href: '/ecp-charting/missed-doses', label: 'Missed Dose Tracker', icon: SidebarIcons.MissedDoses },
-    ]
-  },
-  {
     label: 'EMERGENCY READINESS',
-    icon: SidebarIcons.FireDrills,
+    icon: SidebarIcons.EmergencyReadinessGroup,
+    defaultOpen: true,
     items: [
       { href: '/fire-emergency/fire-drills', label: 'Fire Drills', icon: SidebarIcons.FireDrills },
       { href: '/fire-emergency/extinguisher-checks', label: 'Extinguisher Checks', icon: SidebarIcons.ExtinguisherChecks },
@@ -114,121 +82,6 @@ const navGroups: NavGroup[] = [
       { href: '/fire-emergency/evacuation-plans', label: 'Evacuation Plans', icon: SidebarIcons.EvacuationPlans },
       { href: '/fire-emergency/go-bag-checklist', label: 'Go-Bag Checklist', icon: SidebarIcons.GoBagChecklist },
       { href: '/fire-emergency/911-log', label: '911 Log', icon: SidebarIcons.NineOneOneLog },
-    ],
-  },
-  {
-    label: 'FACILITY OPERATIONS & SERVICES',
-    icon: SidebarIcons.FacilityOpsServicesGroup,
-    items: [
-      { href: '/facility-operations/procurement/grocery-food-purchases', label: 'Grocery & Food Purchases', icon: SidebarIcons.GroceryFoodPurchases },
-      { href: '/facility-operations/procurement/cleaning-supplies-orders', label: 'Cleaning Supplies Orders', icon: SidebarIcons.CleaningSuppliesOrders },
-      { href: '/facility-operations/procurement/food-dry-goods-inventory', label: 'Food & Dry Goods Inventory', icon: SidebarIcons.FoodDryGoodsInventory },
-      { href: '/facility-operations/procurement/cleaning-supplies-inventory', label: 'Cleaning Supplies Inventory', icon: SidebarIcons.CleaningSuppliesInventory },
-      { href: '/facility-operations/maintenance/request-log', label: 'Maintenance Request Log', icon: SidebarIcons.MaintenanceRequestLog },
-      { href: '/facility-operations/maintenance/repair-history', label: 'Facility Repair History', icon: SidebarIcons.FacilityRepairHistory },
-      { href: '/facility-operations/maintenance/preventive-schedule', label: 'Preventive Maintenance', icon: SidebarIcons.PreventiveMaintenanceSchedule },
-      { href: '/facility-operations/maintenance/vendor-directory', label: 'Vendor Directory', icon: SidebarIcons.VendorContactDirectory },
-      { href: '/facility-operations/meal-ops/weekly-schedule', label: 'Weekly Meal Schedule', icon: SidebarIcons.WeeklyMealSchedule },
-      { href: '/facility-operations/meal-ops/meal-prep-checklist', label: 'Meal Prep Checklist', icon: SidebarIcons.MealPrepChecklist },
-      { href: '/facility-operations/meal-ops/therapeutic-diet-tracker', label: 'Therapeutic Diet Tracker', icon: SidebarIcons.TherapeuticDietTracker },
-      { href: '/facility-operations/meal-ops/leftovers-log', label: 'Leftovers & Labeling Log', icon: SidebarIcons.LeftoversLabelingLog },
-      { href: '/facility-operations/water-safety/shower-sink-temp-logs', label: 'Shower & Sink Temp Logs', icon: SidebarIcons.WeeklyShowerSinkTempLogs },
-      { href: '/facility-operations/water-safety/dishwasher-temp-record', label: 'Dishwasher Temp Record', icon: SidebarIcons.DishwasherCycleTempRecord },
-      { href: '/facility-operations/water-safety/scald-risk-audit', label: 'Scald Risk Audit', icon: SidebarIcons.ScaldRiskAudit },
-    ],
-  },
-  {
-    label: 'ENVIRONMENTAL SAFETY',
-    icon: SidebarIcons.EnvironmentalSafetyGroup,
-    items: [
-      { href: '/environmental/pest-control', label: 'Pest Control', icon: SidebarIcons.PestControl },
-      { href: '/environmental/oxygen-handling', label: 'Oxygen Handling', icon: SidebarIcons.OxygenHandling },
-      { href: '/environmental/ppe-audit', label: 'PPE Audits', icon: SidebarIcons.PPEAudits },
-      { href: '/environmental/maintenance-requests', label: 'Maintenance Requests', icon: SidebarIcons.MaintenanceRequests },
-      { href: '/environmental/hazard-checks', label: 'Hazard Checks', icon: SidebarIcons.HazardChecks },
-    ],
-  },
-  {
-    label: 'FOOD & NUTRITION',
-    icon: SidebarIcons.FoodNutritionGroup,
-    items: [
-      { href: '/food-nutrition/food-temp-logs', label: 'Temperature Logs', icon: SidebarIcons.TempLogs },
-      { href: '/food-nutrition/dishwasher-logs', label: 'Dishwasher Logs', icon: SidebarIcons.DishwasherLogs },
-      { href: '/food-nutrition/weekly-menu', label: 'Weekly Menu', icon: SidebarIcons.WeeklyMenu },
-      { href: '/food-nutrition/grocery-inventory', label: 'Grocery Inventory', icon: SidebarIcons.GroceryInventory },
-      { href: '/food-nutrition/food-safety-audit', label: 'Food Safety Audits', icon: SidebarIcons.FoodSafetyAudits },
-    ],
-  },
-  {
-    label: 'SECURITY & BEHAVIOR',
-    icon: SidebarIcons.SecurityBehaviorGroup,
-    items: [
-      { href: '/security-behavior/entry-exit-logs', label: 'Entry/Exit Logs', icon: SidebarIcons.EntryExitLogs },
-      { href: '/security-behavior/smoking-compliance', label: 'Smoking Compliance', icon: SidebarIcons.SmokingCompliance },
-      { href: '/security-behavior/behavior-reports', label: 'Behavior Reports', icon: SidebarIcons.BehaviorReports },
-      { href: '/security-behavior/visitor-log-notifications', label: 'Visitor Log & Notifications', icon: SidebarIcons.VisitorLogNotifications },
-    ],
-  },
-  {
-    label: 'REGULATORY OVERSIGHT',
-    icon: SidebarIcons.RegulatoryOversightGroup,
-    items: [
-      { href: '/governance-regulatory/fire-dept-visits', label: 'Fire Dept Visits', icon: SidebarIcons.FireDeptVisits },
-      { href: '/governance-regulatory/state-survey-visits', label: 'State Survey Visits', icon: SidebarIcons.StateSurveyVisits },
-      { href: '/governance-regulatory/regulatory-visit-logs', label: 'Regulatory Visit Logs', icon: SidebarIcons.RegulatoryVisitLogs },
-      { href: '/governance-regulatory/ombudsman-reports', label: 'Ombudsman Reports', icon: SidebarIcons.OmbudsmanReports },
-      { href: '/governance-regulatory/incident-grievance-logs', label: 'Incident & Grievance Logs', icon: SidebarIcons.IncidentGrievanceLogs },
-    ],
-  },
-  {
-    label: 'FACILITY CERTIFICATIONS & INSTALLATIONS',
-    icon: SidebarIcons.FacilityCertsInstallationsGroup,
-    items: [
-      { href: '/facility-certs-installations/certifications', label: 'Certifications', icon: SidebarIcons.Certifications },
-      { href: '/facility-certs-installations/installations', label: 'Installations & Infrastructure', icon: SidebarIcons.InstallationsInfrastructure },
-    ],
-  },
-  {
-    label: 'FINANCE',
-    icon: SidebarIcons.FinanceGroup,
-    items: [
-      { href: '/finance/purchase-requests', label: 'Purchase Requests', icon: SidebarIcons.PurchaseRequests },
-      { href: '/finance/facility-expenses', label: 'Facility Expenses', icon: SidebarIcons.FacilityExpenses },
-      { href: '/finance/rent-payments', label: 'Rent Payments', icon: SidebarIcons.RentPayments },
-      { href: '/finance/medicaid-claims', label: 'Medicaid Claims', icon: SidebarIcons.MedicaidClaims },
-      { href: '/finance/insurance-claims', label: 'Insurance Claims', icon: SidebarIcons.InsuranceClaims },
-      { href: '/finance/inflow-outflow-reports', label: 'Inflow/Outflow Reports', icon: SidebarIcons.InflowOutflowReports },
-    ],
-  },
-  {
-    label: 'HUMAN RESOURCES',
-    icon: SidebarIcons.HumanResourcesGroup,
-    items: [
-      { href: '/human-resources/recruitment', label: 'Recruitment', icon: SidebarIcons.Recruitment },
-      { href: '/human-resources/onboarding', label: 'Onboarding', icon: SidebarIcons.Onboarding },
-      { href: '/human-resources/staff-matrix', label: 'Staff Matrix', icon: SidebarIcons.StaffMatrix },
-      { href: '/human-resources/training-certs', label: 'Training & Certs', icon: SidebarIcons.TrainingCerts },
-      { href: '/human-resources/performance-reviews', label: 'Performance Reviews', icon: SidebarIcons.PerformanceReviews },
-      { href: '/human-resources/exit-logs', label: 'Exit Logs', icon: SidebarIcons.ExitLogs },
-      { href: '/human-resources/contractors-consultants', label: 'Contractors & Consultants', icon: SidebarIcons.ContractorsConsultants },
-    ],
-  },
-  {
-    label: 'POLICY & COMPLIANCE',
-    icon: SidebarIcons.PolicyComplianceGroup,
-    items: [
-      { href: '/governance-regulatory/policies', label: 'Policies & Procedures', icon: SidebarIcons.PoliciesProcedures },
-      { href: '/governance-regulatory/house-rules', label: 'House Rules', icon: SidebarIcons.HouseRules },
-    ],
-  },
-  {
-    label: 'INSIGHTS & SYSTEMS',
-    icon: SidebarIcons.InsightsSystemsGroup,
-    items: [
-      { href: '/admin/system-logs', label: 'System Logs', icon: SidebarIcons.SystemLogs },
-      { href: '/admin/api-integrations', label: 'API Integrations', icon: SidebarIcons.ApiIntegrations },
-      { href: '/admin/user-management', label: 'User Management', icon: SidebarIcons.UserManagement },
-      { href: '/admin/settings', label: 'Settings', icon: SidebarIcons.Settings },
     ],
   },
 ];
@@ -368,7 +221,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/40x40.png?text=DCS&font=roboto" alt="DCS User Avatar" data-ai-hint="shield cross logo" />
+                  <AvatarImage src="https://placehold.co/40x40.png?text=DCS&font=roboto" alt="DCS Logo - Shield with Cross" data-ai-hint="shield cross logo" />
                   <AvatarFallback>
                     <UserCircle className="h-6 w-6" />
                   </AvatarFallback>
