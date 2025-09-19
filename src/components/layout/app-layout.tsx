@@ -51,12 +51,11 @@ interface NavGroup {
 // New 6-pillar navigation structure
 const navGroups: NavGroup[] = [
   {
-    label: 'Dashboard',
+    label: 'Home',
     icon: SidebarIcons.Dashboard,
     defaultOpen: true,
     items: [
-      { href: '/', label: 'Home Base', icon: SidebarIcons.Home },
-      // Sub-items for dashboard could go here if needed
+      { href: '/', label: 'Home', icon: SidebarIcons.Home },
     ],
   },
   {
@@ -65,7 +64,6 @@ const navGroups: NavGroup[] = [
     defaultOpen: true,
     items: [
       { href: '/checklists', label: 'Daily/Weekly Checklists', icon: SidebarIcons.Checklists },
-      // We can add more task-related pages here later
     ],
   },
   {
@@ -77,7 +75,6 @@ const navGroups: NavGroup[] = [
       { href: '/resident-records/care-plans', label: 'Care Plans', icon: SidebarIcons.CarePlans },
       { href: '/resident-records/progress-notes', label: 'Progress Notes', icon: SidebarIcons.ProgressNotes },
       { href: '/resident-records/moving-in-out', label: 'Move-in/out Logs', icon: SidebarIcons.MovingInOut },
-      // Placeholder for Services Log
     ],
   },
   {
@@ -87,7 +84,6 @@ const navGroups: NavGroup[] = [
     items: [
       { href: '/medication-clinical/mar-logs', label: 'MAR Entries', icon: SidebarIcons.MAR },
       { href: '/medication-clinical/prn-monitoring', label: 'PRN Documentation', icon: SidebarIcons.PRN },
-      // Placeholders for Controlled Substance Logs and Med Room Access
     ],
   },
   {
@@ -142,7 +138,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     const initialOpenGroups: Record<string, boolean> = {};
     navGroups.forEach(group => {
-      initialOpenGroups[group.label] = group.defaultOpen || (activeGroupLabel === group.label);
+      initialOpenGroups[group.label] = group.items.length === 1 || group.defaultOpen || (activeGroupLabel === group.label);
     });
     setOpenGroups(initialOpenGroups);
 
@@ -194,39 +190,62 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </Link>
         </SidebarHeader>
         <SidebarContent>
-          {navGroups.map((group) => (
-            <SidebarGroup key={group.label}>
-              <SidebarGroupLabel
-                onClick={() => toggleGroup(group.label)}
-                className="cursor-pointer flex items-center justify-between hover:bg-sidebar-accent/50 rounded-md"
-              >
-                <div className="flex items-center">
-                  {group.icon && <group.icon className="mr-2 h-4 w-4 inline-block" />}
-                  {group.label}
-                </div>
-                {openGroups[group.label] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </SidebarGroupLabel>
-              {openGroups[group.label] && (
-                <SidebarGroupContent className="pl-2 border-l border-sidebar-border ml-2">
-                  <SidebarMenu>
-                    {group.items.map((item) => (
-                      <SidebarMenuItem key={item.href}>
-                        <Link href={item.href} passHref legacyBehavior>
-                          <SidebarMenuButton
-                            isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length))}
-                            tooltip={item.label}
-                          >
-                            <item.icon className="h-5 w-5" />
-                            <span>{item.label}</span>
-                          </SidebarMenuButton>
-                        </Link>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              )}
-            </SidebarGroup>
-          ))}
+          {navGroups.map((group) => {
+            const isStandalone = group.items.length === 1 && group.items[0].href === '/';
+            if (isStandalone) {
+                const item = group.items[0];
+                return (
+                    <SidebarGroup key={group.label}>
+                         <SidebarMenu>
+                             <SidebarMenuItem>
+                                 <Link href={item.href} passHref legacyBehavior>
+                                    <SidebarMenuButton
+                                        isActive={pathname === item.href}
+                                        tooltip={item.label}
+                                    >
+                                        <item.icon className="h-5 w-5" />
+                                        <span>{item.label}</span>
+                                    </SidebarMenuButton>
+                                </Link>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroup>
+                )
+            }
+            return (
+                <SidebarGroup key={group.label}>
+                <SidebarGroupLabel
+                    onClick={() => toggleGroup(group.label)}
+                    className="cursor-pointer flex items-center justify-between hover:bg-sidebar-accent/50 rounded-md"
+                >
+                    <div className="flex items-center">
+                    {group.icon && <group.icon className="mr-2 h-4 w-4 inline-block" />}
+                    {group.label}
+                    </div>
+                    {openGroups[group.label] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </SidebarGroupLabel>
+                {openGroups[group.label] && (
+                    <SidebarGroupContent className="pl-2 border-l border-sidebar-border ml-2">
+                    <SidebarMenu>
+                        {group.items.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                            <Link href={item.href} passHref legacyBehavior>
+                            <SidebarMenuButton
+                                isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href) && (pathname.charAt(item.href.length) === '/' || pathname.length === item.href.length))}
+                                tooltip={item.label}
+                            >
+                                <item.icon className="h-5 w-5" />
+                                <span>{item.label}</span>
+                            </SidebarMenuButton>
+                            </Link>
+                        </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
+                    </SidebarGroupContent>
+                )}
+                </SidebarGroup>
+            )
+          })}
         </SidebarContent>
         <SidebarFooter className="p-4">
           <Button variant="ghost" onClick={toggleTheme} className="w-full justify-start gap-2">
