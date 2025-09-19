@@ -1,6 +1,7 @@
 
+
 import type { Task, TaskCategory, TaskFrequency, ResolutionStatus, AppRole, AuditToolCategory, AuditRecord, AuditStatus, StaffTrainingRecord, TrainingType, TrainingStatus, RecurrenceConfig, FacilityCertification, CertificationStatus, FacilityInstallation, InstallationStatus, InstallationFrequency, ResidentCareFlag, ChecklistItem, RecurringTask as RecurringTaskSeed, StaffResponsibilityMatrixEntry } from '@/types';
-import { addDays, startOfDay, getDay, getDate, subDays, subMonths, addMonths, endOfMonth, subYears, isValid, parseISO, addYears } from 'date-fns';
+import { addDays, startOfDay, getDay, getDate, subDays, subMonths, addMonths, endOfMonth, subYears, isValid, parseISO, addYears, setHours, setMinutes } from 'date-fns';
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -248,19 +249,21 @@ export const allAuditCategories: AuditToolCategory[] = [
   'Resident Progress Notes',
   'Resident Admissions & Discharges',
   'Case Management Coordination',
+  'Medication Administration Record',
 ];
 export const allAuditStatuses: AuditStatus[] = [
     'Pending Review', 'In Progress', 'Action Required', 'Compliant', 'Non-Compliant',
     'Resolved', 'Up-to-date', 'Archived', 'Review Needed', 'Active',
     'Admission Pending', 'Admission Complete', 'Discharge Pending', 'Discharge Complete',
-    'Active Engagement', 'Referral Made', 'Follow-up Scheduled' 
+    'Active Engagement', 'Referral Made', 'Follow-up Scheduled',
+    'Administered', 'Missed', 'Late',
 ];
 
 
 export const mockAuditRecords: AuditRecord[] = Array.from({ length: 25 }, (_, i) => {
-  const category = getRandomElement(allAuditCategories.filter(c => !['Resident Records Management', 'Resident Care Plans', 'Resident Progress Notes', 'Resident Admissions & Discharges', 'Case Management Coordination'].includes(c)));
+  const category = getRandomElement(allAuditCategories.filter(c => !['Resident Records Management', 'Resident Care Plans', 'Resident Progress Notes', 'Resident Admissions & Discharges', 'Case Management Coordination', 'Medication Administration Record'].includes(c)));
   const assignedRole = getRandomElement(allAppRoles);
-  const status = getRandomElement(allAuditStatuses.filter(s => !['Up-to-date', 'Archived', 'Active', 'Review Needed', 'Admission Pending', 'Admission Complete', 'Discharge Pending', 'Discharge Complete', 'Active Engagement', 'Referral Made', 'Follow-up Scheduled'].includes(s)));
+  const status = getRandomElement(allAuditStatuses.filter(s => !['Up-to-date', 'Archived', 'Active', 'Review Needed', 'Admission Pending', 'Admission Complete', 'Discharge Pending', 'Discharge Complete', 'Active Engagement', 'Referral Made', 'Follow-up Scheduled', 'Administered', 'Missed', 'Late'].includes(s)));
   const lastCompleted = status === 'Compliant' || status === 'Resolved' ? getRandomDate(subMonths(new Date(), 6), new Date()) : undefined;
   const createdAt = getRandomDate(subYears(new Date(), 1), new Date());
   const updatedAt = lastCompleted || createdAt;
@@ -494,6 +497,58 @@ export const recurringTasksSeedData: RecurringTaskSeed[] = [
   }
 ];
 
+const residentNames = [
+  "Abigail Adams", "Benjamin Franklin", "Clara Barton", "Daniel Boone", "Eleanor Roosevelt", 
+  "George Washington", "Harriet Tubman", "Isaac Newton", "Joan of Arc", "Ken Adams", "Laura Palmer",
+  "Michael Johnson", "Sarah Connor"
+];
+
+const medications = [
+  { name: "Lisinopril", dosage: "20mg", route: "Oral" },
+  { name: "Metformin", dosage: "500mg", route: "Oral" },
+  { name: "Amlodipine", dosage: "10mg", route: "Oral" },
+  { name: "Simvastatin", dosage: "40mg", route: "Oral" },
+  { name: "Insulin Glargine", dosage: "10 units", route: "Subcutaneous" },
+  { name: "Warfarin", dosage: "5mg", route: "Oral" },
+  { name: "Albuterol", dosage: "2 puffs", route: "Inhalation" },
+];
+
+export const mockMarRecords: AuditRecord[] = Array.from({ length: 30 }, (_, i) => {
+    const resident = getRandomElement(residentNames);
+    const med = getRandomElement(medications);
+    const qmap = getRandomElement(staffNamesByRole['QMAP Supervisor'] || staffNamesByRole['Caregiver']);
+
+    const scheduledTime = setMinutes(setHours(subDays(now, i % 5), getRandomElement([8, 12, 18, 22])), 0);
+    const administrationRoll = Math.random();
+    let status: AuditStatus;
+    let actualTime: Date;
+
+    if (administrationRoll < 0.8) { // 80% administered on time
+        status = 'Administered';
+        actualTime = setMinutes(scheduledTime, getRandomElement([0, 1, -1, 2, -2]));
+    } else if (administrationRoll < 0.9) { // 10% administered late
+        status = 'Late';
+        actualTime = setMinutes(scheduledTime, getRandomElement([35, 40, 55]));
+    } else { // 10% missed
+        status = 'Missed';
+        actualTime = scheduledTime; // For missed, actual time is the scheduled time
+    }
+
+    return {
+        id: `mar_${i + 1}`,
+        name: `${resident} - ${med.name}`,
+        category: 'Medication Administration Record',
+        assignedRole: 'QMAP Supervisor', // The role responsible for giving the med
+        validator: 'Wellness Nurse',
+        lastCompletedDate: status !== 'Missed' ? actualTime : null, // Actual admin time
+        status: status,
+        notes: `Dosage: ${med.dosage}, Route: ${med.route}. Scheduled: ${scheduledTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`,
+        createdAt: scheduledTime,
+        updatedAt: actualTime,
+        chapterReferenceTag: 'Ch. 7.03',
+    };
+});
+
 
 const allMockAuditCollections = [
   mockAuditRecords, 
@@ -503,7 +558,8 @@ const allMockAuditCollections = [
   mockAdmissionDischargeRecords,
   mockCaseManagementRecords,
   mockCertifications, 
-  mockInstallations
+  mockInstallations,
+  mockMarRecords,
 ];
 
 allMockAuditCollections.forEach(collection => {

@@ -1,4 +1,5 @@
 
+
 export type ResolutionStatus = 'Pending' | 'Resolved' | 'Escalated' | 'Complete' | 'Flagged'; // Added Complete, Flagged
 
 export type TaskCategory =
@@ -102,7 +103,8 @@ export type AuditToolCategory =
   | 'Resident Care Plans' 
   | 'Resident Progress Notes' 
   | 'Resident Admissions & Discharges'
-  | 'Case Management Coordination';
+  | 'Case Management Coordination'
+  | 'Medication Administration Record';
 
 
 export type AuditStatus = 
@@ -122,7 +124,10 @@ export type AuditStatus =
   | 'Discharge Complete'
   | 'Active Engagement' // For Case Management
   | 'Referral Made'     // For Case Management
-  | 'Follow-up Scheduled';// For Case Management
+  | 'Follow-up Scheduled'// For Case Management
+  | 'Administered' // For MAR
+  | 'Missed'       // For MAR
+  | 'Late';        // For MAR
 
 
 export interface AuditRecord {
