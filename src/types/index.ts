@@ -143,6 +143,7 @@ export interface AuditRecord {
   notes?: string; 
   createdAt: Date;
   updatedAt: Date;
+  residentCareFlags?: ResidentCareFlag[];
 }
 
 

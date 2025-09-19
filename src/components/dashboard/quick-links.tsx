@@ -4,7 +4,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, ListTodo, Users, Pill, ShieldCheck, FilePlus, UserPlus, Award, BarChart } from 'lucide-react';
+import { ArrowRight, FilePlus, UserPlus, Award, BarChart } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface QuickLinkItemProps {

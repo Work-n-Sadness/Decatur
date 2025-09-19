@@ -245,8 +245,8 @@ export const allAuditCategories: AuditToolCategory[] = [
   'Environmental & Sanitation Safety',
   'General ALR Compliance',
   'Resident Records Management',
-  'Resident Care Plans',
-  'Resident Progress Notes',
+  'Resident Care Plans', 
+  'Resident Progress Notes', 
   'Resident Admissions & Discharges',
   'Case Management Coordination',
   'Medication Administration Record',
@@ -285,11 +285,11 @@ export const mockAuditRecords: AuditRecord[] = Array.from({ length: 25 }, (_, i)
 });
 
 export const mockFaceSheetAuditRecords: AuditRecord[] = [
-  { id: 'fs_001', name: 'Abigail Adams - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', lastCompletedDate: new Date(2025, 4, 1), status: 'Up-to-date', validator: 'Wellness Nurse', evidenceLink: 'https://example.com/fs_adams.pdf', createdAt: new Date(2024,10,1), updatedAt: new Date(2025,4,1) },
-  { id: 'fs_002', name: 'Benjamin Franklin - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', lastCompletedDate: new Date(2025, 3, 15), status: 'Up-to-date', validator: 'Wellness Nurse', createdAt: new Date(2024,9,15), updatedAt: new Date(2025,3,15) },
-  { id: 'fs_003', name: 'Clara Barton - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', lastCompletedDate: new Date(2025, 0, 10), status: 'Review Needed', notes: 'Needs annual review by June.', validator: 'Wellness Nurse', createdAt: new Date(2024,5,10), updatedAt: new Date(2025,0,10) },
-  { id: 'fs_004', name: 'Daniel Boone - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', status: 'Pending Review', notes: 'New resident, face sheet to be created.', validator: 'Wellness Nurse', createdAt: new Date(2025,4,10), updatedAt: new Date(2025,4,10) },
-  { id: 'fs_005', name: 'Eleanor Roosevelt - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', lastCompletedDate: new Date(2023, 11, 1), status: 'Archived', notes: 'Resident discharged.', validator: 'Administrator Designee', evidenceLink: 'https://example.com/fs_roosevelt_archived.pdf', createdAt: new Date(2023,1,1), updatedAt: new Date(2023,11,1) },
+  { id: 'fs_001', name: 'Abigail Adams - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', lastCompletedDate: new Date(2025, 4, 1), status: 'Up-to-date', validator: 'Wellness Nurse', evidenceLink: 'https://example.com/fs_adams.pdf', createdAt: new Date(2024,10,1), updatedAt: new Date(2025,4,1), residentCareFlags: ['fall_risk_low', 'hypertension'] },
+  { id: 'fs_002', name: 'Benjamin Franklin - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', lastCompletedDate: new Date(2025, 3, 15), status: 'Up-to-date', validator: 'Wellness Nurse', createdAt: new Date(2024,9,15), updatedAt: new Date(2025,3,15), residentCareFlags: ['dementia', 'fall_risk_high'] },
+  { id: 'fs_003', name: 'Clara Barton - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', lastCompletedDate: new Date(2025, 0, 10), status: 'Review Needed', notes: 'Needs annual review by June.', validator: 'Wellness Nurse', createdAt: new Date(2024,5,10), updatedAt: new Date(2025,0,10), residentCareFlags: ['diabetes', 'walker'] },
+  { id: 'fs_004', name: 'Daniel Boone - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', status: 'Pending Review', notes: 'New resident, face sheet to be created.', validator: 'Wellness Nurse', createdAt: new Date(2025,4,10), updatedAt: new Date(2025,4,10), residentCareFlags: [] },
+  { id: 'fs_005', name: 'Eleanor Roosevelt - Face Sheet', category: 'Resident Records Management', assignedRole: 'Admin Assistant', lastCompletedDate: new Date(2023, 11, 1), status: 'Archived', notes: 'Resident discharged.', validator: 'Administrator Designee', evidenceLink: 'https://example.com/fs_roosevelt_archived.pdf', createdAt: new Date(2023,1,1), updatedAt: new Date(2023,11,1), residentCareFlags: [] },
 ].map(record => ({
     ...record,
     lastCompletedDate: record.lastCompletedDate ? (record.lastCompletedDate instanceof Date ? record.lastCompletedDate : parseISO(record.lastCompletedDate as unknown as string)) : null,
