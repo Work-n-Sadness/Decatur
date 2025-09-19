@@ -157,10 +157,13 @@ export function AuditRecordFormDialog({ isOpen, onClose, onSave, existingRecord 
                   name="validator"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <Select 
+                        onValueChange={(value) => field.onChange(value === 'none' ? '' : value)} 
+                        value={field.value || 'none'}
+                    >
                       <SelectTrigger id="validator" className="mt-1"><SelectValue placeholder="Select validator" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {allAppRoles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -191,10 +194,13 @@ export function AuditRecordFormDialog({ isOpen, onClose, onSave, existingRecord 
                   name="chapterReferenceTag"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <Select 
+                        onValueChange={(value) => field.onChange(value === 'none' ? '' : value)} 
+                        value={field.value || 'none'}
+                    >
                       <SelectTrigger id="chapterReferenceTag" className="mt-1"><SelectValue placeholder="Select chapter tag" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {allMockComplianceChapters.map(tag => <SelectItem key={tag} value={tag}>{tag}</SelectItem>)}
                       </SelectContent>
                     </Select>
