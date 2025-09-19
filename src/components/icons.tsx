@@ -121,6 +121,12 @@ export const AuditToolCategoryIcons: Record<AuditToolCategory, LucideIcon> = {
   'Postings & Required Notices': ScrollText,
   'Environmental & Sanitation Safety': Wind,
   'General ALR Compliance': ShieldCheck,
+  'Resident Records Management': Users,
+  'Resident Care Plans': FileText,
+  'Resident Progress Notes': TrendingUp,
+  'Resident Admissions & Discharges': UserCheck,
+  'Case Management Coordination': Users2,
+  'Medication Administration Record': Activity,
 };
 
 

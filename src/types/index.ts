@@ -221,8 +221,8 @@ export interface FacilityInstallation {
   installationName: string;
   category: 'Fire Safety' | 'HVAC' | 'Water Systems' | 'Electrical' | 'Accessibility' | 'Sanitation' | 'Gas Systems' | 'Air Quality' | 'General Safety';
   location?: string;
-  lastInspectionDate?: Date | null;
-  nextInspectionDue?: Date | null;
+  lastInspectionDate: Date | null;
+  nextInspectionDue: Date | null;
   inspectionFrequency?: InstallationFrequency;
   serviceVendor?: string;
   status: InstallationStatus;

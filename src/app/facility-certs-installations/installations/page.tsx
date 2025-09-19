@@ -2,17 +2,18 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, type Timestamp } from 'firebase/firestore';
+import { mockInstallations } from '@/lib/mock-data'; // Using mock data directly for now
 import type { FacilityInstallation, InstallationStatus } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, RefreshCw, AlertCircle } from 'lucide-react';
-import { format, formatDistanceToNow, isValid } from 'date-fns';
+import { PlusCircle, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react';
+import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import { getInstallationCategoryIcon } from '@/components/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+
 
 // Helper function to determine badge variant based on status
 const getInstallationStatusBadgeVariant = (status: InstallationStatus): "default" | "secondary" | "destructive" | "outline" => {
@@ -33,33 +34,41 @@ export default function InstallationsPage() {
   const [installations, setInstallations] = useState<FacilityInstallation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    setLoading(true);
-    const q = query(collection(db, "facilityInstallations"), orderBy("nextInspectionDue", "asc"));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => {
-        const docData = doc.data();
-        return {
-          id: doc.id,
-          ...docData,
-          lastInspectionDate: docData.lastInspectionDate && (docData.lastInspectionDate as Timestamp).toDate ? (docData.lastInspectionDate as Timestamp).toDate() : null,
-          nextInspectionDue: docData.nextInspectionDue && (docData.nextInspectionDue as Timestamp).toDate ? (docData.nextInspectionDue as Timestamp).toDate() : null,
-          createdAt: docData.createdAt && (docData.createdAt as Timestamp).toDate ? (docData.createdAt as Timestamp).toDate() : new Date(),
-          updatedAt: docData.updatedAt && (docData.updatedAt as Timestamp).toDate ? (docData.updatedAt as Timestamp).toDate() : new Date(),
-        } as FacilityInstallation;
-      });
-      setInstallations(data);
-      setLoading(false);
-    }, (err) => {
-      console.error("Error fetching installations:", err);
-      setError("Failed to load installations. Please try again later.");
-      setLoading(false);
-    });
+    const fetchInstallations = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // In a real app, this would be: const response = await fetch('/api/installations');
+            // For now, we simulate an async fetch from mock data.
+            await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
-    return () => unsubscribe();
-  }, []);
+            if (!mockInstallations) {
+                throw new Error("Installation data is not available.");
+            }
+
+            const processedData: FacilityInstallation[] = mockInstallations.map(item => ({
+                ...item,
+                lastInspectionDate: item.lastInspectionDate ? (typeof item.lastInspectionDate === 'string' ? parseISO(item.lastInspectionDate) : item.lastInspectionDate) : null,
+                nextInspectionDue: item.nextInspectionDue ? (typeof item.nextInspectionDue === 'string' ? parseISO(item.nextInspectionDue) : item.nextInspectionDue) : null,
+                createdAt: typeof item.createdAt === 'string' ? parseISO(item.createdAt) : item.createdAt,
+                updatedAt: typeof item.updatedAt === 'string' ? parseISO(item.updatedAt) : item.updatedAt,
+            }));
+
+            setInstallations(processedData);
+        } catch (err: any) {
+            console.error("Error fetching installations:", err);
+            setError("Failed to load installation logs. Please try again later.");
+            toast({ variant: "destructive", title: "Error", description: "Could not load installation logs." });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchInstallations();
+  }, [toast]);
 
   const pageTitle = "Installations & Infrastructure Compliance";
   const descriptionText = "Track major facility systems, their inspection schedules, and compliance status. Ensure all critical infrastructure is operational and meets safety standards.";
@@ -113,6 +122,9 @@ export default function InstallationsPage() {
               <TableBody>
                 {installations.map(install => {
                   const CategoryIcon = getInstallationCategoryIcon(install.category);
+                  const lastInspectionDate = install.lastInspectionDate ? new Date(install.lastInspectionDate) : null;
+                  const nextInspectionDue = install.nextInspectionDue ? new Date(install.nextInspectionDue) : null;
+                  
                   return (
                     <TableRow key={install.id}>
                       <TableCell className="font-medium">{install.installationName}</TableCell>
@@ -121,8 +133,8 @@ export default function InstallationsPage() {
                         {install.category}
                       </TableCell>
                       <TableCell>{install.location || 'N/A'}</TableCell>
-                      <TableCell>{install.lastInspectionDate && isValid(install.lastInspectionDate) ? format(install.lastInspectionDate, 'PP') : 'N/A'}</TableCell>
-                      <TableCell>{install.nextInspectionDue && isValid(install.nextInspectionDue) ? formatDistanceToNow(install.nextInspectionDue, { addSuffix: true }) : 'N/A'}</TableCell>
+                      <TableCell>{lastInspectionDate && isValid(lastInspectionDate) ? format(lastInspectionDate, 'PP') : 'N/A'}</TableCell>
+                      <TableCell>{nextInspectionDue && isValid(nextInspectionDue) ? formatDistanceToNow(nextInspectionDue, { addSuffix: true }) : 'N/A'}</TableCell>
                       <TableCell>{install.inspectionFrequency || 'N/A'}</TableCell>
                       <TableCell>{install.serviceVendor || 'N/A'}</TableCell>
                       <TableCell>
@@ -133,8 +145,8 @@ export default function InstallationsPage() {
                       <TableCell>
                         {install.uploadInspectionLog ? (
                           <Button variant="link" size="sm" asChild className="p-0 h-auto">
-                            <a href={install.uploadInspectionLog} target="_blank" rel="noopener noreferrer" className="text-accent">
-                              View Log
+                            <a href={install.uploadInspectionLog} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center">
+                              View Log <ExternalLink className="ml-1 h-3 w-3" />
                             </a>
                           </Button>
                         ) : (
@@ -152,4 +164,3 @@ export default function InstallationsPage() {
     </Card>
   );
 }
-
