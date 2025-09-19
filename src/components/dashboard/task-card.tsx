@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Task, Role, ResidentCareFlag } from '@/types';
@@ -7,8 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getTaskCategoryIcon, getResolutionStatusIcon, getTaskFrequencyIcon, getCareFlagIcon } from '@/components/icons';
-import { CalendarDays, User, Users, CheckSquare, Tag, Paperclip, ExternalLink, BookOpen, Milestone, FileLock, AlertTriangle, Wheelchair, Brain, Pill, HeartPulse, Droplets } from 'lucide-react';
-import { format, differenceInDays, addDays } from 'date-fns';
+import { CalendarDays, User, Users, CheckSquare, Tag, Paperclip, ExternalLink, BookOpen, Milestone, FileLock, AlertTriangle } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
 
 interface TaskCardProps {
   task: Task;
@@ -18,12 +17,11 @@ interface TaskCardProps {
 
 const CareFlagDisplay: React.FC<{ flag: ResidentCareFlag }> = ({ flag }) => {
   const Icon = getCareFlagIcon(flag);
-  if (!Icon) return null; // Or some default text/badge
+  if (!Icon) return null;
 
-  let title = flag.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); // Simple title case
+  let title = flag.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   if (flag === 'fall_risk_high') title = 'High Fall Risk';
   if (flag === 'controlled_meds') title = 'Controlled Meds';
-
 
   return (
     <Badge variant="outline" className="p-1" title={title}>
@@ -38,7 +36,7 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
   const FrequencyIcon = getTaskFrequencyIcon(task.frequency);
   
   const getStatusColorClass = (status: Task['status'], endDate: Date | null) => {
-    if (status === 'Resolved') {
+    if (status === 'Resolved' || status === 'Complete') {
       return 'bg-green-500/20 text-green-700 border-green-500/50 dark:text-green-400 dark:bg-green-500/10 dark:border-green-500/30';
     }
     if (status === 'Escalated') {
@@ -46,7 +44,7 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
     }
     if (endDate) {
       const today = new Date();
-      const daysLeft = differenceInDays(endDate, today);
+      const daysLeft = differenceInDays(new Date(endDate), today);
       if (daysLeft < 0) {
         return 'bg-red-500/20 text-red-700 border-red-500/50 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30'; // Overdue
       } else if (daysLeft <= 3 && task.frequency === 'Daily') {
@@ -55,7 +53,6 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
          return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/50 dark:text-yellow-400 dark:bg-yellow-500/10 dark:border-yellow-500/30'; // Due soon for weekly/monthly
       }
     }
-    // Default for Pending or other non-critical states
     return 'bg-blue-500/20 text-blue-700 border-blue-500/50 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30';
   };
   
@@ -66,11 +63,11 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
   };
 
   const getOverdueRiskBadge = (currentTask: Task) => {
-    if (currentTask.status === 'Resolved') return null;
+    if (currentTask.status === 'Resolved' || currentTask.status === 'Complete') return null;
     if (currentTask.status === 'Escalated') return <Badge variant="destructive" className="text-xs">Escalated</Badge>;
     if (currentTask.endDate) {
       const today = new Date();
-      const daysLeft = differenceInDays(currentTask.endDate, today);
+      const daysLeft = differenceInDays(new Date(currentTask.endDate), today);
       if (daysLeft < 0) return <Badge variant="destructive" className="text-xs">🔴 Overdue</Badge>;
       if (currentTask.frequency === 'Daily' && daysLeft <=1) return <Badge variant="secondary" className="text-xs">🟠 Due Soon</Badge>;
       if (currentTask.frequency === 'Weekly' && daysLeft <=2) return <Badge variant="secondary" className="text-xs">🟠 Due Soon</Badge>;
@@ -117,7 +114,7 @@ export default function TaskCard({ task, onOpenDetails, onOpenAttachEvidence }: 
         )}
       </CardHeader>
       <CardContent className="flex-grow space-y-2.5 text-xs">
-        {task.status !== 'Resolved' && (
+        {task.status !== 'Resolved' && task.status !== 'Complete' && (
             <div className="text-muted-foreground">
                 <Progress value={task.progress} className="w-full h-1.5" 
                 aria-label={`Task progress ${task.progress}%`} />

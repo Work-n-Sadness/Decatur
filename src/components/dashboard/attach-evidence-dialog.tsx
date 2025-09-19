@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -20,7 +19,7 @@ export default function AttachEvidenceDialog({ task, isOpen, onClose, onSaveEvid
   const [evidenceLink, setEvidenceLink] = useState('');
 
   useEffect(() => {
-    if (task) {
+    if (task && isOpen) {
       setEvidenceLink(task.evidenceLink || '');
     } else {
       setEvidenceLink('');

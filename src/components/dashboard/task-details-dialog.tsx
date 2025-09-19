@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Task, ActivityLog, ResolutionStatus, TaskCategory, Role, TaskFrequency } from '@/types';
@@ -19,7 +18,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import React, { useEffect, useState } from 'react';
-import { allResolutionStatuses, allAppRoles, allTaskFrequencies, allTaskCategories, allMockStaffNames } from '@/lib/mock-data'; 
+import { allResolutionStatuses, allAppRoles, allTaskFrequencies, allTaskCategories, allMockStaffNames, allMockComplianceChapters } from '@/lib/mock-data'; 
 import { cn } from '@/lib/utils'; 
 
 const taskSchema = z.object({
@@ -113,25 +112,23 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
     const originalStatus = task.status;
     const newStatus = data.status;
 
-    if (newStatus === 'Resolved' && originalStatus !== 'Resolved') {
+    if ((newStatus === 'Resolved' || newStatus === 'Complete') && (originalStatus !== 'Resolved' && originalStatus !== 'Complete')) {
       updatedTask.lastCompletedOn = new Date();
       updatedTask.completedBy = data.assignedStaff; 
       updatedTask.progress = 100;
       updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: 'Task Resolved', details: 'Task marked as resolved.' });
-    } else if (newStatus !== 'Resolved' && originalStatus === 'Resolved') {
+    } else if ((newStatus !== 'Resolved' && newStatus !== 'Complete') && (originalStatus === 'Resolved' || originalStatus === 'Complete')) {
       updatedTask.lastCompletedOn = null;
       updatedTask.completedBy = null;
-      
-      updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: 'Task Un-Resolved', details: `Task status changed from Resolved to ${newStatus}.` });
+      updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: 'Task Un-Resolved', details: `Task status changed from Resolved to ${newStatus}.`});
     } else if (newStatus !== originalStatus) {
         updatedTask.activities.push({ timestamp: new Date(), user: data.assignedStaff, action: `Status Change: ${originalStatus} -> ${newStatus}`, details: `Task status updated to ${newStatus}.`});
     }
     
-    if (data.status === 'Resolved' && data.progress !== 100) {
+    if ((data.status === 'Resolved' || data.status === 'Complete') && data.progress !== 100) {
         updatedTask.progress = 100;
         form.setValue('progress', 100); 
     }
-
 
     onSave(updatedTask); 
     setIsEditing(false);
@@ -233,13 +230,11 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                             <SelectTrigger className="mt-1">
                                 <SelectValue placeholder="Select responsible role" />
                             </SelectTrigger>
-                            <SelectContent>
-                                {allAppRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                            </SelectContent>
+                            <SelectContent><ScrollArea className="h-48">{allAppRoles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</ScrollArea></SelectContent>
                           </Select>
                         )}
                     />
-                    <small className="text-xs text-muted-foreground">For multiple roles, separate by comma in mock data or use a dedicated multi-select component.</small>
+                    <small className="text-xs text-muted-foreground">For multiple roles, edit mock data.</small>
                     {form.formState.errors.responsibleRole && <p className="text-sm text-destructive mt-1">{form.formState.errors.responsibleRole.message}</p>}
                   </div>
                   <div>
@@ -252,9 +247,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                             <SelectTrigger className="mt-1">
                                 <SelectValue placeholder="Select assigned staff" />
                             </SelectTrigger>
-                            <SelectContent>
-                                {allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
-                            </SelectContent>
+                            <SelectContent><ScrollArea className="h-48">{allMockStaffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}</ScrollArea></SelectContent>
                           </Select>
                         )}
                     />
@@ -305,7 +298,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                            <Input id="progress" type="number" {...field} 
                            onChange={e => field.onChange(parseInt(e.target.value) || 0)} 
                            className="mt-1" 
-                           readOnly={form.watch("status") === "Resolved"} 
+                           readOnly={form.watch("status") === "Resolved" || form.watch("status") === "Complete"} 
                            />
                         )}
                     />
@@ -353,7 +346,18 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                   </div>
                   <div>
                     <Label htmlFor="complianceChapterTag">Compliance Chapter Tag</Label>
-                    <Input id="complianceChapterTag" {...form.register("complianceChapterTag")} className="mt-1" placeholder="e.g., Ch. 14.31" />
+                     <Controller
+                        name="complianceChapterTag"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
+                            <SelectTrigger className="mt-1">
+                                <SelectValue placeholder="Select chapter (optional)" />
+                            </SelectTrigger>
+                            <SelectContent><ScrollArea className="h-48">{allMockComplianceChapters.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</ScrollArea></SelectContent>
+                          </Select>
+                        )}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="validatorApproval">Validator Approval Notes</Label>
@@ -373,7 +377,7 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
                     <Label htmlFor="notes">Notes/Remarks</Label>
                     <Textarea id="notes" {...form.register("notes")} className="mt-1 min-h-[100px]" />
                 </div>
-                 {form.watch("status") === 'Resolved' && (
+                 {(form.watch("status") === 'Resolved' || form.watch("status") === 'Complete') && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-green-500/50 rounded-md bg-green-500/10">
                         <div>
                             <Label htmlFor="lastCompletedOn">Resolved On</Label>
@@ -502,4 +506,3 @@ export default function TaskDetailsDialog({ task, isOpen, onClose, onSave, onOpe
     </Dialog>
   );
 }
-

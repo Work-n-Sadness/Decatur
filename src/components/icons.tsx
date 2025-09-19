@@ -1,13 +1,12 @@
-
 import {
-  HeartPulse, // Used for Hypertension
+  HeartPulse,
   ClipboardList,
   Sparkles,
   ListChecks,
   CircleDot,
   Loader2,
   CheckCircle2,
-  AlertTriangle, // Used for High Fall Risk
+  AlertTriangle,
   ShieldX,
   type LucideIcon,
   GanttChartSquare,
@@ -15,7 +14,7 @@ import {
   Settings2,
   Repeat,
   CalendarClock,
-  Pill, // Used for Controlled Meds
+  Pill,
   FileHeart,
   ShieldCheck,
   Wind,
@@ -41,7 +40,7 @@ import {
   PhoneCall,
   Thermometer,
   WashingMachine,
-  Utensils, // Standard Lucide icon
+  Utensils,
   ChefHat,
   Bug,
   Shirt,
@@ -54,8 +53,8 @@ import {
   Contact,
   FileText,
   TrendingUp,
-  UserCheck, // Used for Residents Moving-in
-  UserMinus, // Used for Residents Moving-out
+  UserCheck,
+  UserMinus,
   Users2,
   Presentation,
   UserPlus,
@@ -70,7 +69,7 @@ import {
   FileDigit,
   LineChart,
   Building,
-  Building2, // Added for FacilityCertsInstallationsGroup
+  Building2,
   BadgeCheck,
   BookCopy,
   Gavel,
@@ -93,11 +92,11 @@ import {
   ListTodo,
   Shield as ShieldIcon,
   Cpu as CpuIcon,
-  HeartHandshake, // For Medical Needs & Care Tags group
-  Tags, // For Special Care Tags
-  Brain, // For Dementia care flag
-  Droplets, // For Diabetes care flag
-  FileLock, // For HIPAA Note Available care flag
+  HeartHandshake,
+  Tags,
+  Brain,
+  Droplets,
+  FileLock,
   Accessibility,
   Package,
   FilePlus,
@@ -153,37 +152,10 @@ export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
 
 
 export const SidebarIcons = {
-  // NEW STRUCTURE
-  Dashboard: LayoutGrid,
-  ChecklistManager: ListTodo,
-  ResidentRecords: Users,
-  MedicationTracking: Pill,
-  FacilityManagement: Building,
-  ComplianceCenter: ShieldCheck,
-
-  // Page-specific icons within the new structure
-  Home: LayoutGrid, // For the main dashboard page
-  Checklists: ListChecks, // For the checklist page
-  FaceSheets: Contact,
-  CarePlans: FileText,
-  ProgressNotes: TrendingUp,
-  MovingInOut: UserCheck,
-  MAR: Activity,
-  PRN: Eye,
-  ControlledMeds: FileLock,
-  MedRoomLog: DoorOpen,
-  FacilityLogs: History,
-  RoomInspections: SearchCheck,
-  Maintenance: Wrench,
-  SupplyInventory: Boxes,
-  Certificates: Award,
-  SurveyPacket: Package,
-  AuditLogs: FileSearch,
-
-
-  // OLD ICONS (some may be reused or can be cleaned up later)
+  Dashboard: GanttChartSquare,
   AuditTool: FileSearch,
   ComplianceSummary: ClipboardCheck,
+  Checklists: ListChecks,
   Reports: FilePieChart,
   SurveyReadiness: ClipboardList, 
   
@@ -332,14 +304,14 @@ export const getInstallationCategoryIcon = (category: FacilityInstallation['cate
 
 export const getCareFlagIcon = (flag: ResidentCareFlag): LucideIcon | null => {
   switch (flag) {
-    case 'wheelchair': return Accessibility; // Using Accessibility as Wheelchair icon might not be available or correctly mapped
-    case 'walker': return Accessibility; // Using Accessibility as a generic for walker too
+    case 'wheelchair': return Accessibility;
+    case 'walker': return Accessibility;
     case 'dementia': return Brain;
-    case 'controlled_meds': return Pill;
+    case 'controlled_meds': return FileLock;
     case 'hypertension': return HeartPulse;
     case 'diabetes': return Droplets;
     case 'fall_risk_high': return AlertTriangle;
-    case 'elopement_risk_yes': return AlertTriangle; // Using AlertTriangle for elopement risk
-    default: return null; // Or a generic icon like Tag
+    case 'elopement_risk_yes': return AlertTriangle;
+    default: return null;
   }
 };

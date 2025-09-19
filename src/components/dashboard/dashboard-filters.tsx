@@ -7,17 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, ArrowDownUp, Download, Filter as FilterIcon, CalendarDays, BookOpen, FileText, Package, Users, Brain, Droplets, HeartPulse, AlertTriangle, Accessibility } from "lucide-react";
 import type { TaskCategory, ResolutionStatus, Role, TaskFrequency, ResidentCareFlag } from "@/types";
 import { allCareFlags } from "@/lib/mock-data"; // Import allCareFlags
+import { ScrollArea } from "../ui/scroll-area";
 
 interface DashboardFiltersProps {
   onSearch: (term: string) => void;
-  onFilterChange: (filters: Partial<{ 
-    category: TaskCategory; 
-    status: ResolutionStatus; 
-    role: Role; 
-    frequency: TaskFrequency; 
-    complianceChapterTag: string;
-    careFlag: ResidentCareFlag; // New filter for care flags
-   }>) => void;
+  onFilterChange: (filters: any) => void;
   onSortChange: (sortBy: string) => void;
   onExportReport: () => void;
   onExportAuditLog: () => void;
@@ -45,15 +39,22 @@ export default function DashboardFilters({
 
   const careFlagOptions = [
     { value: 'all', label: 'All Care Needs', icon: Accessibility },
-    { value: 'wheelchair', label: 'Wheelchair Use', icon: Accessibility }, // Changed from Wheelchair
-    { value: 'walker', label: 'Walker Use', icon: Accessibility }, // Using generic Accessibility icon for walker
-    { value: 'controlled_meds', label: 'Controlled Meds', icon: FileText }, // Placeholder, Pill icon not directly usable in Select
+    { value: 'wheelchair', label: 'Wheelchair Use', icon: Accessibility },
+    { value: 'walker', label: 'Walker Use', icon: Accessibility },
+    { value: 'controlled_meds', label: 'Controlled Meds', icon: FileText },
     { value: 'hypertension', label: 'Hypertension', icon: HeartPulse },
     { value: 'diabetes', label: 'Diabetes', icon: Droplets },
     { value: 'dementia', label: 'Dementia/Alzheimer’s', icon: Brain },
     { value: 'fall_risk_high', label: 'High Fall Risk', icon: AlertTriangle },
     { value: 'elopement_risk_yes', label: 'Elopement Risk', icon: AlertTriangle },
   ];
+  
+  const handleSingleFilterChange = (key: string, value: string) => {
+    onFilterChange((prev: any) => ({
+      ...prev,
+      [key]: value === 'all' ? undefined : value
+    }));
+  };
 
 
   return (
@@ -69,40 +70,44 @@ export default function DashboardFilters({
           />
         </div>
 
-        <Select onValueChange={(value) => onFilterChange({ category: value === 'all' ? undefined : value as TaskCategory })}>
+        <Select onValueChange={(value) => handleSingleFilterChange('category', value)}>
           <SelectTrigger>
             <FilterIcon className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue placeholder="Filter by Category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+            <ScrollArea className="h-48">
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+            </ScrollArea>
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => onFilterChange({ status: value === 'all' ? undefined : value as ResolutionStatus })}>
+        <Select onValueChange={(value) => handleSingleFilterChange('status', value)}>
           <SelectTrigger>
             <FilterIcon className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue placeholder="Filter by Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
+             <SelectItem value="all">All Statuses</SelectItem>
              {statuses.map(stat => <SelectItem key={stat} value={stat}>{stat}</SelectItem>)}
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => onFilterChange({ role: value === 'all' ? undefined : value as Role })}>
+        <Select onValueChange={(value) => handleSingleFilterChange('responsibleRole', value)}>
           <SelectTrigger>
              <Users className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue placeholder="Filter by Responsible Role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+             <ScrollArea className="h-48">
+              <SelectItem value="all">All Roles</SelectItem>
+              {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+            </ScrollArea>
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => onFilterChange({ frequency: value === 'all' ? undefined : value as TaskFrequency })}>
+        <Select onValueChange={(value) => handleSingleFilterChange('frequency', value)}>
           <SelectTrigger>
             <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue placeholder="Filter by Frequency" />
@@ -113,18 +118,20 @@ export default function DashboardFilters({
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => onFilterChange({ complianceChapterTag: value === 'all' ? undefined : value })}>
+        <Select onValueChange={(value) => handleSingleFilterChange('complianceChapterTag', value)}>
           <SelectTrigger>
             <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue placeholder="Filter by Compliance Chapter" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Compliance Chapters</SelectItem>
-            {complianceChapterTags.map(tag => <SelectItem key={tag} value={tag}>{tag}</SelectItem>)}
+            <ScrollArea className="h-48">
+              <SelectItem value="all">All Compliance Chapters</SelectItem>
+              {complianceChapterTags.map(tag => <SelectItem key={tag} value={tag}>{tag}</SelectItem>)}
+            </ScrollArea>
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => onFilterChange({ careFlag: value === 'all' ? undefined : value as ResidentCareFlag })}>
+        <Select onValueChange={(value) => handleSingleFilterChange('careFlag', value)}>
           <SelectTrigger>
             <Accessibility className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue placeholder="Filter by Care Need/Tag" />
@@ -132,7 +139,9 @@ export default function DashboardFilters({
           <SelectContent>
             {careFlagOptions.map(option => (
               <SelectItem key={option.value} value={option.value}>
-                <option.icon className="mr-2 h-4 w-4 inline-block" /> {option.label}
+                <div className="flex items-center gap-2">
+                  <option.icon className="h-4 w-4" /> {option.label}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
@@ -140,7 +149,7 @@ export default function DashboardFilters({
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-        <Select onValueChange={(value) => onSortChange(value)}>
+        <Select onValueChange={onSortChange}>
           <SelectTrigger>
               <ArrowDownUp className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Sort by..." />

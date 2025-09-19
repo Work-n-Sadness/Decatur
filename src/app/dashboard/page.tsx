@@ -1,196 +1,202 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase'; // Assuming you have firebase initialized in lib/firebase.ts
-import { TaskCard } from '@/components/dashboard/task-card'; // Assuming a TaskCard component exists
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Task } from '@/types'; // Assuming you have a Task type definition
-import { groupBy } from '@/lib/utils'; // Assuming a utility function for grouping
+import { useState, useEffect, useMemo } from 'react';
+import type { Task } from '@/types';
+import { useToast } from "@/hooks/use-toast";
+import { parseISO } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
+import { groupBy } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import TaskCard from '@/components/dashboard/task-card';
+import TaskDetailsDialog from '@/components/dashboard/task-details-dialog';
+import AttachEvidenceDialog from '@/components/dashboard/attach-evidence-dialog';
+import DashboardFilters from '@/components/dashboard/dashboard-filters';
+import { allTaskCategories, allResolutionStatuses, allAppRoles, allTaskFrequencies, allMockComplianceChapters } from '@/lib/mock-data';
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
-    // Initialize filters with empty strings or default values
-    taskName: '',
-    category: '',
-    frequency: '',
-    status: '',
-    responsibleRole: '',
-    complianceChapter: '',
-    specialCareTag: '',
-  });
+  const { toast } = useToast();
+
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
+  const [taskForEvidence, setTaskForEvidence] = useState<Task | null>(null);
+  
+  const [filters, setFilters] = useState<any>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('dueDate_asc');
+
 
   useEffect(() => {
-    const fetchTasks = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      let tasksQuery = query(collection(db, 'checklistTasks'));
-      setError(null); // Reset error
-
       try {
-        // Apply filters (Firestore queries can only have one '==', so for multiple filters
-        // you might need to fetch and filter client-side or use more advanced querying)
-        // For a simple example with one '==', let's apply only one filter at a time
-        // or consider fetching all and filtering client-side for more complex combinations.
-        // As per the instructions, we will apply all filters here, but note the Firestore limitations.
-        if (filters.taskName) {
-          tasksQuery = query(tasksQuery, where('taskName', '==', filters.taskName));
-        }
-        if (filters.category) {
-          tasksQuery = query(tasksQuery, where('category', '==', filters.category));
-        }
-        if (filters.frequency) {
-          tasksQuery = query(tasksQuery, where('frequency', '==', filters.frequency));
-        }
-        if (filters.status) {
-          tasksQuery = query(tasksQuery, where('status', '==', filters.status));
-        }
-        if (filters.responsibleRole) {
-          tasksQuery = query(tasksQuery, where('responsibleRole', '==', filters.responsibleRole));
-        }
-        if (filters.complianceChapter) {
-          tasksQuery = query(tasksQuery, where('complianceChapter', '==', filters.complianceChapter));
-        }
-        if (filters.specialCareTag) {
-          tasksQuery = query(tasksQuery, where('specialCareTag', '==', filters.specialCareTag));
-        }
-
-        const querySnapshot = await getDocs(tasksQuery);
-        const fetchedTasks = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Task[];
-        setTasks(fetchedTasks);
-      } catch (err) {
-        console.error("Error fetching tasks:", err);
-        setError("Failed to load tasks.");
-        setTasks([]); // Clear tasks on error
+        const tasksResponse = await fetch('/api/tasks');
+        if (!tasksResponse.ok) throw new Error(`Failed to fetch tasks: ${tasksResponse.statusText}`);
+        
+        const tasksData: any[] = await tasksResponse.json();
+        
+        const processDate = (date: any) => (date ? parseISO(date) : null);
+        
+        const processedTasks: Task[] = tasksData.map(item => ({
+          ...item,
+          startDate: processDate(item.startDate),
+          endDate: processDate(item.endDate),
+          lastCompletedOn: processDate(item.lastCompletedOn),
+          activities: item.activities?.map((act: any) => ({ ...act, timestamp: processDate(act.timestamp) })) || [],
+        }));
+        
+        setTasks(processedTasks);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error Loading Tasks",
+          description: error instanceof Error ? error.message : "Could not load task data.",
+        });
       } finally {
         setLoading(false);
       }
     };
-    fetchTasks();
-  }, [filters]); // Refetch when filters change
-
-  const handleFilterChange = (filterName: string, value: string) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      [filterName]: value,
-    }));
+    fetchData();
+  }, [toast]);
+  
+  const handleOpenDetails = (task: Task) => {
+    setSelectedTask(task);
+    setIsDetailsOpen(true);
   };
 
-  const handleExportTaskReport = () => {
-    // Implement export logic (e.g., call a Firebase Function)
-    console.log("Exporting Task Report");
+  const handleCloseDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedTask(null);
+  };
+  
+  const handleSaveTask = (updatedTask: Task) => {
+    setTasks(prevTasks => prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+    toast({ title: "Task Updated", description: `Task "${updatedTask.name}" has been saved.` });
+    handleCloseDetails();
   };
 
-  const handleExportAuditLog = () => {
-    // Implement export logic (e.g., call a Firebase Function)
-    console.log("Exporting Audit Log");
+  const handleOpenAttachEvidence = (task: Task) => {
+    setTaskForEvidence(task);
+    setIsEvidenceOpen(true);
   };
 
-  const handleExportSurveyPacket = () => {
-    // Implement export logic (e.g., call a Firebase Function)
-    console.log("Exporting Survey Packet");
+  const handleCloseAttachEvidence = () => {
+    setIsEvidenceOpen(false);
+    setTaskForEvidence(null);
   };
 
-  const groupedTasks = groupBy(tasks, 'category');
+  const handleSaveEvidence = (taskId: string, evidenceLink: string) => {
+    setTasks(prevTasks => prevTasks.map(t => t.id === taskId ? { ...t, evidenceLink } : t));
+    toast({ title: "Evidence Saved", description: "The evidence link has been updated." });
+    handleCloseAttachEvidence();
+  };
+
+  const filteredAndSortedTasks = useMemo(() => {
+    let filtered = tasks;
+
+    if (searchTerm) {
+      filtered = filtered.filter(task => task.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) {
+        filtered = filtered.filter(task => {
+          if (key === 'careFlag') {
+            return task.residentCareFlags?.includes(filters[key]);
+          }
+          return (task as any)[key] === filters[key];
+        });
+      }
+    });
+
+    // Sorting logic
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name_asc': return a.name.localeCompare(b.name);
+        case 'name_desc': return b.name.localeCompare(a.name);
+        case 'dueDate_asc': return (a.endDate?.getTime() || 0) - (b.endDate?.getTime() || 0);
+        case 'dueDate_desc': return (b.endDate?.getTime() || 0) - (a.endDate?.getTime() || 0);
+        case 'status': return a.status.localeCompare(b.status);
+        case 'progress_desc': return b.progress - a.progress;
+        case 'progress_asc': return a.progress - b.progress;
+        case 'frequency': return a.frequency.localeCompare(b.frequency);
+        default: return 0;
+      }
+    });
+
+    return filtered;
+  }, [tasks, searchTerm, filters, sortBy]);
+
+  const groupedTasks = useMemo(() => groupBy(filteredAndSortedTasks, 'category'), [filteredAndSortedTasks]);
+  const defaultOpenAccordions = useMemo(() => Object.keys(groupedTasks), [groupedTasks]);
+
 
   if (loading) {
-    return <div>Loading tasks...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
+    return (
+       <div className="space-y-6">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Skeleton className="h-48 w-full lg:col-span-2" />
+          <Skeleton className="h-48 w-full" />
+        </div>
+        <Skeleton className="h-80 w-full" />
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Task Dashboard</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Input
-          placeholder="Filter by Task Name"
-          value={filters.taskName}
-          onChange={(e) => handleFilterChange('taskName', e.target.value)}
+    <div className="space-y-6">
+        <DashboardFilters 
+            onSearch={setSearchTerm}
+            onFilterChange={setFilters}
+            onSortChange={setSortBy}
+            onExportReport={() => console.log("Exporting Task Report")}
+            onExportAuditLog={() => console.log("Exporting Audit Log")}
+            onExportSurveyPrepPacket={() => console.log("Exporting Survey Prep Packet")}
+            categories={allTaskCategories}
+            statuses={allResolutionStatuses}
+            roles={allAppRoles}
+            frequencies={allTaskFrequencies}
+            complianceChapterTags={allMockComplianceChapters}
         />
-        <Select onValueChange={(value) => handleFilterChange('category', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by Category" />
-          </SelectTrigger>
-          <SelectContent>
-            {/* Populate with actual categories from your data or a predefined list */}
-            <SelectItem value="Medication Audits">Medication Audits</SelectItem>
-            <SelectItem value="Environmental Checks">Environmental Checks</SelectItem>
-            {/* Add more categories */}
-          </SelectContent>
-        </Select>
-        <Select onValueChange={(value) => handleFilterChange('frequency', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by Frequency" />
-          </SelectTrigger>
-          <SelectContent>
-            {/* Populate with actual frequencies */}
-            <SelectItem value="Daily">Daily</SelectItem>
-            <SelectItem value="Weekly">Weekly</SelectItem>
-            <SelectItem value="Monthly">Monthly</SelectItem>
-            {/* Add more frequencies */}
-          </SelectContent>
-        </Select>
-        <Select onValueChange={(value) => handleFilterChange('status', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="Flagged">Flagged</SelectItem>
-            <SelectItem value="Overdue">Overdue</SelectItem>
-            <SelectItem value="Completed">Completed</SelectItem>
-          </SelectContent>
-        </Select>
-        <Input
-          placeholder="Filter by Responsible Role"
-          value={filters.responsibleRole}
-          onChange={(e) => handleFilterChange('responsibleRole', e.target.value)}
-        />
-        <Input
-          placeholder="Filter by Compliance Chapter"
-          value={filters.complianceChapter}
-          onChange={(e) => handleFilterChange('complianceChapter', e.target.value)}
-        />
-        <Input
-          placeholder="Filter by Special Care Tag"
-          value={filters.specialCareTag}
-          onChange={(e) => handleFilterChange('specialCareTag', e.target.value)}
-        />
-      </div>
-
-      <div className="flex space-x-4 mb-6">
-        <Button onClick={handleExportTaskReport}>Export Task Report</Button>
-        <Button onClick={handleExportAuditLog}>Export Audit Log</Button>
-        <Button onClick={handleExportSurveyPacket}>Export Survey Packet</Button>
-      </div>
-
-      {Object.entries(groupedTasks).map(([category, categoryTasks]) => (
-        <div key={category} className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">{category}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categoryTasks.map(task => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                // Pass other necessary props to TaskCard
-              />
+        
+        <Accordion type="multiple" defaultValue={defaultOpenAccordions} className="w-full space-y-4">
+            {Object.entries(groupedTasks).map(([category, categoryTasks]) => (
+                <AccordionItem value={category} key={category} className="border bg-card rounded-lg shadow-sm">
+                <AccordionTrigger className="p-4 text-lg font-semibold hover:no-underline">
+                    {category} ({categoryTasks.length})
+                </AccordionTrigger>
+                <AccordionContent className="p-4 pt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {categoryTasks.map(task => (
+                            <TaskCard
+                                key={task.id}
+                                task={task}
+                                onOpenDetails={handleOpenDetails}
+                                onOpenAttachEvidence={handleOpenAttachEvidence}
+                            />
+                        ))}
+                    </div>
+                </AccordionContent>
+                </AccordionItem>
             ))}
-          </div>
-          <Separator className="mt-6" />
-        </div>
-      ))}
+        </Accordion>
+
+      <TaskDetailsDialog
+        task={selectedTask}
+        isOpen={isDetailsOpen}
+        onClose={handleCloseDetails}
+        onSave={handleSaveTask}
+        onOpenAttachEvidence={handleOpenAttachEvidence}
+      />
+      <AttachEvidenceDialog
+        task={taskForEvidence}
+        isOpen={isEvidenceOpen}
+        onClose={handleCloseAttachEvidence}
+        onSaveEvidence={handleSaveEvidence}
+      />
     </div>
   );
 }

@@ -1,6 +1,4 @@
-
-
-export type ResolutionStatus = 'Pending' | 'Resolved' | 'Escalated' | 'Complete' | 'Flagged'; // Added Complete, Flagged
+export type ResolutionStatus = 'Pending' | 'Resolved' | 'Escalated' | 'Complete' | 'Flagged';
 
 export type TaskCategory =
   | 'Medication Management & ECP Audits'
@@ -29,7 +27,6 @@ export type AppRole =
   | 'housekeeping_lead_id'
   | 'safety_officer_id'
   | 'maintenance_id';
-
 
 export interface ActivityLog {
   timestamp: Date;
@@ -76,7 +73,7 @@ export interface Task {
   endDate: Date | null;
   time: string | null;
   deliverables: string;
-  notes: string;
+  notes?: string;
   activities: ActivityLog[];
   evidenceLink?: string;
   lastCompletedOn?: Date | null;
