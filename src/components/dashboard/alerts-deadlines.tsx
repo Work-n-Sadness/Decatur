@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { AlertTriangle, CalendarClock, ChevronsRight } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { format, differenceInDays, startOfDay } from 'date-fns';
 
 interface AlertsDeadlinesProps {
@@ -22,16 +22,18 @@ export default function AlertsDeadlines({ tasks, certifications }: AlertsDeadlin
     tasks.filter(task => 
       (task.status === 'Pending' || task.status === 'Flagged') && 
       task.endDate && 
-      differenceInDays(today, startOfDay(task.endDate)) > 0
+      differenceInDays(today, startOfDay(new Date(task.endDate))) > 0
     ).slice(0, 5), // Limit to 5 for the dashboard
     [tasks, today]
   );
 
   const expiringCerts = useMemo(() => 
     certifications.filter(cert => {
-      const daysUntilExpiry = differenceInDays(startOfDay(cert.expirationDate), today);
+      const expirationDate = new Date(cert.expirationDate);
+      if (isNaN(expirationDate.getTime())) return false; // Invalid date guard
+      const daysUntilExpiry = differenceInDays(startOfDay(expirationDate), today);
       return cert.status !== 'Expired' && daysUntilExpiry >= 0 && daysUntilExpiry <= 90;
-    }).sort((a, b) => a.expirationDate.getTime() - b.expirationDate.getTime())
+    }).sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime())
     .slice(0, 5), // Limit to 5
     [certifications, today]
   );
@@ -67,7 +69,7 @@ export default function AlertsDeadlines({ tasks, certifications }: AlertsDeadlin
                     </TableCell>
                     <TableCell>
                       <Badge variant="destructive">
-                        {task.endDate ? format(task.endDate, 'MMM dd, yyyy') : 'N/A'}
+                        {task.endDate ? format(new Date(task.endDate), 'MMM dd, yyyy') : 'N/A'}
                       </Badge>
                     </TableCell>
                     <TableCell>{task.assignedStaff}</TableCell>
@@ -93,17 +95,17 @@ export default function AlertsDeadlines({ tasks, certifications }: AlertsDeadlin
               </TableHeader>
               <TableBody>
                 {expiringCerts.map(cert => {
-                  const daysLeft = differenceInDays(startOfDay(cert.expirationDate), today);
+                  const daysLeft = differenceInDays(startOfDay(new Date(cert.expirationDate)), today);
                   return (
                     <TableRow key={cert.id} className="hover:bg-yellow-500/10">
                       <TableCell className="font-medium">
-                         <Link href="/compliance-center/certificates" className="hover:underline text-primary">
+                         <Link href="/facility-certs-installations/certifications" className="hover:underline text-primary">
                             {cert.certificationName}
                         </Link>
                       </TableCell>
                       <TableCell>
                         <Badge variant={daysLeft <= 30 ? 'destructive' : 'secondary'}>
-                          {format(cert.expirationDate, 'MMM dd, yyyy')}
+                          {format(new Date(cert.expirationDate), 'MMM dd, yyyy')}
                         </Badge>
                       </TableCell>
                       <TableCell>{daysLeft}</TableCell>

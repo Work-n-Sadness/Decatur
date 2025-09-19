@@ -76,8 +76,7 @@ export default function DashboardPage() {
        <div className="space-y-6">
         <WelcomeBanner />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full lg:col-span-2" />
             <Skeleton className="h-48 w-full" />
         </div>
          <Skeleton className="h-64 w-full" />

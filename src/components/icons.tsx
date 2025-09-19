@@ -100,6 +100,8 @@ import {
   FileLock, // For HIPAA Note Available care flag
   Accessibility,
   Package,
+  FilePlus,
+  BarChart,
 } from 'lucide-react';
 import type { TaskCategory, ResolutionStatus, TaskFrequency, FacilityInstallation, ResidentCareFlag, AuditToolCategory } from '@/types';
 
@@ -306,7 +308,7 @@ export const getResolutionStatusIcon = (status: ResolutionStatus): JSX.Element =
     case 'Escalated': case 'Flagged': className = 'text-red-500'; break;
     default: className = 'text-gray-500'; break;
   }
-  return <Icon className={className} />;
+  return <Icon className={`h-4 w-4 ${className}`} />;
 };
 
 export const getTaskFrequencyIcon = (frequency: TaskFrequency): LucideIcon => {

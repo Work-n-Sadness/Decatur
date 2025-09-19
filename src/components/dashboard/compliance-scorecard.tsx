@@ -6,7 +6,7 @@ import type { Task } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { isToday, isThisWeek, startOfDay } from 'date-fns';
-import { CheckCircle2, ListTodo } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 interface ComplianceScorecardProps {
   tasks: Task[];
@@ -28,12 +28,12 @@ export default function ComplianceScorecard({ tasks }: ComplianceScorecardProps)
   const today = startOfDay(new Date());
 
   const todaysTasks = useMemo(() => 
-    tasks.filter(task => task.endDate && isToday(startOfDay(task.endDate))),
+    tasks.filter(task => task.endDate && isToday(startOfDay(new Date(task.endDate)))),
     [tasks]
   );
   
   const thisWeeksTasks = useMemo(() => 
-    tasks.filter(task => task.endDate && isThisWeek(startOfDay(task.endDate), { weekStartsOn: 1 })),
+    tasks.filter(task => task.endDate && isThisWeek(startOfDay(new Date(task.endDate)), { weekStartsOn: 1 })),
     [tasks]
   );
 
@@ -76,11 +76,4 @@ export default function ComplianceScorecard({ tasks }: ComplianceScorecardProps)
       </CardContent>
     </Card>
   );
-}
-
-// Add a new prop to the Progress component to accept indicator class
-declare module "@/components/ui/progress" {
-    interface ProgressProps {
-        indicatorClassName?: string;
-    }
 }
