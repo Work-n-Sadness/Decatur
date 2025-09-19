@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { mockChecklistItems } from '@/lib/mock-data';
 import type { ChecklistItem } from '@/types';
-import { isValid, parseISO } from 'date-fns';
+import { isValid, parseISO, startOfDay } from 'date-fns';
 
 export async function GET() {
   try {
@@ -16,10 +16,12 @@ export async function GET() {
         return isValid(d) ? d.toISOString() : null;
       };
 
+      const dueDate = item.dueDate ? toISO(item.dueDate) : new Date(0).toISOString();
+
       return {
         ...item,
-        // dueDate from mock data can be a string 'YYYY-MM-DD' or a Date object
-        dueDate: item.dueDate ? toISO(item.dueDate)?.split('T')[0] : new Date(0).toISOString().split('T')[0], // Ensure YYYY-MM-DD format
+        // The component will handle parsing, send as ISO string.
+        dueDate: dueDate,
         createdAt: toISO(item.createdAt) || new Date(0).toISOString(), // Ensure it's always a valid ISO string
         lastCompletedOn: toISO(item.lastCompletedOn),
         statusUpdatedAt: toISO(item.statusUpdatedAt),

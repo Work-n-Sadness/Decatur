@@ -112,7 +112,7 @@ export default function ChecklistTable() {
     
     setChecklistItems(prevItems => prevItems.map(i => i.id === itemId ? { ...i, ...updatePayload } : i));
     
-    toast({ title: "Status Updated (UI Only)", description: `Task status changed to ${newStatus}. Implement API call.` });
+    toast({ title: "Status Updated (UI Only)", description: `Task status changed to ${newStatus}. Implement API call to persist.` });
   };
 
   const openEvidenceModal = (item: ChecklistItem) => {
@@ -125,7 +125,7 @@ export default function ChecklistTable() {
     if (!selectedItemForModal) return;
     setChecklistItems(prevItems => prevItems.map(i => i.id === selectedItemForModal.id ? { ...i, evidenceLink: currentEvidenceLink } : i));
     
-    toast({ title: "Evidence Link Saved (UI Only)", description: "Evidence link has been updated. Implement API call." });
+    toast({ title: "Evidence Link Saved (UI Only)", description: "Evidence link has been updated. Implement API call to persist." });
     setIsEvidenceModalOpen(false);
     setSelectedItemForModal(null);
   };
@@ -141,7 +141,7 @@ export default function ChecklistTable() {
     if (!selectedItemForModal) return;
     setChecklistItems(prevItems => prevItems.map(i => i.id === selectedItemForModal.id ? { ...i, notes: currentNotes, validator: currentValidator } : i));
     
-    toast({ title: "Details Saved (UI Only)", description: "Notes and validator have been updated. Implement API call." });
+    toast({ title: "Details Saved (UI Only)", description: "Notes and validator have been updated. Implement API call to persist." });
     setIsNotesModalOpen(false);
     setSelectedItemForModal(null);
   };
