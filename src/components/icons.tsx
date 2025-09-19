@@ -94,11 +94,12 @@ import {
   Shield as ShieldIcon,
   Cpu as CpuIcon,
   HeartHandshake, // For Medical Needs & Care Tags group
-  Tags, // For Special Care Tags item
+  Tags, // For Special Care Tags
   Brain, // For Dementia care flag
   Droplets, // For Diabetes care flag
   FileLock, // For HIPAA Note Available care flag
-  Accessibility
+  Accessibility,
+  Package,
 } from 'lucide-react';
 import type { TaskCategory, ResolutionStatus, TaskFrequency, FacilityInstallation, ResidentCareFlag, AuditToolCategory } from '@/types';
 
@@ -144,29 +145,49 @@ export const TaskFrequencyIcons: Record<TaskFrequency, LucideIcon> = {
 
 
 export const SidebarIcons = {
-  // OPERATIONS
-  Dashboard: GanttChartSquare,
+  // NEW STRUCTURE
+  Dashboard: LayoutGrid,
+  ChecklistManager: ListTodo,
+  ResidentRecords: Users,
+  MedicationTracking: Pill,
+  FacilityManagement: Building,
+  ComplianceCenter: ShieldCheck,
+
+  // Page-specific icons within the new structure
+  Home: LayoutGrid, // For the main dashboard page
+  Checklists: ListChecks, // For the checklist page
+  FaceSheets: Contact,
+  CarePlans: FileText,
+  ProgressNotes: TrendingUp,
+  MovingInOut: UserCheck,
+  MAR: Activity,
+  PRN: Eye,
+  ControlledMeds: FileLock,
+  MedRoomLog: DoorOpen,
+  FacilityLogs: History,
+  RoomInspections: SearchCheck,
+  Maintenance: Wrench,
+  SupplyInventory: Boxes,
+  Certificates: Award,
+  SurveyPacket: Package,
+  AuditLogs: FileSearch,
+
+
+  // OLD ICONS (some may be reused or can be cleaned up later)
   AuditTool: FileSearch,
   ComplianceSummary: ClipboardCheck,
   Reports: FilePieChart,
-  SurveyReadiness: ClipboardList, // Ensured this is ClipboardList
-  Checklists: ListTodo,
-
-  // RESIDENTS
+  SurveyReadiness: ClipboardList, 
+  
   ResidentsGroup: Users,
   ProfilesFaceSheets: Contact,
-  CarePlans: FileText,
-  ProgressNotes: TrendingUp,
-  ResidentsMovingInOut: UserCheck, // UserCheck for "moving in", UserMinus for "moving out" might be part of a sub-page or modal
+  ResidentsMovingInOut: UserCheck, 
   CaseManagement: Users2,
-  ResidentManagementForum: Presentation, // Changed from CouncilMeetings
+  ResidentManagementForum: Presentation,
   
-  // MEDICAL NEEDS & CARE TAGS
   MedicalNeedsCareTagsGroup: HeartHandshake,
   SpecialCareTags: Tags,
 
-
-  // MEDICATION & ECP
   MedicationECPGroup: Pill,
   MedOrders: Pill,
   MARLogs: Activity,
@@ -174,111 +195,96 @@ export const SidebarIcons = {
   PharmacyOrders: ShoppingCart,
   DiscontinuedMeds: Archive,
   TreatmentHistory: Stethoscope,
-  DoctorOrders: NotebookPen, // Was UserMd which doesn't exist, using NotebookPen
+  DoctorOrders: NotebookPen,
 
-  // ECP CHARTING
-  ECPChartingGroup: FileEdit, // Using FileEdit as a general icon for this group
+  ECPChartingGroup: FileEdit,
   FlaggedECPActions: Flag,
   MARCorrections: FileEdit,
-  MissedDoses: History, // Was CalendarX2, using History
+  MissedDoses: History,
 
-  // EMERGENCY READINESS
-  EmergencyReadinessGroup: Flame, // Using Flame as a general icon for this group
+  EmergencyReadinessGroup: Flame,
   FireDrills: Flame,
   ExtinguisherChecks: FlameKindling,
   EmergencyLighting: Lightbulb,
   CNFAPosting: Siren,
   EvacuationPlans: Map,
-  GoBagChecklist: Briefcase, // "Bag Checklist" to "Go-Bag Checklist" - icon is Briefcase
+  GoBagChecklist: Briefcase,
   NineOneOneLog: PhoneCall,
 
-  // FACILITY OPERATIONS & SERVICES
   FacilityOpsServicesGroup: LayoutGrid,
   GroceryFoodPurchases: ShoppingCart,
   CleaningSuppliesOrders: SprayCan,
   FoodDryGoodsInventory: Boxes,
-  CleaningSuppliesInventory: Archive, // Re-using Archive
+  CleaningSuppliesInventory: Archive,
   MaintenanceRequestLog: Wrench,
-  FacilityRepairHistory: History, // Re-using History
+  FacilityRepairHistory: History,
   PreventiveMaintenanceSchedule: CalendarCheck,
   VendorContactDirectory: BookUser,
   WeeklyMealSchedule: Utensils,
-  MealPrepChecklist: ClipboardCheck, // Re-using ClipboardCheck
+  MealPrepChecklist: ClipboardCheck,
   TherapeuticDietTracker: Salad,
   LeftoversLabelingLog: Tag,
   WeeklyShowerSinkTempLogs: Thermometer,
   DishwasherCycleTempRecord: WashingMachine,
   ScaldRiskAudit: ShieldAlert,
 
-
-  // ENVIRONMENTAL SAFETY
   EnvironmentalSafetyGroup: Wind,
   PestControl: Bug,
-  OxygenHandling: Wind, // Re-using Wind
-  PPEAudits: Shirt, // Using Shirt as fallback
-  MaintenanceRequests: Wrench, // Re-using Wrench
-  HazardChecks: SearchCheck, // Fallback for TriangleAlert if not suitable
+  OxygenHandling: Wind,
+  PPEAudits: Shirt,
+  MaintenanceRequests: Wrench,
+  HazardChecks: SearchCheck,
 
-  // FOOD & NUTRITION
   FoodNutritionGroup: ChefHat,
-  TempLogs: Thermometer, // Re-using Thermometer
-  DishwasherLogs: WashingMachine, // Re-using WashingMachine
-  WeeklyMenu: Utensils, // Re-using Utensils
-  GroceryInventory: ShoppingCart, // Re-using ShoppingCart from FacilityOps
-  FoodSafetyAudits: ChefHat, // Re-using ChefHat
+  TempLogs: Thermometer,
+  DishwasherLogs: WashingMachine,
+  WeeklyMenu: Utensils,
+  GroceryInventory: ShoppingCart,
+  FoodSafetyAudits: ChefHat,
 
-  // SECURITY & BEHAVIOR
-  SecurityBehaviorGroup: ShieldCheck, // Re-using ShieldCheck
+  SecurityBehaviorGroup: ShieldCheck,
   EntryExitLogs: DoorOpen,
   SmokingCompliance: Cigarette,
   BehaviorReports: SmilePlus,
-  VisitorLogNotifications: Users, // Changed from VisitorRestrictions, icon Users
+  VisitorLogNotifications: Users,
 
-  // REGULATORY OVERSIGHT
   RegulatoryOversightGroup: Gavel,
-  FireDeptVisits: Building, // Building icon for Fire Dept
+  FireDeptVisits: Building,
   StateSurveyVisits: BadgeCheck,
   RegulatoryVisitLogs: BookCopy,
-  OmbudsmanReports: Gavel, // Re-using Gavel
+  OmbudsmanReports: Gavel,
   IncidentGrievanceLogs: AlertOctagon,
 
-  // FACILITY CERTIFICATIONS & INSTALLATIONS
-  FacilityCertsInstallationsGroup: Building2, // Using Building2 for the group
-  Certifications: ShieldIcon, // Using Shield (aliased)
-  InstallationsInfrastructure: CpuIcon, // Using CPU (aliased)
+  FacilityCertsInstallationsGroup: Building2,
+  Certifications: ShieldIcon,
+  InstallationsInfrastructure: CpuIcon,
 
-
-  // FINANCE
   FinanceGroup: DollarSign,
   PurchaseRequests: ShoppingBag,
   FacilityExpenses: CreditCard,
   RentPayments: Landmark,
-  MedicaidClaims: DollarSign, // Re-using DollarSign
+  MedicaidClaims: DollarSign,
   InsuranceClaims: FileDigit,
   InflowOutflowReports: LineChart,
 
-  // HUMAN RESOURCES
-  HumanResourcesGroup: Users, // Re-using Users
+  HumanResourcesGroup: Users,
   Recruitment: UserPlus,
-  Onboarding: ClipboardPen, // Replaced ClipboardUser
-  StaffMatrix: Users, // Re-using Users for Staff Matrix
-  TrainingCerts: UsersRound, // Re-using UsersRound from original request
+  Onboarding: ClipboardPen,
+  StaffMatrix: Users,
+  TrainingCerts: UsersRound,
   PerformanceReviews: Award,
-  ExitLogs: UserMinus, // Re-using UserMinus
-  ContractorsConsultants: HardHat, // Re-using HardHat
+  ExitLogs: UserMinus,
+  ContractorsConsultants: HardHat,
 
-  // POLICY & COMPLIANCE
   PolicyComplianceGroup: ScrollText,
-  PoliciesProcedures: ScrollText, // Re-using ScrollText for Policies
-  HouseRules: ClipboardSignature, // Re-using ClipboardSignature for House Rules
+  PoliciesProcedures: ScrollText,
+  HouseRules: ClipboardSignature,
 
-
-  // INSIGHTS & SYSTEMS
-  InsightsSystemsGroup: Settings, // Using Settings for the group
+  InsightsSystemsGroup: Settings,
   SystemLogs: DatabaseZap,
   ApiIntegrations: Network,
-  UserManagement: UserCog, // Corrected from UsersCog
-  Settings: Settings, // Re-using Settings
+  UserManagement: UserCog,
+  Settings: Settings,
 };
 
 export const getTaskCategoryIcon = (category: TaskCategory): LucideIcon => {

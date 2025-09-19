@@ -48,40 +48,66 @@ interface NavGroup {
   defaultOpen?: boolean; 
 }
 
-// Updated navGroups focusing on compliance
+// New 6-pillar navigation structure
 const navGroups: NavGroup[] = [
   {
-    label: 'OPERATIONS',
-    icon: SidebarIcons.Dashboard, // Or a more compliance-focused group icon if available
+    label: 'Dashboard',
+    icon: SidebarIcons.Dashboard,
     defaultOpen: true,
     items: [
-      { href: '/', label: 'Dashboard', icon: SidebarIcons.Dashboard },
-      { href: '/core-operations/audit-tool', label: 'Audit Tool', icon: SidebarIcons.AuditTool },
-      { href: '/compliance-summary', label: 'Compliance Summary', icon: SidebarIcons.ComplianceSummary },
-      { href: '/core-operations/survey-readiness', label: 'Survey Readiness', icon: SidebarIcons.SurveyReadiness },
-      { href: '/checklists', label: 'Checklists', icon: SidebarIcons.Checklists },
+      { href: '/', label: 'Home Base', icon: SidebarIcons.Home },
+      // Sub-items for dashboard could go here if needed
     ],
   },
   {
-    label: 'MEDICAL NEEDS & CARE TAGS',
-    icon: SidebarIcons.MedicalNeedsCareTagsGroup,
+    label: 'Checklist & Task Manager',
+    icon: SidebarIcons.ChecklistManager,
     defaultOpen: true,
     items: [
-        { href: '/medical-needs/special-care-tags', label: 'Special Care Tags', icon: SidebarIcons.SpecialCareTags },
+      { href: '/checklists', label: 'Daily/Weekly Checklists', icon: SidebarIcons.Checklists },
+      // We can add more task-related pages here later
     ],
   },
   {
-    label: 'EMERGENCY READINESS',
-    icon: SidebarIcons.EmergencyReadinessGroup,
+    label: 'Resident Records',
+    icon: SidebarIcons.ResidentRecords,
     defaultOpen: true,
     items: [
-      { href: '/fire-emergency/fire-drills', label: 'Fire Drills', icon: SidebarIcons.FireDrills },
-      { href: '/fire-emergency/extinguisher-checks', label: 'Extinguisher Checks', icon: SidebarIcons.ExtinguisherChecks },
-      { href: '/fire-emergency/emergency-lighting', label: 'Emergency Lighting', icon: SidebarIcons.EmergencyLighting },
-      { href: '/fire-emergency/cnfa-posting', label: 'CNFA Posting', icon: SidebarIcons.CNFAPosting },
-      { href: '/fire-emergency/evacuation-plans', label: 'Evacuation Plans', icon: SidebarIcons.EvacuationPlans },
-      { href: '/fire-emergency/go-bag-checklist', label: 'Go-Bag Checklist', icon: SidebarIcons.GoBagChecklist },
-      { href: '/fire-emergency/911-log', label: '911 Log', icon: SidebarIcons.NineOneOneLog },
+      { href: '/resident-records/face-sheets', label: 'Resident Profiles', icon: SidebarIcons.FaceSheets },
+      { href: '/resident-records/care-plans', label: 'Care Plans', icon: SidebarIcons.CarePlans },
+      { href: '/resident-records/progress-notes', label: 'Progress Notes', icon: SidebarIcons.ProgressNotes },
+      { href: '/resident-records/moving-in-out', label: 'Move-in/out Logs', icon: SidebarIcons.MovingInOut },
+      // Placeholder for Services Log
+    ],
+  },
+  {
+    label: 'Medication Tracking',
+    icon: SidebarIcons.MedicationTracking,
+    defaultOpen: true,
+    items: [
+      { href: '/medication-clinical/mar-logs', label: 'MAR Entries', icon: SidebarIcons.MAR },
+      { href: '/medication-clinical/prn-monitoring', label: 'PRN Documentation', icon: SidebarIcons.PRN },
+      // Placeholders for Controlled Substance Logs and Med Room Access
+    ],
+  },
+  {
+    label: 'Facility Management',
+    icon: SidebarIcons.FacilityManagement,
+    defaultOpen: true,
+    items: [
+       { href: '/facility-certs-installations/installations', label: 'Facility Logs', icon: SidebarIcons.FacilityLogs },
+       { href: '/facility-operations/maintenance/request-log', label: 'Maintenance', icon: SidebarIcons.Maintenance },
+       { href: '/facility-operations/procurement/cleaning-supplies-inventory', label: 'Supply Inventory', icon: SidebarIcons.SupplyInventory },
+    ],
+  },
+  {
+    label: 'Compliance Center',
+    icon: SidebarIcons.ComplianceCenter,
+    defaultOpen: true,
+    items: [
+      { href: '/facility-certs-installations/certifications', label: 'Certificates', icon: SidebarIcons.Certificates },
+      { href: '/core-operations/survey-readiness', label: 'Survey Packet', icon: SidebarIcons.SurveyPacket },
+      { href: '/core-operations/audit-tool', label: 'Audit Logs', icon: SidebarIcons.AuditLogs },
     ],
   },
 ];
