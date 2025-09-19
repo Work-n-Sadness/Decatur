@@ -158,13 +158,16 @@ export const SidebarIcons = {
   Checklists: ListChecks,
   Reports: FilePieChart,
   SurveyReadiness: ClipboardList, 
+  History: History,
   
-  ResidentsGroup: Users,
+  Users: Users,
   ProfilesFaceSheets: Contact,
   ResidentsMovingInOut: UserCheck, 
   CaseManagement: Users2,
   ResidentManagementForum: Presentation,
-  
+  NotebookPen: NotebookPen,
+  TrendingUp: TrendingUp,
+
   MedicalNeedsCareTagsGroup: HeartHandshake,
   SpecialCareTags: Tags,
 
@@ -192,6 +195,9 @@ export const SidebarIcons = {
   NineOneOneLog: PhoneCall,
 
   FacilityOpsServicesGroup: LayoutGrid,
+  Building: Building,
+  Wrench: Wrench,
+  Archive: Archive,
   GroceryFoodPurchases: ShoppingCart,
   CleaningSuppliesOrders: SprayCan,
   FoodDryGoodsInventory: Boxes,

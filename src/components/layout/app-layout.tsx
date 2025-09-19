@@ -47,63 +47,62 @@ interface NavGroup {
   defaultOpen?: boolean; 
 }
 
-// New 6-pillar navigation structure
 const navGroups: NavGroup[] = [
   {
     label: 'Home',
     icon: SidebarIcons.Dashboard,
     defaultOpen: true,
     items: [
-      { href: '/', label: 'Home', icon: SidebarIcons.Home },
+      { href: '/', label: 'Home', icon: SidebarIcons.Dashboard },
     ],
   },
   {
     label: 'Checklist & Task Manager',
-    icon: SidebarIcons.ChecklistManager,
+    icon: SidebarIcons.Checklists,
     defaultOpen: true,
     items: [
       { href: '/checklists', label: 'Daily/Weekly Checklists', icon: SidebarIcons.Checklists },
-      { href: '/tasks', label: 'Task History & Reporting', icon: SidebarIcons.AuditLogs },
+      { href: '/tasks', label: 'Task History & Reporting', icon: SidebarIcons.History },
     ],
   },
   {
     label: 'Resident Records',
-    icon: SidebarIcons.ResidentRecords,
+    icon: SidebarIcons.Users,
     defaultOpen: true,
     items: [
-      { href: '/resident-records/face-sheets', label: 'Resident Profiles', icon: SidebarIcons.FaceSheets },
-      { href: '/resident-records/care-plans', label: 'Care Plans', icon: SidebarIcons.CarePlans },
-      { href: '/resident-records/progress-notes', label: 'Progress Notes', icon: SidebarIcons.ProgressNotes },
-      { href: '/resident-records/moving-in-out', label: 'Move-in/out Logs', icon: SidebarIcons.MovingInOut },
+      { href: '/resident-records/face-sheets', label: 'Resident Profiles', icon: SidebarIcons.ProfilesFaceSheets },
+      { href: '/resident-records/care-plans', label: 'Care Plans', icon: SidebarIcons.NotebookPen },
+      { href: '/resident-records/progress-notes', label: 'Progress Notes', icon: SidebarIcons.TrendingUp },
+      { href: '/resident-records/moving-in-out', label: 'Move-in/out Logs', icon: SidebarIcons.ResidentsMovingInOut },
     ],
   },
   {
     label: 'Medication Tracking',
-    icon: SidebarIcons.MedicationTracking,
+    icon: SidebarIcons.MedicationECPGroup,
     defaultOpen: true,
     items: [
-      { href: '/medication-clinical/mar-logs', label: 'MAR Entries', icon: SidebarIcons.MAR },
-      { href: '/medication-clinical/prn-monitoring', label: 'PRN Documentation', icon: SidebarIcons.PRN },
+      { href: '/medication-clinical/mar-logs', label: 'MAR Entries', icon: SidebarIcons.MARLogs },
+      { href: '/medication-clinical/prn-monitoring', label: 'PRN Documentation', icon: SidebarIcons.PRNMonitoring },
     ],
   },
   {
     label: 'Facility Management',
-    icon: SidebarIcons.FacilityManagement,
+    icon: SidebarIcons.FacilityOpsServicesGroup,
     defaultOpen: true,
     items: [
-       { href: '/facility-certs-installations/installations', label: 'Facility Logs', icon: SidebarIcons.FacilityLogs },
-       { href: '/facility-operations/maintenance/request-log', label: 'Maintenance', icon: SidebarIcons.Maintenance },
-       { href: '/facility-operations/procurement/cleaning-supplies-inventory', label: 'Supply Inventory', icon: SidebarIcons.SupplyInventory },
+       { href: '/facility-certs-installations/installations', label: 'Facility Logs', icon: SidebarIcons.Building },
+       { href: '/facility-operations/maintenance/request-log', label: 'Maintenance', icon: SidebarIcons.Wrench },
+       { href: '/facility-operations/procurement/cleaning-supplies-inventory', label: 'Supply Inventory', icon: SidebarIcons.Archive },
     ],
   },
   {
     label: 'Compliance Center',
-    icon: SidebarIcons.ComplianceCenter,
+    icon: SidebarIcons.RegulatoryOversightGroup,
     defaultOpen: true,
     items: [
-      { href: '/facility-certs-installations/certifications', label: 'Certificates', icon: SidebarIcons.Certificates },
-      { href: '/core-operations/survey-readiness', label: 'Survey Packet', icon: SidebarIcons.SurveyPacket },
-      { href: '/core-operations/audit-tool', label: 'Audit Logs', icon: SidebarIcons.AuditLogs },
+      { href: '/facility-certs-installations/certifications', label: 'Certificates', icon: SidebarIcons.Certifications },
+      { href: '/core-operations/survey-readiness', label: 'Survey Packet', icon: SidebarIcons.SurveyReadiness },
+      { href: '/core-operations/audit-tool', label: 'Audit Logs', icon: SidebarIcons.AuditTool },
     ],
   },
 ];
