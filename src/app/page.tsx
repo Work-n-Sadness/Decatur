@@ -110,7 +110,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <WelcomeBanner />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <ComplianceScorecard tasks={tasks} certifications={certifications} />
+        <ComplianceScorecard tasks={tasks} />
         <QuickLinks />
       </div>
        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
