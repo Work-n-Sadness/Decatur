@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import type { ChecklistItem, ResolutionStatus } from '@/types';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,12 +10,14 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CalendarIcon, Filter, Paperclip, RefreshCw, Save, AlertCircle, Edit3, ExternalLink, FileText, X } from 'lucide-react';
+import { CalendarIcon, Filter, Paperclip, RefreshCw, Save, AlertCircle, Edit3, ExternalLink, FileText, X, CheckSquare, User, Clock, Building } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isValid as isValidDate, isToday, startOfDay as dateFnsStartOfDay, isEqual as isEqualDate } from 'date-fns';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { getTaskCategoryIcon } from '@/components/icons';
 
 const CHECKLIST_STATUSES: Extract<ResolutionStatus, 'Pending' | 'Complete' | 'Flagged'>[] = ['Pending', 'Complete', 'Flagged'];
 
@@ -296,28 +297,13 @@ export default function ChecklistTable() {
         </div>
       </div>
       
-      <ScrollArea className="h-[600px] rounded-md border">
-        <Table>
-          <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm z-10">
-            <TableRow>
-              <TableHead>Task Name</TableHead>
-              <TableHead>Assigned Staff</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Validator</TableHead>
-              <TableHead>Last Completed / Updated</TableHead>
-              <TableHead>Evidence</TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <ScrollArea className="h-[700px] -mx-1 p-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredItems.length > 0 ? filteredItems.map((item) => {
               const itemDueDateJs = item.dueDate instanceof Date ? item.dueDate : parseISO(item.dueDate as unknown as string);
-              const displayDueDate = itemDueDateJs && isValidDate(itemDueDateJs)
-                ? isToday(itemDueDateJs) ? <span className="text-accent font-semibold">Today</span> : format(itemDueDateJs, 'PP')
-                : 'N/A';
-              
+              const isDueToday = itemDueDateJs && isValidDate(itemDueDateJs) && isToday(itemDueDateJs);
+              const CategoryIcon = getTaskCategoryIcon(item.category as any);
+
               let lastActionDate: Date | null = null;
               const itemStatusUpdatedAtJs = item.statusUpdatedAt instanceof Date ? item.statusUpdatedAt : (item.statusUpdatedAt ? parseISO(item.statusUpdatedAt as unknown as string) : null);
               const itemLastCompletedOnJs = item.lastCompletedOn instanceof Date ? item.lastCompletedOn : (item.lastCompletedOn ? parseISO(item.lastCompletedOn as unknown as string) : null);
@@ -329,59 +315,69 @@ export default function ChecklistTable() {
               }
 
               return (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.taskName}</TableCell>
-                <TableCell>{item.assignedStaff}</TableCell>
-                <TableCell>{displayDueDate}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusBadgeVariant(item.status)}>{item.status}</Badge>
-                </TableCell>
-                <TableCell>{item.validator || 'N/A'}</TableCell>
-                <TableCell>
-                  {lastActionDate && isValidDate(lastActionDate)
-                    ? `${format(lastActionDate, 'PPp')} ${item.status === 'Complete' && item.completedBy ? `by ${item.completedBy}` : ''}`
-                    : 'N/A'}
-                </TableCell>
-                <TableCell>
-                  {item.evidenceLink ? (
-                    <a href={item.evidenceLink} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center text-xs">
-                      View <ExternalLink className="inline h-3 w-3 ml-1"/>
-                    </a>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">None</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {item.notes ? (
-                     <span title={item.notes} className="truncate block max-w-[100px] text-xs">{item.notes}</span>
-                  ) : <span className="text-xs text-muted-foreground">N/A</span>}
-                </TableCell>
-                <TableCell className="space-x-1 flex items-center">
-                  <Select value={item.status} onValueChange={(newStatus) => handleStatusChange(item.id, newStatus as ChecklistItem['status'])}>
-                    <SelectTrigger className="h-8 text-xs w-[100px] sm:w-[120px]">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CHECKLIST_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                   <Button variant="outline" size="sm" onClick={() => openEvidenceModal(item)} className="h-8 px-2">
-                    <Paperclip className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => openNotesModal(item)} className="h-8 px-2">
-                    <Edit3 className="h-3.5 w-3.5" />
-                  </Button>
-                </TableCell>
-              </TableRow>
+                <Card key={item.id} className="flex flex-col shadow-md hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                             <CardTitle className="text-base font-semibold leading-tight pr-2">{item.taskName}</CardTitle>
+                             <Badge variant={getStatusBadgeVariant(item.status)}>{item.status}</Badge>
+                        </div>
+                        {item.category && <p className="text-xs text-muted-foreground pt-1 flex items-center gap-1.5"><CategoryIcon className="h-4 w-4" /> {item.category}</p>}
+                    </CardHeader>
+                    <CardContent className="space-y-2.5 text-sm flex-grow">
+                        <div className="flex items-center gap-2">
+                           <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                           <span className={isDueToday ? "font-bold text-accent" : ""}>
+                                {isValidDate(itemDueDateJs) ? format(itemDueDateJs, 'PP') : 'N/A'}
+                           </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <User className="h-4 w-4 text-muted-foreground" />
+                           <span>{item.assignedStaff}</span>
+                        </div>
+                         <div className="flex items-center gap-2">
+                           <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                           <span>Validator: {item.validator || 'N/A'}</span>
+                        </div>
+                        {lastActionDate && isValidDate(lastActionDate) && (
+                             <div className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                    {item.status === 'Complete' ? 'Completed ' : 'Updated '} 
+                                    {format(lastActionDate, 'p')}
+                                    {item.completedBy ? ` by ${item.completedBy}`: ''}
+                                </span>
+                             </div>
+                        )}
+                        {item.notes && <p className="text-xs text-muted-foreground pt-1 italic line-clamp-2">Notes: {item.notes}</p>}
+                        {item.evidenceLink && <a href={item.evidenceLink} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center text-xs pt-1"><ExternalLink className="inline h-3 w-3 mr-1"/> View Evidence</a>}
+                    </CardContent>
+                    <CardFooter className="flex justify-between items-center p-2 border-t bg-muted/50">
+                        <Select value={item.status} onValueChange={(newStatus) => handleStatusChange(item.id, newStatus as ChecklistItem['status'])}>
+                            <SelectTrigger className="h-8 text-xs w-[100px]">
+                            <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            {CHECKLIST_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <div className="flex items-center space-x-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEvidenceModal(item)} title="Attach Evidence">
+                                <Paperclip className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openNotesModal(item)} title="Edit Notes/Validator">
+                                <Edit3 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </CardFooter>
+                </Card>
             )}) : (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                  No checklist items found matching your criteria.
-                </TableCell>
-              </TableRow>
+              <div className="col-span-full text-center text-muted-foreground py-16">
+                <Building className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-200">No checklist items</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">No items found matching your criteria. Try adjusting the filters.</p>
+              </div>
             )}
-          </TableBody>
-        </Table>
+        </div>
       </ScrollArea>
 
       <Dialog open={isEvidenceModalOpen} onOpenChange={setIsEvidenceModalOpen}>
