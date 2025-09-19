@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -64,6 +63,7 @@ const navGroups: NavGroup[] = [
     defaultOpen: true,
     items: [
       { href: '/checklists', label: 'Daily/Weekly Checklists', icon: SidebarIcons.Checklists },
+      { href: '/tasks', label: 'Task History & Reporting', icon: SidebarIcons.AuditLogs },
     ],
   },
   {
@@ -191,7 +191,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarHeader>
         <SidebarContent>
           {navGroups.map((group) => {
-            const isStandalone = group.items.length === 1 && group.items[0].href === '/';
+            const isStandalone = group.items.length === 1 && group.label === 'Home';
             if (isStandalone) {
                 const item = group.items[0];
                 return (
