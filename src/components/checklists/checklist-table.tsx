@@ -410,7 +410,7 @@ export default function ChecklistTable() {
       <Dialog open={isNotesModalOpen} onOpenChange={setIsNotesModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Notes & Validator</DialogTitle>
+            <DialogTitle>Edit Notes &amp; Validator</DialogTitle>
             <DialogDescription>For task: {selectedItemForModal?.taskName}</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
